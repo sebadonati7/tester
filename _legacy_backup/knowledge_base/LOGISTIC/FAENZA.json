@@ -1,0 +1,699 @@
+[
+  {
+    "id": "RA_HUB_FAENZA_PS",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Generale - Ospedale degli Infermi",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "frazione": "",
+    "indirizzo": "Viale Stradone, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 601111",
+      "web": "https://www.auslromagna.it/ospedali/faenza"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "ACCESSO PER EMERGENZE (Codici Rossi/Arancioni/Azzurri). Per codici bianchi recarsi al CAU."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Rianimazione",
+      "Cardiologia con UTIC",
+      "Neurologia",
+      "Ortopedia",
+      "Chirurgia d'Urgenza"
+    ]
+  },
+  {
+    "id": "RA_HUB_FAENZA_PED",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Pediatrico Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Viale Stradone, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 601111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto pediatrico (0-14 anni)."
+    },
+    "servizi_disponibili": [
+      "Visita pediatrica urgente",
+      "Osservazione Breve Intensiva Pediatrica"
+    ]
+  },
+  {
+    "id": "RA_HUB_FAENZA_OST",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ostetrico-Ginecologico Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Viale Stradone, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 601111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto per gravide e urgenze ginecologiche."
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Visita ginecologica urgente"
+    ]
+  },
+  {
+    "id": "RA_HUB_FAENZA_DIALISI",
+    "tipologia": "Specialistica Ospedaliera",
+    "nome": "Centro Dialisi Ospedale Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Viale Stradone, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 601111"
+    },
+    "orari": {
+      "lunedi": "07:00-19:00",
+      "martedi": "07:00-19:00",
+      "mercoledi": "07:00-19:00",
+      "giovedi": "07:00-19:00",
+      "venerdi": "07:00-19:00",
+      "sabato": "07:00-13:00",
+      "domenica": "Chiuso",
+      "note": "Servizio dialisi per residenti e turisti (su prenotazione)."
+    },
+    "servizi_disponibili": [
+      "Emodialisi"
+    ]
+  },
+  {
+    "id": "RA_CAU_FAENZA",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Faenza (c/o Ex Medicina Legale)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via Ennio Golfieri, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 601555",
+      "web": "https://www.auslromagna.it/luoghi/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Accesso diretto 7/7 per urgenze a bassa complessità (Codici Bianchi/Verdi)."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni semplici",
+      "Piccola traumatologia",
+      "Prescrizioni urgenti"
+    ]
+  },
+  {
+    "id": "RA_OSP_SAN_PIER_DAMIANO",
+    "tipologia": "Ospedale Privato Accreditato",
+    "nome": "San Pier Damiano Hospital",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via per Cotignola, 9, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 671111",
+      "web": "https://www.gvmnet.it"
+    },
+    "orari": {
+      "lunedi": "07:00-19:00",
+      "martedi": "07:00-19:00",
+      "mercoledi": "07:00-19:00",
+      "giovedi": "07:00-19:00",
+      "venerdi": "07:00-19:00",
+      "sabato": "07:00-13:00",
+      "domenica": "Chiuso",
+      "note": "Struttura accreditata SSN. Punto Prelievi e Specialistica."
+    },
+    "servizi_disponibili": [
+      "Chirurgia programmata",
+      "Punto Prelievi",
+      "Diagnostica per immagini",
+      "Ortopedia"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_FAENZA_OSP",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Ospedale Faenza (Palazzina 13)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Viale Stradone, 9 (Palazzina 13), 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602150",
+      "web": "https://www.auslromagna.it/luoghi/punti-prelievo"
+    },
+    "orari": {
+      "lunedi": "07:00-09:30",
+      "martedi": "07:00-09:30",
+      "mercoledi": "07:00-09:30",
+      "giovedi": "07:00-09:30",
+      "venerdi": "07:00-09:30",
+      "sabato": "07:00-09:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto 7:00-9:00 (posti limitati) o su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici",
+      "Consegna campioni biologici"
+    ]
+  },
+  {
+    "id": "RA_CDC_FAENZA_FILANDA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Faenza Centro-Nord (La Filanda)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via della Costituzione, 28, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602411"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Sede centrale servizi territoriali."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Assistenza Domiciliare",
+      "Medicina Legale",
+      "Consultorio Familiare"
+    ]
+  },
+  {
+    "id": "RA_CONS_FAENZA",
+    "tipologia": "Consultorio",
+    "nome": "Consultorio Familiare Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via della Costituzione, 28/32, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602040",
+      "web": "https://www.auslromagna.it/luoghi/consultori"
+    },
+    "orari": {
+      "lunedi": "08:30-13:00",
+      "martedi": "08:30-13:00",
+      "mercoledi": "08:30-13:00",
+      "giovedi": "08:30-13:00",
+      "venerdi": "08:30-13:00",
+      "sabato": "08:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani: Lun 14:00-17:00 (accesso libero)."
+    },
+    "servizi_disponibili": [
+      "Ostetricia",
+      "Ginecologia",
+      "Spazio Giovani",
+      "Contraccezione gratuita (under 26)"
+    ]
+  },
+  {
+    "id": "RA_PED_COM_FAENZA",
+    "tipologia": "Pediatria di Comunità",
+    "nome": "Pediatria di Comunità Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via della Costituzione, 28, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602060"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Vaccinazioni pediatriche su appuntamento."
+    },
+    "servizi_disponibili": [
+      "Vaccinazioni pediatriche",
+      "Certificati vaccinali"
+    ]
+  },
+  {
+    "id": "RA_IGIENE_PUBBLICA_FAENZA",
+    "tipologia": "Igiene Pubblica",
+    "nome": "Igiene Pubblica Faenza (Vaccinazioni Adulti)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via Zaccagnini, 22, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602311"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "08:30-12:00",
+      "domenica": "Chiuso",
+      "note": "Vaccinazioni adulti e viaggiatori internazionali."
+    },
+    "servizi_disponibili": [
+      "Vaccinazioni adulti",
+      "Profilassi viaggi internazionali"
+    ]
+  },
+  {
+    "id": "RA_CDC_CASTELBOLOGNESE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Castel Bolognese",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Castel Bolognese",
+    "indirizzo": "Via Roma, 2, 48014 Castel Bolognese RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Hub per la Via Emilia Ovest."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Ambulatorio Infermieristico",
+      "Medicina Generale",
+      "Pediatria di Comunità"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_CASTELBOLOGNESE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Castel Bolognese",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Castel Bolognese",
+    "indirizzo": "Via Roma, 2, Castel Bolognese RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "07:00-08:45",
+      "martedi": "Chiuso",
+      "mercoledi": "07:00-08:45",
+      "giovedi": "07:00-08:45",
+      "venerdi": "07:00-08:45",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Lun, Mer, Gio, Ven."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_SOLAROLO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Solarolo",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Solarolo",
+    "indirizzo": "Via Ordiere, 2, 48027 Solarolo RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "07:00-13:00",
+      "martedi": "09:00-13:00",
+      "mercoledi": "09:00-13:00",
+      "giovedi": "09:00-13:00",
+      "venerdi": "09:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio locale."
+    },
+    "servizi_disponibili": [
+      "Infermiere di Famiglia",
+      "CUP"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_SOLAROLO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Solarolo",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Solarolo",
+    "indirizzo": "Via Ordiere, 2, Solarolo RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "07:00-08:45",
+      "martedi": "Chiuso",
+      "mercoledi": "Chiuso",
+      "giovedi": "Chiuso",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "ATTENZIONE: Aperto SOLO Lunedì."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_RIOLOTERME",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Riolo Terme",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Riolo Terme",
+    "indirizzo": "Via Tarlombani, 10, 48025 Riolo Terme RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "07:30-13:30",
+      "martedi": "07:30-13:30",
+      "mercoledi": "07:30-13:30",
+      "giovedi": "07:30-13:30",
+      "venerdi": "07:30-13:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio Media Val Senio."
+    },
+    "servizi_disponibili": [
+      "Ambulatorio Cronicità",
+      "Pediatra di Libera Scelta",
+      "CUP"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_RIOLOTERME",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Riolo Terme",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Riolo Terme",
+    "indirizzo": "Via Tarlombani, 10, Riolo Terme RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:00-08:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:00-08:30",
+      "venerdi": "07:00-08:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar, Gio, Ven."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_BRISIGHELLA",
+    "tipologia": "Casa della Comunità / OsCo",
+    "nome": "Casa della Comunità Brisighella (Ospedale di Comunità)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Brisighella",
+    "indirizzo": "Viale delle Terme, 2, 48013 Brisighella RA",
+    "contatti": {
+      "telefono": "0546 992650"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Include Ospedale di Comunità con degenza."
+    },
+    "servizi_disponibili": [
+      "Ospedale di Comunità",
+      "Specialistica Ambulatoriale",
+      "Residenza Psichiatrica",
+      "CUP"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_BRISIGHELLA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Brisighella",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Brisighella",
+    "indirizzo": "Viale delle Terme, 2, Brisighella RA",
+    "contatti": {
+      "telefono": "0546 992650"
+    },
+    "orari": {
+      "lunedi": "07:00-08:30",
+      "martedi": "07:00-08:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:00-08:30",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Lun, Mar, Gio."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_CASOLAVALSENIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Casola Valsenio",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Casola Valsenio",
+    "indirizzo": "Via Roma, 28, 48010 Casola Valsenio RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio Alta Val Senio."
+    },
+    "servizi_disponibili": [
+      "Infermiere di Comunità",
+      "Assistenza Domiciliare",
+      "CUP"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_CASOLAVALSENIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Casola Valsenio",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Casola Valsenio",
+    "indirizzo": "Via Roma, 28, Casola Valsenio RA",
+    "contatti": {
+      "telefono": "0546 652750"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-08:30",
+      "mercoledi": "08:00-09:00",
+      "giovedi": "Chiuso",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar e Mer."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_HOSPICE_VILLA_AGNESINA",
+    "tipologia": "Hospice",
+    "nome": "Hospice Villa Agnesina",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via Firenze, 14, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 699511"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Struttura residenziale per cure palliative."
+    },
+    "servizi_disponibili": [
+      "Cure Palliative Residenziali",
+      "Supporto al lutto",
+      "Terapia del dolore"
+    ]
+  },
+  {
+    "id": "RA_GM_FAENZA",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via della Costituzione, 28/32 (c/o La Filanda), 48018 Faenza RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Unico punto di riferimento notturno/festivo per tutto il distretto (inclusa collina)."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Consulti telefonici",
+      "Certificati medici urgenti"
+    ]
+  },
+  {
+    "id": "RA_CSM_FAENZA",
+    "tipologia": "CSM - Centro Salute Mentale",
+    "nome": "CSM Faenza",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via Zaccagnini, 22, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602411"
+    },
+    "orari": {
+      "lunedi": "08:30-16:30",
+      "martedi": "08:30-16:30",
+      "mercoledi": "08:30-16:30",
+      "giovedi": "08:30-16:30",
+      "venerdi": "08:30-16:30",
+      "sabato": "08:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto per urgenze in orario diurno."
+    },
+    "servizi_disponibili": [
+      "Visita psichiatrica",
+      "Psicoterapia",
+      "Supporto infermieristico"
+    ]
+  },
+  {
+    "id": "RA_SERDP_FAENZA",
+    "tipologia": "SerDP",
+    "nome": "SerDP Faenza (Dipendenze Patologiche)",
+    "provincia": "RA",
+    "distretto": "Distretto di Faenza",
+    "comune": "Faenza",
+    "indirizzo": "Via Zaccagnini, 22, 48018 Faenza RA",
+    "contatti": {
+      "telefono": "0546 602440"
+    },
+    "orari": {
+      "lunedi": "08:30-13:30",
+      "martedi": "08:30-13:30",
+      "mercoledi": "08:30-13:30",
+      "giovedi": "08:30-13:30",
+      "venerdi": "08:30-13:30",
+      "sabato": "08:30-11:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto per prima accoglienza."
+    },
+    "servizi_disponibili": [
+      "Trattamento dipendenze",
+      "Somministrazione terapie",
+      "Counselling"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_MARRADI",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Marradi (Cross-Border)",
+    "provincia": "FI",
+    "distretto": "Distretto di Faenza (Convenzionato)",
+    "comune": "Marradi",
+    "indirizzo": "Via Dino Campana, 15, 50034 Marradi FI",
+    "contatti": {
+      "telefono": "055 8045511"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "Chiuso",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:30",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Comune toscano ma riferimento sanitario per alta Valle Lamone."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  }
+]

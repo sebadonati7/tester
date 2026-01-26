@@ -1,0 +1,1134 @@
+[
+  {
+    "id": "FC_HOSP_CESENA_BUFALINI",
+    "tipologia": "Ospedale / Hub",
+    "nome": "Ospedale Maurizio Bufalini",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Viale Giovanni Ghirotti, 286, 47521",
+    "contatti": {
+      "telefono": "0547.394111",
+      "email": "urp.ce@auslromagna.it",
+      "web": "https://www.auslromagna.it/luoghi/ospedali/ospedale-bufalini-cesena"
+    },
+    "orari": {
+      "lunedi": "00:00-24:00",
+      "martedi": "00:00-24:00",
+      "mercoledi": "00:00-24:00",
+      "giovedi": "00:00-24:00",
+      "venerdi": "00:00-24:00",
+      "sabato": "00:00-24:00",
+      "domenica": "00:00-24:00",
+      "note": "Pronto Soccorso H24 sempre attivo. Centro Trauma (SIAT) di riferimento regionale."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Trauma Center",
+      "Radiologia",
+      "Specialistica Acuti",
+      "Guardia Medica (Palazzina Scala E)",
+      "Neurochirurgia",
+      "Centro Grandi Ustionati"
+    ]
+  },
+  {
+    "id": "FC_CAU_CESENA",
+    "tipologia": "CAU",
+    "nome": "CAU Cesena",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Piazzale Giommi, 140 (Piastra Servizi)",
+    "contatti": {
+      "telefono": "0547.394111",
+      "web": "https://www.auslromagna.it/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Accesso diretto per urgenze a bassa complessità (codici bianchi e verdi)."
+    },
+    "servizi_disponibili": [
+      "Urgenze minori",
+      "Medicazioni",
+      "Piccole suture",
+      "Certificati di malattia urgenti"
+    ]
+  },
+  {
+    "id": "FC_DIAG_CESENA_PIASTRA",
+    "tipologia": "Hub Diagnostico",
+    "nome": "Piastra Servizi e Laboratorio Analisi",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Piazzale Giommi, 140",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "07:00-10:30",
+      "martedi": "07:00-10:30",
+      "mercoledi": "07:00-10:30",
+      "giovedi": "07:00-10:30",
+      "venerdi": "07:00-10:30",
+      "sabato": "07:00-10:30",
+      "domenica": "Chiuso",
+      "note": "Orari riferiti al Punto Prelievi Hub. Diagnostica su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi Hub",
+      "Ritiro Referti",
+      "Diagnostica Ambulatoriale"
+    ]
+  },
+  {
+    "id": "FC_CDC_VALSAVIO",
+    "tipologia": "Casa della Comunità / CAU",
+    "nome": "Casa della Comunità Valsavio",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Mercato Saraceno",
+    "frazione": "",
+    "indirizzo": "Viale Decio Raggi, 16",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "00:00-24:00",
+      "martedi": "00:00-24:00",
+      "mercoledi": "00:00-24:00",
+      "giovedi": "00:00-24:00",
+      "venerdi": "00:00-24:00",
+      "sabato": "00:00-24:00",
+      "domenica": "00:00-24:00",
+      "note": "CAU attivo H24. Punto Prelievi: 07:00-08:45 nei giorni feriali."
+    },
+    "servizi_disponibili": [
+      "CAU H24",
+      "CUP",
+      "Punto Prelievi",
+      "Consultorio Familiare (Mar)",
+      "Pediatria di Comunità"
+    ]
+  },
+  {
+    "id": "FC_HOSP_ANGIOLONI",
+    "tipologia": "Ospedale di Comunità",
+    "nome": "Ospedale Angioloni",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "San Piero in Bagno",
+    "frazione": "San Piero in Bagno",
+    "indirizzo": "Via Guglielmo Marconi, 36",
+    "contatti": {
+      "telefono": "0543.904111"
+    },
+    "orari": {
+      "lunedi": "00:00-24:00",
+      "martedi": "00:00-24:00",
+      "mercoledi": "00:00-24:00",
+      "giovedi": "00:00-24:00",
+      "venerdi": "00:00-24:00",
+      "sabato": "00:00-24:00",
+      "domenica": "00:00-24:00",
+      "note": "PPI (Punto Primo Intervento) H24. CAU attivo 09:00-16:00."
+    },
+    "servizi_disponibili": [
+      "CAU (09:00-16:00)",
+      "PPI H24",
+      "Ospedale di Comunità (OsCo)",
+      "Punto Prelievi",
+      "Radiologia"
+    ]
+  },
+  {
+    "id": "FC_AMB_SARSINA",
+    "tipologia": "Presidio Territoriale",
+    "nome": "Presidio di Sarsina (c/o CRA Barocci)",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Sarsina",
+    "frazione": "",
+    "indirizzo": "Via Martiri d'Ungheria / Via Roma",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:00",
+      "mercoledi": "Chiuso",
+      "giovedi": "Chiuso",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Prelievi solo il martedì. Centro Donna Mar 09:30-12:30."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Mar)",
+      "Centro Donna (Mar)",
+      "Assistenza Anziani"
+    ]
+  },
+  {
+    "id": "FC_CDC_VERGHERETO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Verghereto",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Verghereto",
+    "frazione": "",
+    "indirizzo": "Via Caduti d'Ungheria, 11",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Punto Prelievi su appuntamento. Guardia Medica Turistica (Giu-Set)."
+    },
+    "servizi_disponibili": [
+      "Infermiere di Comunità",
+      "Punto Prelievi",
+      "Farmacia Rurale"
+    ]
+  },
+  {
+    "id": "FC_GMT_ALFERO",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Ambulatorio Alfero",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Verghereto",
+    "frazione": "Alfero",
+    "indirizzo": "Via Leopardi, 14",
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "Servizio attivo solo da Giugno a Settembre."
+    },
+    "servizi_disponibili": [
+      "Assistenza Medica Turisti"
+    ]
+  },
+  {
+    "id": "FC_GMT_BALZE",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Ambulatorio Balze",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Verghereto",
+    "frazione": "Balze",
+    "indirizzo": "Via Tevere, 4",
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "Servizio attivo solo da Giugno a Settembre. Farmacia adiacente."
+    },
+    "servizi_disponibili": [
+      "Assistenza Medica Turisti",
+      "Farmacia Rurale"
+    ]
+  },
+  {
+    "id": "FC_CDC_CESENA_CENTRO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Cesena Centro",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Piazza Anna Magnani, 146/147",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani Lun/Gio 14:30-17:00."
+    },
+    "servizi_disponibili": [
+      "Pediatria di Comunità",
+      "Consultorio Familiare",
+      "Spazio Giovani",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FC_CDC_CESENA_CAVOUR",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Corso Cavour",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Corso Cavour, 180",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "07:00-18:00",
+      "martedi": "07:00-18:00",
+      "mercoledi": "07:00-18:00",
+      "giovedi": "07:00-18:00",
+      "venerdi": "07:00-18:00",
+      "sabato": "07:00-12:00",
+      "domenica": "Chiuso",
+      "note": "Servizio Infermieristico e Cure Palliative."
+    },
+    "servizi_disponibili": [
+      "Sportello Unico CUP",
+      "Ambulatorio Infermieristico",
+      "Assistenza Domiciliare (ADI)",
+      "PUA Cure Palliative"
+    ]
+  },
+  {
+    "id": "FC_CSM_CESENA",
+    "tipologia": "Salute Mentale",
+    "nome": "Centro di Salute Mentale (CSM)",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Via Brunelli, 450/474",
+    "contatti": {
+      "telefono": "0547.394111"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-14:00",
+      "domenica": "Chiuso",
+      "note": "Distribuzione farmaci psichiatrici in orario di apertura."
+    },
+    "servizi_disponibili": [
+      "Urgenze Psichiatriche",
+      "Distribuzione Farmaci",
+      "Visite Specialistiche"
+    ]
+  },
+  {
+    "id": "FC_SER_CESENA",
+    "tipologia": "Dipendenze Patologiche",
+    "nome": "SerDP Cesena",
+    "provincia": "FC",
+    "distretto": "Cesena - Valle Savio",
+    "comune": "Cesena",
+    "frazione": "",
+    "indirizzo": "Via Brunelli, 552",
+    "contatti": {
+      "telefono": "0547.394535"
+    },
+    "orari": {
+      "lunedi": "07:30-13:15",
+      "martedi": "07:30-13:15",
+      "mercoledi": "07:30-13:15",
+      "giovedi": "07:30-13:15",
+      "venerdi": "07:30-13:15",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Trattamento Dipendenze",
+      "Supporto Psicologico"
+    ]
+  },
+  {
+    "id": "FC_HOSP_FORLI_MORGAGNI",
+    "tipologia": "Ospedale / Hub",
+    "nome": "Ospedale G.B. Morgagni - L. Pierantoni",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Viale Forlanini, 34",
+    "contatti": {
+      "telefono": "0543.731111"
+    },
+    "orari": {
+      "lunedi": "00:00-24:00",
+      "martedi": "00:00-24:00",
+      "mercoledi": "00:00-24:00",
+      "giovedi": "00:00-24:00",
+      "venerdi": "00:00-24:00",
+      "sabato": "00:00-24:00",
+      "domenica": "00:00-24:00",
+      "note": "Pronto Soccorso H24. Punto Prelievi Hub presso Padiglione Vallisneri."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Punto Prelievi Hub (Pad. Vallisneri)",
+      "Specialistica Complessa",
+      "Chirurgia Robotica",
+      "Oncologia"
+    ]
+  },
+  {
+    "id": "FC_CAU_FORLI",
+    "tipologia": "CAU",
+    "nome": "CAU Forlì",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Viale Forlanini, 34 (Padiglione Allende)",
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Sostituisce il servizio di continuità assistenziale diurna."
+    },
+    "servizi_disponibili": [
+      "Urgenze minori",
+      "Accesso Diretto"
+    ]
+  },
+  {
+    "id": "FC_IRST_MELDOLA",
+    "tipologia": "Centro Specialistico / IRCCS",
+    "nome": "IRST Meldola",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Meldola",
+    "frazione": "",
+    "indirizzo": "Via Piero Maroncelli, 40",
+    "contatti": {
+      "telefono": "0543.739100",
+      "web": "https://www.irst.emr.it"
+    },
+    "orari": {
+      "lunedi": "08:00-18:00",
+      "martedi": "08:00-18:00",
+      "mercoledi": "08:00-18:00",
+      "giovedi": "08:00-18:00",
+      "venerdi": "08:00-18:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Istituto Romagnolo per lo Studio dei Tumori. Centro oncologico di eccellenza."
+    },
+    "servizi_disponibili": [
+      "Oncologia Medica",
+      "Radioterapia",
+      "Medicina Nucleare",
+      "Ricerca Clinica"
+    ]
+  },
+  {
+    "id": "FC_CONS_FORLI_COLOMBO",
+    "tipologia": "Consultorio / Famiglia",
+    "nome": "Sede Via Colombo (Polo Famiglia)",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Via Cristoforo Colombo, 11",
+    "orari": {
+      "lunedi": "07:30-19:00",
+      "martedi": "07:30-19:00",
+      "mercoledi": "07:30-19:00",
+      "giovedi": "07:30-19:00",
+      "venerdi": "07:30-19:00",
+      "sabato": "07:30-13:00",
+      "domenica": "Chiuso",
+      "note": "Pediatria di Comunità e Vaccinazioni Infantili."
+    },
+    "servizi_disponibili": [
+      "Consultorio Familiare",
+      "Pediatria di Comunità",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FC_VACC_FORLI_ROCCA",
+    "tipologia": "Sanità Pubblica",
+    "nome": "Sede Via della Rocca",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Via della Rocca, 19",
+    "orari": {
+      "lunedi": "08:30-13:00",
+      "martedi": "08:30-16:00",
+      "mercoledi": "08:30-13:00",
+      "giovedi": "08:30-16:00",
+      "venerdi": "08:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Mar-Gio orario continuato per commissione patenti."
+    },
+    "servizi_disponibili": [
+      "Vaccinazioni Adulti",
+      "Commissione Patenti"
+    ]
+  },
+  {
+    "id": "FC_CDC_FORLI_RISORGIMENTO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Risorgimento",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Viale Risorgimento, 281",
+    "orari": {
+      "lunedi": "08:30-18:30",
+      "martedi": "08:30-18:30",
+      "mercoledi": "08:30-18:30",
+      "giovedi": "08:30-18:30",
+      "venerdi": "08:30-18:30",
+      "sabato": "Chiuso",
+      "note": "Ambulatorio cronicità."
+    },
+    "servizi_disponibili": [
+      "Gestione Cronicità",
+      "Cure Primarie"
+    ]
+  },
+  {
+    "id": "FC_CDC_MELDOLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Meldola",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Meldola",
+    "frazione": "",
+    "indirizzo": "Strada San Colombano, 1",
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:30",
+      "venerdi": "Chiuso",
+      "sabato": "07:30-09:30",
+      "note": "Punto Prelievi Mar-Gio-Sab."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio",
+      "CSM Periferico"
+    ]
+  },
+  {
+    "id": "FC_HOSP_SANTA_SOFIA",
+    "tipologia": "Ospedale / Spoke",
+    "nome": "Ospedale Nefetti",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Santa Sofia",
+    "frazione": "",
+    "indirizzo": "Via Renato Valbonesi, 1",
+    "orari": {
+      "lunedi": "09:00-16:00",
+      "martedi": "09:00-16:00",
+      "mercoledi": "09:00-16:00",
+      "giovedi": "09:00-16:00",
+      "venerdi": "09:00-16:00",
+      "sabato": "09:00-16:00",
+      "domenica": "09:00-16:00",
+      "note": "Orari indicati per il CAU. PPI attivo H24."
+    },
+    "servizi_disponibili": [
+      "CAU",
+      "Pronto Soccorso (Filtro)",
+      "Ospedale di Comunità",
+      "Punto Prelievi (Lun-Sab 07:30-08:30)"
+    ]
+  },
+  {
+    "id": "FC_AMB_CIVITELLA",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Civitella",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Civitella di Romagna",
+    "frazione": "",
+    "indirizzo": "Via XX Settembre, 6",
+    "orari": {
+      "mercoledi": "07:30-08:30",
+      "note": "Frequenza quindicinale (ogni 15 giorni)."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "FC_AMB_GALEATA",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Galeata",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Galeata",
+    "frazione": "",
+    "orari": {
+      "venerdi": "07:30-08:30",
+      "note": "Frequenza quindicinale (ogni 15 giorni)."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "FC_CDC_PREDAPPIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Predappio",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Predappio",
+    "frazione": "",
+    "indirizzo": "Via Trieste, 4",
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:20-09:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:20-09:30",
+      "venerdi": "07:20-09:30",
+      "sabato": "07:20-09:30",
+      "note": "Orario Punto Prelievi."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "FC_AMB_PREMILCUORE",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Premilcuore",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Premilcuore",
+    "frazione": "",
+    "indirizzo": "Via Valbura, 1",
+    "orari": {
+      "mercoledi": "07:30-08:30",
+      "venerdi": "07:30-08:30"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "FC_AMB_CASTROCARO",
+    "tipologia": "Presidio Spoke",
+    "nome": "Poliambulatorio Castrocaro",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Castrocaro Terme",
+    "frazione": "",
+    "indirizzo": "Via Maltoni, 43",
+    "orari": {
+      "martedi": "07:30-09:00",
+      "note": "Punto Prelievi attivo solo Martedì."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Mar)"
+    ]
+  },
+  {
+    "id": "FC_CDC_ROCCA_SAN_CASCIANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Rocca S.C.",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Rocca San Casciano",
+    "frazione": "",
+    "indirizzo": "Via San Francesco, 4",
+    "orari": {
+      "lunedi": "08:00-10:30",
+      "mercoledi": "07:30-12:00"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Lun/Mer)",
+      "Ambulatorio Infermieristico (Lun/Mer/Ven)"
+    ]
+  },
+  {
+    "id": "FC_CDC_MODIGLIANA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Modigliana",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Modigliana",
+    "frazione": "",
+    "indirizzo": "Piazza Oberdan, 6/A",
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "07:30-10:30"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Ospedale di Comunità",
+      "CUP",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "FC_AMB_TREDOZIO",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Tredozio",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Tredozio",
+    "frazione": "",
+    "indirizzo": "Viale Repubblica, 28",
+    "orari": {
+      "martedi": "07:15-08:15",
+      "note": "Aperto solo il Martedì mattina (60 min)."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "FC_CDC_FORLIMPOPOLI",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Forlimpopoli",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlimpopoli",
+    "frazione": "",
+    "indirizzo": "Via Duca d'Aosta, 33",
+    "orari": {
+      "lunedi": "07:10-09:30",
+      "martedi": "07:10-09:30",
+      "mercoledi": "07:10-09:30",
+      "giovedi": "07:10-09:30",
+      "venerdi": "07:10-09:30",
+      "sabato": "07:10-09:30",
+      "note": "Orario Punto Prelievi."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Hospice",
+      "Consultorio",
+      "Medicina dello Sport"
+    ]
+  },
+  {
+    "id": "FC_AMB_BERTINORO",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Bertinoro",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Bertinoro",
+    "frazione": "",
+    "indirizzo": "Via Cavour, 9",
+    "orari": {
+      "lunedi": "07:30-08:30"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Solo Lun)"
+    ]
+  },
+  {
+    "id": "FC_CSM_FORLI",
+    "tipologia": "Salute Mentale",
+    "nome": "Centro di Salute Mentale (CSM) Forlì",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Piazzale Solieri, 4",
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-14:00"
+    },
+    "servizi_disponibili": [
+      "Urgenze Psichiatriche diurne",
+      "Distribuzione Farmaci",
+      "Visite Specialistiche"
+    ]
+  },
+  {
+    "id": "FC_SER_FORLI",
+    "tipologia": "Dipendenze Patologiche",
+    "nome": "SerDP Forlì",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Via Orto del Fuoco, 10",
+    "orari": {
+      "lunedi": "08:30-13:30",
+      "martedi": "08:30-13:30",
+      "mercoledi": "08:30-13:30",
+      "giovedi": "08:30-13:30",
+      "venerdi": "08:30-13:30"
+    },
+    "servizi_disponibili": [
+      "Trattamento Dipendenze",
+      "Accesso Diretto"
+    ]
+  },
+  {
+    "id": "FC_CONS_FORLI_GIOVANI",
+    "tipologia": "Consultorio Giovani",
+    "nome": "Spazio Giovani Forlì",
+    "provincia": "FC",
+    "distretto": "Forlì",
+    "comune": "Forlì",
+    "frazione": "",
+    "indirizzo": "Via G. Saffi, 18",
+    "orari": {
+      "lunedi": "14:00-18:00",
+      "martedi": "14:00-18:00",
+      "mercoledi": "14:00-18:00",
+      "giovedi": "14:00-18:00",
+      "note": "Aperto solo il pomeriggio."
+    },
+    "servizi_disponibili": [
+      "Consultorio per 14-19 anni",
+      "Accesso Libero",
+      "Supporto Psicologico"
+    ]
+  },
+  {
+    "id": "RA_HOSP_LUGO_UMBERTO",
+    "tipologia": "Ospedale / Hub",
+    "nome": "Ospedale Umberto I",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "",
+    "indirizzo": "Viale Dante, 10",
+    "contatti": {
+      "telefono": "0545.214111"
+    },
+    "orari": {
+      "lunedi": "00:00-24:00",
+      "martedi": "00:00-24:00",
+      "mercoledi": "00:00-24:00",
+      "giovedi": "00:00-24:00",
+      "venerdi": "00:00-24:00",
+      "sabato": "00:00-24:00",
+      "domenica": "00:00-24:00",
+      "note": "Pronto Soccorso H24 sempre attivo. Hub Prelievi 09:00-11:30."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Hub Prelievi",
+      "Hospice",
+      "Specialistica Ambulatoriale",
+      "Chirurgia"
+    ]
+  },
+  {
+    "id": "RA_CAU_LUGO",
+    "tipologia": "CAU",
+    "nome": "CAU Lugo",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "",
+    "indirizzo": "Viale Masi, 3/1 (Padiglione C)",
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Situato nel polo ospedaliero. Accesso diretto urgenze minori."
+    },
+    "servizi_disponibili": [
+      "Urgenze minori",
+      "Medicazioni",
+      "Traumatologia lieve"
+    ]
+  },
+  {
+    "id": "RA_CDC_CONSELICE",
+    "tipologia": "Casa della Comunità / CAU",
+    "nome": "Casa della Comunità di Conselice",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Conselice",
+    "frazione": "",
+    "indirizzo": "Via Provinciale Selice, 101",
+    "orari": {
+      "lunedi": "14:00-20:00",
+      "martedi": "08:00-14:00",
+      "mercoledi": "08:00-14:00",
+      "giovedi": "08:00-14:00",
+      "venerdi": "14:00-20:00",
+      "sabato": "08:00-14:00",
+      "domenica": "08:00-14:00",
+      "note": "CAU Spoke con orario alternato. Punto Prelievi Lun-Ven 07:00-08:30."
+    },
+    "servizi_disponibili": [
+      "CAU Spoke",
+      "Punto Prelievi",
+      "Consultorio",
+      "Medicina di Gruppo"
+    ]
+  },
+  {
+    "id": "RA_CDC_ALFONSINE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Alfonsine",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Alfonsine",
+    "frazione": "",
+    "indirizzo": "Via Reale, 49/51",
+    "orari": {
+      "lunedi": "07:00-08:45",
+      "martedi": "07:00-08:45",
+      "mercoledi": "07:00-08:45",
+      "giovedi": "07:00-08:45",
+      "venerdi": "07:00-08:45",
+      "note": "Orario riferito al Punto Prelievi."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio (Via Reale 51)",
+      "Supporto Psicologico Post-Alluvione"
+    ]
+  },
+  {
+    "id": "RA_CDC_BAGNACAVALLO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Bagnacavallo",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Bagnacavallo",
+    "frazione": "",
+    "indirizzo": "Via Vittorio Veneto, 8",
+    "orari": {
+      "lunedi": "07:00-08:30",
+      "martedi": "07:00-08:30",
+      "mercoledi": "07:00-08:30",
+      "giovedi": "07:00-08:30",
+      "venerdi": "07:00-08:30",
+      "note": "Consultorio attivo Mercoledì mattina."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Consultorio (Mer)"
+    ]
+  },
+  {
+    "id": "RA_CDC_COTIGNOLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Cotignola",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Cotignola",
+    "frazione": "",
+    "indirizzo": "Via Cairoli, 2",
+    "orari": {
+      "lunedi": "07:00-08:15",
+      "mercoledi": "07:00-08:15",
+      "venerdi": "07:00-08:15",
+      "note": "Punto Prelievi chiuso il Martedì e Giovedì."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Ambulatorio Infermieristico",
+      "Consultorio (Mer pom)"
+    ]
+  },
+  {
+    "id": "RA_CDC_FUSIGNANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Fusignano",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Fusignano",
+    "frazione": "",
+    "indirizzo": "Via Vincenzo Monti, 13",
+    "orari": {
+      "lunedi": "07:00-08:15",
+      "martedi": "07:00-08:15",
+      "giovedi": "07:00-08:15",
+      "venerdi": "07:00-08:15"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Chiuso Mer)",
+      "Consultorio (Lun/Ven pom)"
+    ]
+  },
+  {
+    "id": "RA_CDC_MASSA_LOMBARDA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Massa Lombarda",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Massa Lombarda",
+    "frazione": "",
+    "indirizzo": "Viale Resistenza, 7",
+    "orari": {
+      "lunedi": "07:00-08:30",
+      "martedi": "07:00-08:30",
+      "mercoledi": "07:00-08:30",
+      "giovedi": "07:00-08:30",
+      "venerdi": "07:00-08:30"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio (Lun/Mer/Ven mattina)"
+    ]
+  },
+  {
+    "id": "RA_CDC_VOLTANA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Voltana",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "Voltana",
+    "indirizzo": "Via Stefano Pelloni, 18",
+    "orari": {
+      "mercoledi": "07:00-08:30",
+      "note": "Punto Prelievi attivo solo il Mercoledì."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Mer)",
+      "Infermiere di Famiglia"
+    ]
+  },
+  {
+    "id": "RA_TEMP_SANT_AGATA",
+    "tipologia": "Presidio Post-Alluvione",
+    "nome": "Sportello Sociale e GM",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Sant'Agata sul Santerno",
+    "frazione": "",
+    "orari": {
+      "notturno": "20:00-08:00",
+      "note": "Guardia Medica Temporanea notturna."
+    },
+    "servizi_disponibili": [
+      "Sportello Sociale Educativo",
+      "Continuità Assistenziale"
+    ]
+  },
+  {
+    "id": "RA_AMB_BAGNARA",
+    "tipologia": "Micro-Nodo",
+    "nome": "Punto Prelievi Bagnara",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Bagnara di Romagna",
+    "frazione": "",
+    "indirizzo": "Piazza IV Novembre, 7",
+    "orari": {
+      "giovedi": "07:00-08:30",
+      "note": "Attivo solo il Giovedì mattina."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi (Solo Gio)"
+    ]
+  },
+  {
+    "id": "RA_CSM_LUGO",
+    "tipologia": "Salute Mentale",
+    "nome": "Centro di Salute Mentale (CSM) Lugo",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "",
+    "indirizzo": "Viale Masi, 18",
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-14:00"
+    },
+    "servizi_disponibili": [
+      "Urgenze Psichiatriche",
+      "Consultazione",
+      "Riabilitazione"
+    ]
+  },
+  {
+    "id": "RA_SER_LUGO",
+    "tipologia": "Dipendenze Patologiche",
+    "nome": "SerDP Lugo",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "",
+    "indirizzo": "Via Bosi, 32",
+    "orari": {
+      "lunedi": "08:00-13:30",
+      "martedi": "08:00-09:00",
+      "note": "Il Martedì anche 14:30-17:30. Altri feriali 08:00-13:30."
+    },
+    "servizi_disponibili": [
+      "Trattamento Dipendenze",
+      "Privacy Protetta"
+    ]
+  },
+  {
+    "id": "RA_CONS_LUGO_GIOVANI",
+    "tipologia": "Consultorio / Giovani",
+    "nome": "Consultorio Familiare e Spazio Giovani Lugo",
+    "provincia": "RA",
+    "distretto": "Lugo",
+    "comune": "Lugo",
+    "frazione": "",
+    "indirizzo": "Viale Masi, 22",
+    "orari": {
+      "martedi": "14:00-18:00",
+      "giovedi": "14:00-18:00",
+      "note": "Spazio Giovani 14-19 anni Mar/Gio pomeriggio."
+    },
+    "servizi_disponibili": [
+      "Consultorio Familiare",
+      "Spazio Giovani"
+    ]
+  }

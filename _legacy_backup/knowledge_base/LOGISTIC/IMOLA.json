@@ -1,0 +1,622 @@
+[
+  {
+    "id": "BO_OSP_IMOLA_HUB",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Generale - Ospedale Santa Maria della Scaletta",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Montericco, 4, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 662111",
+      "web": "https://www.ausl.imola.bo.it/"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "HUB DEA I LIVELLO. Accesso per EMERGENZE (Codici Rossi/Arancioni/Azzurri). Per urgenze minori andare al CAU (Ospedale Vecchio)."
+    },
+    "servizi_disponibili": [
+      "Emergenza-Urgenza",
+      "Rianimazione",
+      "Cardiologia con UTIC",
+      "Traumatologia",
+      "Neurologia"
+    ]
+  },
+  {
+    "id": "BO_OSP_IMOLA_PED",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Pediatrico Imola",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Montericco, 4, 40026 Imola BO (Piano 4)",
+    "contatti": {
+      "telefono": "0542 662111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto pediatrico (0-14 anni) tramite Triage Generale PS."
+    },
+    "servizi_disponibili": [
+      "Visita pediatrica urgente",
+      "Osservazione Breve Pediatrica"
+    ]
+  },
+  {
+    "id": "BO_OSP_IMOLA_OST",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ostetrico-Ginecologico Imola",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Montericco, 4, 40026 Imola BO (Piano 3)",
+    "contatti": {
+      "telefono": "0542 662111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto per gravide e urgenze ginecologiche."
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Visita ginecologica urgente"
+    ]
+  },
+  {
+    "id": "BO_CAU_IMOLA",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Imola (c/o Ospedale Vecchio)",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Caterina Sforza, 3, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 662111",
+      "web": "https://www.ausl.imola.bo.it/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Accesso diretto 7/7 per urgenze a bassa complessità (Codici Bianchi/Verdi). NO Pediatria."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni",
+      "Piccola traumatologia",
+      "Prescrizioni urgenti"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_IMOLA_OSP",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Ospedale Santa Maria della Scaletta",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Montericco, 4, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 662111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "07:30-10:30",
+      "martedi": "07:30-10:30",
+      "mercoledi": "07:30-10:30",
+      "giovedi": "07:30-10:30",
+      "venerdi": "07:30-10:30",
+      "sabato": "07:30-10:30",
+      "domenica": "Chiuso",
+      "note": "Accesso preferenziale su prenotazione CUP."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici",
+      "Consegna campioni"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_IMOLA_OSP_VECCHIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Ospedale Vecchio",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Caterina Sforza, 3, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 604111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "07:30-10:00",
+      "martedi": "07:30-10:00",
+      "mercoledi": "07:30-10:00",
+      "giovedi": "07:30-10:00",
+      "venerdi": "07:30-10:00",
+      "sabato": "07:30-10:00",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_CASTEL_SAN_PIETRO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Castel San Pietro Terme",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Castel San Pietro Terme",
+    "frazione": "",
+    "indirizzo": "Viale Oriani, 1, 40024 Castel San Pietro Terme BO",
+    "contatti": {
+      "telefono": "051 6955111",
+      "web": "https://www.ausl.imola.bo.it/luoghi/case-della-comunita"
+    },
+    "orari": {
+      "lunedi": "07:00-20:00",
+      "martedi": "07:00-20:00",
+      "mercoledi": "07:00-20:00",
+      "giovedi": "07:00-20:00",
+      "venerdi": "07:00-20:00",
+      "sabato": "07:00-20:00",
+      "domenica": "07:00-20:00",
+      "note": "Hub territoriale principale. Ospedale di Comunità (OsCo) attivo."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica Ambulatoriale",
+      "Ospedale di Comunità",
+      "Consultorio Familiare",
+      "Guardia Medica (Sede)"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CSPT",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Castel San Pietro Terme",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Castel San Pietro Terme",
+    "frazione": "",
+    "indirizzo": "Viale Oriani, 1, 40024 Castel San Pietro Terme BO",
+    "contatti": {
+      "telefono": "051 6955111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:45",
+      "martedi": "07:15-09:45",
+      "mercoledi": "07:15-09:45",
+      "giovedi": "07:15-09:45",
+      "venerdi": "07:15-09:45",
+      "sabato": "07:15-09:45",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_MEDICINA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Medicina",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Medicina",
+    "frazione": "",
+    "indirizzo": "Viale Saffi, 1, 40059 Medicina BO",
+    "contatti": {
+      "telefono": "051 6978111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "07:00-20:00",
+      "martedi": "07:00-20:00",
+      "mercoledi": "07:00-20:00",
+      "giovedi": "07:00-20:00",
+      "venerdi": "07:00-20:00",
+      "sabato": "07:00-14:00",
+      "domenica": "Chiuso",
+      "note": "Punto di riferimento per l'area della pianura bolognese orientale."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica Ambulatoriale",
+      "Pediatria di Comunità",
+      "Guardia Medica (Sede)"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_MEDICINA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Medicina",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Medicina",
+    "frazione": "",
+    "indirizzo": "Viale Saffi, 1, 40059 Medicina BO",
+    "contatti": {
+      "telefono": "051 6978111"
+    },
+    "orari": {
+      "lunedi": "07:30-10:00",
+      "martedi": "07:30-10:00",
+      "mercoledi": "07:30-10:00",
+      "giovedi": "07:30-10:00",
+      "venerdi": "07:30-10:00",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": "Anche accesso diretto per urgenze (U) e TAO (7:30-8:00)."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_VALLATA_SANTERNO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Vallata del Santerno",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Borgo Tossignano",
+    "frazione": "",
+    "indirizzo": "Via dell'VIII Centenario, 4, 40021 Borgo Tossignano BO",
+    "contatti": {
+      "telefono": "0542 942111",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "08:00-13:30",
+      "martedi": "08:00-13:30",
+      "mercoledi": "08:00-13:30",
+      "giovedi": "08:00-13:30",
+      "venerdi": "08:00-13:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Hub per la vallata (Casalfiumanese, Fontanelice, Castel del Rio)."
+    },
+    "servizi_disponibili": [
+      "Postazione 118 (H12)",
+      "Specialistica Ambulatoriale",
+      "Pediatria di Comunità",
+      "Guardia Medica (Sede)"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_BORGO_TOSSIGNANO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Borgo Tossignano",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Borgo Tossignano",
+    "frazione": "",
+    "indirizzo": "Via dell'VIII Centenario, 4, 40021 Borgo Tossignano BO",
+    "contatti": {
+      "telefono": "0542 942111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:00",
+      "martedi": "07:30-09:00",
+      "mercoledi": "07:30-09:00",
+      "giovedi": "07:30-09:00",
+      "venerdi": "07:30-09:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CASTEL_GUELFO",
+    "tipologia": "Punto Prelievi Periferico",
+    "nome": "Punto Prelievi Castel Guelfo",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Castel Guelfo di Bologna",
+    "frazione": "",
+    "indirizzo": "Via 2 Giugno, 4/A, 40023 Castel Guelfo BO",
+    "contatti": {
+      "telefono": "0542 604402"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "Chiuso",
+      "mercoledi": "Chiuso",
+      "giovedi": "Chiuso",
+      "venerdi": "07:30-09:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "ATTENZIONE: Aperto SOLO Venerdì."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_MORDANO",
+    "tipologia": "Punto Prelievi Periferico",
+    "nome": "Punto Prelievi Mordano",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Mordano",
+    "frazione": "",
+    "indirizzo": "Via Roma, 22, 40027 Mordano BO",
+    "contatti": {
+      "telefono": "0542 604402"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "Chiuso",
+      "mercoledi": "07:30-08:30",
+      "giovedi": "Chiuso",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "ATTENZIONE: Aperto SOLO Mercoledì."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CONS_IMOLA",
+    "tipologia": "Consultorio",
+    "nome": "Consultorio Familiare Imola",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Viale Amendola, 8, 40026 Imola BO (c/o Casa Comunità)",
+    "contatti": {
+      "telefono": "0542 604190",
+      "web": "https://www.ausl.imola.bo.it/consultorio"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00 (Spazio Giovani 14-16)",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00 (Spazio Giovani 14-16)",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "08:00-12:00",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani ad accesso diretto Lunedì e Mercoledì pomeriggio."
+    },
+    "servizi_disponibili": [
+      "Ostetricia",
+      "Ginecologia",
+      "Spazio Giovani (Contraccezione gratuita)",
+      "Psicologia"
+    ]
+  },
+  {
+    "id": "BO_CONS_CSPT",
+    "tipologia": "Consultorio",
+    "nome": "Consultorio Familiare Castel San Pietro Terme",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Castel San Pietro Terme",
+    "frazione": "",
+    "indirizzo": "Viale Oriani, 1, 40024 Castel San Pietro Terme BO",
+    "contatti": {
+      "telefono": "051 6955367"
+    },
+    "orari": {
+      "lunedi": "Su appuntamento",
+      "martedi": "08:00-11:00",
+      "mercoledi": "09:00-13:00 (Spazio Giovani 14-16)",
+      "giovedi": "Su appuntamento",
+      "venerdi": "Su appuntamento",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani Mercoledì pomeriggio."
+    },
+    "servizi_disponibili": [
+      "Ostetricia",
+      "Ginecologia",
+      "Spazio Giovani"
+    ]
+  },
+  {
+    "id": "BO_CONS_MEDICINA",
+    "tipologia": "Consultorio",
+    "nome": "Consultorio Familiare Medicina",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Medicina",
+    "frazione": "",
+    "indirizzo": "Viale Saffi, 1, 40059 Medicina BO",
+    "contatti": {
+      "telefono": "051 6978846"
+    },
+    "orari": {
+      "lunedi": "08:00-12:00 (Spazio Giovani 14-16)",
+      "martedi": "Su appuntamento",
+      "mercoledi": "Su appuntamento",
+      "giovedi": "14:00-15:30",
+      "venerdi": "Su appuntamento",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani Lunedì pomeriggio."
+    },
+    "servizi_disponibili": [
+      "Ostetricia",
+      "Ginecologia",
+      "Spazio Giovani"
+    ]
+  },
+  {
+    "id": "BO_GM_IMOLA",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Imola (Sede Centrale)",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Via Caterina Sforza, 3, 40026 Imola BO",
+    "contatti": {
+      "telefono": "800 040 050",
+      "web": "https://www.ausl.imola.bo.it/guardiamedica"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Numero unico gratuito. Accesso ambulatoriale diretto possibile Sab/Dom 8-20 (previa chiamata)."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Consulti telefonici",
+      "Certificati malattia"
+    ]
+  },
+  {
+    "id": "BO_GM_MEDICINA",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Medicina",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Medicina",
+    "frazione": "",
+    "indirizzo": "Viale Saffi, 1, 40059 Medicina BO",
+    "contatti": {
+      "telefono": "800 040 050"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento per Medicina e Castel Guelfo."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Ambulatorio festivo"
+    ]
+  },
+  {
+    "id": "BO_GM_VALLATA",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Vallata Santerno",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Borgo Tossignano",
+    "frazione": "",
+    "indirizzo": "Via dell'VIII Centenario, 4, 40021 Borgo Tossignano BO",
+    "contatti": {
+      "telefono": "800 040 050"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento per Borgo Tossignano, Fontanelice, Casalfiumanese, Castel del Rio."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Ambulatorio festivo"
+    ]
+  },
+  {
+    "id": "BO_CSM_IMOLA",
+    "tipologia": "CSM - Centro Salute Mentale",
+    "nome": "CSM Imola",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Viale Amendola, 8, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 604160",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "08:00-18:00",
+      "martedi": "08:00-18:00",
+      "mercoledi": "08:00-18:00",
+      "giovedi": "08:00-18:00",
+      "venerdi": "08:00-18:00",
+      "sabato": "08:00-13:00",
+      "domenica": "Chiuso",
+      "note": "Urgenze psichiatriche gestite in PS (consulenza)."
+    },
+    "servizi_disponibili": [
+      "Visita psichiatrica",
+      "Psicoterapia",
+      "Somministrazione farmaci"
+    ]
+  },
+  {
+    "id": "BO_SERDP_IMOLA",
+    "tipologia": "SerDP",
+    "nome": "SerDP Imola (Dipendenze Patologiche)",
+    "provincia": "BO",
+    "distretto": "Imola",
+    "comune": "Imola",
+    "frazione": "",
+    "indirizzo": "Viale Amendola, 8, 40026 Imola BO",
+    "contatti": {
+      "telefono": "0542 604130",
+      "web": ""
+    },
+    "orari": {
+      "lunedi": "08:00-13:30",
+      "martedi": "08:00-13:30",
+      "mercoledi": "08:00-13:30",
+      "giovedi": "08:00-13:30",
+      "venerdi": "08:00-13:30",
+      "sabato": "08:00-11:00",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto per prima accoglienza."
+    },
+    "servizi_disponibili": [
+      "Trattamento dipendenze",
+      "Terapie farmacologiche",
+      "Supporto psicologico"
+    ]
+  }
+]

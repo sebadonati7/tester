@@ -1,0 +1,959 @@
+[
+  {
+    "id": "FE_HUB_CONA_PS",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Generale - Ospedale Sant'Anna di Cona",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Cona",
+    "indirizzo": "Via Aldo Moro, 8",
+    "contatti": {
+      "telefono": "0532 236111",
+      "web": "https://www.ospfe.it/per-i-pazienti/pronto-soccorso"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "ACCESSO ESCLUSIVO EMERGENZE (Codici Rossi/Arancioni/Azzurri). I codici bianchi devono andare al CAU San Rocco."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Trauma Center Hub",
+      "Stroke Unit (Ictus)",
+      "Emodinamica d'Urgenza",
+      "Neurochirurgia"
+    ]
+  },
+  {
+    "id": "FE_HUB_CONA_OST",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Ostetrico Ginecologico - Ospedale Sant'Anna",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Cona",
+    "indirizzo": "Via Aldo Moro, 8 (Ingresso 2)",
+    "contatti": {
+      "telefono": "0532 236066",
+      "web": "https://www.ospfe.it/reparti/dipartimento-materno-infantile"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Urgenze ostetriche e ginecologiche. Accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Ostetrico",
+      "Sala Parto",
+      "Neonatologia d'Urgenza"
+    ]
+  },
+  {
+    "id": "FE_HUB_CONA_PED",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Pediatrico - Ospedale Sant'Anna",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Cona",
+    "indirizzo": "Via Aldo Moro, 8 (Ingresso 3)",
+    "contatti": {
+      "telefono": "0532 236111",
+      "web": "https://www.ospfe.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Per pazienti da 0 a 14 anni."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Pediatrico",
+      "Osservazione Breve Intensiva"
+    ]
+  },
+  {
+    "id": "FE_CAU_SANROCCO",
+    "tipologia": "CAU",
+    "nome": "CAU Ferrara - Cittadella San Rocco",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Centro Storico",
+    "indirizzo": "Corso Giovecca, 203 (Settore 19)",
+    "contatti": {
+      "telefono": "0532 238111",
+      "web": "https://www.ausl.fe.it/cau"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Punto di riferimento cittadino per urgenze a bassa complessità (Codici Bianchi/Verdi)."
+    },
+    "servizi_disponibili": [
+      "Visite mediche urgenza minore",
+      "Medicazioni",
+      "Gestione coliche",
+      "Piccola traumatologia",
+      "Prescrizioni urgenti"
+    ]
+  },
+  {
+    "id": "FE_CDC_SANROCCO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Cittadella San Rocco (Hub)",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Centro Storico",
+    "indirizzo": "Corso Giovecca, 203",
+    "contatti": {
+      "telefono": "0532 235111",
+      "web": "https://www.ausl.fe.it/cittadella-san-rocco"
+    },
+    "orari": {
+      "lunedi": "07:00-19:00",
+      "martedi": "07:00-19:00",
+      "mercoledi": "07:00-19:00",
+      "giovedi": "07:00-19:00",
+      "venerdi": "07:00-19:00",
+      "sabato": "07:00-13:00",
+      "domenica": "Chiuso",
+      "note": "Polo sanitario polifunzionale urbano"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi Centrale",
+      "CUP",
+      "Centro Salute Donna (Consultorio)",
+      "Odontoiatria",
+      "Diabetologia",
+      "Cardiologia Ambulatoriale"
+    ]
+  },
+  {
+    "id": "FE_CDC_PONTELAGOSCURO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Pontelagoscuro",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Pontelagoscuro",
+    "indirizzo": "Piazza Buozzi, 14",
+    "contatti": {
+      "telefono": "0532 461711",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-13:30",
+      "martedi": "07:30-13:30",
+      "mercoledi": "07:30-13:30",
+      "giovedi": "07:30-13:30",
+      "venerdi": "07:30-13:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio territoriale zona nord Ferrara"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Infermiere di Famiglia",
+      "Medicina di Gruppo"
+    ]
+  },
+  {
+    "id": "FE_CDC_SANBARTOLOMEO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Bartolomeo in Bosco",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "San Bartolomeo in Bosco",
+    "indirizzo": "Via dei Gerani, 2",
+    "contatti": {
+      "telefono": "0532 725111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio territoriale zona sud Ferrara"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Ambulatorio Infermieristico",
+      "Assistenza Domiciliare Integrata"
+    ]
+  },
+  {
+    "id": "FE_CAU_COPPARO",
+    "tipologia": "CAU",
+    "nome": "CAU Copparo (Casa della Comunità Terre e Fiumi)",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Copparo",
+    "frazione": "",
+    "indirizzo": "Via Roma, 18",
+    "contatti": {
+      "telefono": "0532 879111",
+      "web": "https://www.ausl.fe.it/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Ex Ospedale San Giuseppe. Serve l'Unione Terre e Fiumi."
+    },
+    "servizi_disponibili": [
+      "Assistenza Urgenza Minore (CAU)",
+      "Punto Prelievi",
+      "Radiologia (diurna)",
+      "Dialisi",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FE_OSCO_COPPARO",
+    "tipologia": "Ospedale di Comunità",
+    "nome": "Ospedale di Comunità Copparo",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Copparo",
+    "frazione": "",
+    "indirizzo": "Via Roma, 18",
+    "contatti": {
+      "telefono": "0532 879111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Struttura di degenza territoriale per cure intermedie."
+    },
+    "servizi_disponibili": [
+      "Degenza post-acuta",
+      "Assistenza infermieristica H24",
+      "Riabilitazione estensiva"
+    ]
+  },
+  {
+    "id": "FE_CDC_BERRA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Riva del Po (Berra)",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Riva del Po",
+    "frazione": "Berra",
+    "indirizzo": "Via Bellaria, 4",
+    "contatti": {
+      "telefono": "0532 831111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Nodo periferico basso ferrarese"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Ambulatorio Infermieristico",
+      "Pediatria di Comunità"
+    ]
+  },
+  {
+    "id": "FE_CDC_TRESIGALLO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Tresignana (Tresigallo)",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Tresignana",
+    "frazione": "Tresigallo",
+    "indirizzo": "Viale Roma, 9",
+    "contatti": {
+      "telefono": "0533 607111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Medicina Generale",
+      "Assistenza Domiciliare"
+    ]
+  },
+  {
+    "id": "FE_PP_RO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Ro Ferrarese",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Riva del Po",
+    "frazione": "Ro",
+    "indirizzo": "Via L. D'Oro, 8",
+    "contatti": {
+      "telefono": "0532 868111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:30",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Punto periferico ad accesso limitato"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consegna Referti"
+    ]
+  },
+  {
+    "id": "FE_OSP_DELTA",
+    "tipologia": "Ospedale Spoke",
+    "nome": "Ospedale del Delta (Lagosanto)",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Lagosanto",
+    "frazione": "Valle Oppio",
+    "indirizzo": "Via Valle Oppio, 2",
+    "contatti": {
+      "telefono": "0533 723111",
+      "web": "https://www.ausl.fe.it/ospedale-del-delta"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Hub Distrettuale per il Delta del Po"
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Cardiologia",
+      "Ortopedia e Traumatologia",
+      "Chirurgia Generale",
+      "Medicina Interna",
+      "Pediatria (Ambulatoriale/Consulenza)"
+    ]
+  },
+  {
+    "id": "FE_CAU_COMACCHIO",
+    "tipologia": "CAU",
+    "nome": "CAU Comacchio (Casa della Comunità San Camillo)",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Comacchio",
+    "frazione": "",
+    "indirizzo": "Via Felletti, 2",
+    "contatti": {
+      "telefono": "0533 310111",
+      "web": "https://www.ausl.fe.it/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Riferimento sanitario principale per la zona costiera"
+    },
+    "servizi_disponibili": [
+      "Assistenza Urgenza Minore (CAU)",
+      "Punto Prelievi",
+      "Radiologia",
+      "Dialisi Turistica",
+      "Hospice San Camillo",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FE_CDC_CODIGORO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Codigoro (Ex Ospedale)",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Codigoro",
+    "frazione": "",
+    "indirizzo": "Viale Riviera Cavallotti, 347",
+    "contatti": {
+      "telefono": "0533 729111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-13:00",
+      "domenica": "Chiuso",
+      "note": "Sede storica del distretto"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio Familiare",
+      "Poliambulatorio Specialistico",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FE_OSCO_CODIGORO",
+    "tipologia": "Ospedale di Comunità",
+    "nome": "Ospedale di Comunità Codigoro",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Codigoro",
+    "frazione": "",
+    "indirizzo": "Viale Riviera Cavallotti, 347",
+    "contatti": {
+      "telefono": "0533 729111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Degenza territoriale gestita da MMG e Infermieri"
+    },
+    "servizi_disponibili": [
+      "Degenza territoriale",
+      "Assistenza Infermieristica"
+    ]
+  },
+  {
+    "id": "FE_CDC_PORTOMAGGIORE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Portomaggiore - Ostellato",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Portomaggiore",
+    "frazione": "",
+    "indirizzo": "Via De Amicis, 22",
+    "contatti": {
+      "telefono": "0532 817111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-13:00",
+      "domenica": "Chiuso",
+      "note": "Hub territoriale per Portomaggiore e Ostellato"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Neuropsichiatria Infantile",
+      "Centro Salute Mentale (CSM)",
+      "Consultorio Familiare",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FE_CDC_OSTELLATO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Ostellato",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Ostellato",
+    "frazione": "",
+    "indirizzo": "Piazza Bassani, 1",
+    "contatti": {
+      "telefono": "0533 681111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Spoke di prossimità"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Ambulatorio Infermieristico"
+    ]
+  },
+  {
+    "id": "FE_CDC_MESOLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Mesola",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Mesola",
+    "frazione": "",
+    "indirizzo": "Via Pomposa, 26",
+    "contatti": {
+      "telefono": "0533 793411",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-14:00",
+      "martedi": "08:00-14:00",
+      "mercoledi": "08:00-14:00",
+      "giovedi": "08:00-14:00",
+      "venerdi": "08:00-14:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio per l'area nord del Delta"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Ambulatorio Infermieristico",
+      "Assistenza Domiciliare"
+    ]
+  },
+  {
+    "id": "FE_CDC_GORO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Goro",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Goro",
+    "frazione": "",
+    "indirizzo": "Via Giacomo Matteotti, 44",
+    "contatti": {
+      "telefono": "0533 793111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio sanitario più a est della provincia"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Medicina di Gruppo",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "FE_OSP_ARGENTA",
+    "tipologia": "Ospedale Spoke",
+    "nome": "Ospedale Mazzolani Vandini",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Argenta",
+    "frazione": "",
+    "indirizzo": "Via Nazionale Ponente, 5",
+    "contatti": {
+      "telefono": "0532 317111",
+      "web": "https://www.ausl.fe.it/ospedale-di-argenta"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Pronto Soccorso Spoke"
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina Interna",
+      "Chirurgia (Day Surgery)",
+      "Lungodegenza",
+      "Radiologia"
+    ]
+  },
+  {
+    "id": "FE_GM_TURISTICA_LIDI",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Lidi di Comacchio",
+    "provincia": "FE",
+    "distretto": "Distretto Sud-Est",
+    "comune": "Comacchio",
+    "frazione": "Lido degli Estensi / Nazioni",
+    "indirizzo": "Viale dei Lecci, 9 (Estensi) / Viale Spagna (Nazioni)",
+    "contatti": {
+      "telefono": "800 572 725",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "ATTIVO SOLO GIUGNO-SETTEMBRE. Orari e sedi possono variare, chiamare numero verde."
+    },
+    "servizi_disponibili": [
+      "Visite mediche per non residenti",
+      "Prescrizioni urgenti",
+      "Piccole medicazioni"
+    ]
+  },
+  {
+    "id": "FE_OSP_CENTO",
+    "tipologia": "Ospedale Spoke",
+    "nome": "Ospedale Santissima Annunziata",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Cento",
+    "frazione": "",
+    "indirizzo": "Via Vicini, 2",
+    "contatti": {
+      "telefono": "051 6838111",
+      "web": "https://www.ausl.fe.it/ospedale-di-cento"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Pronto Soccorso Spoke - Riferimento Alto Ferrarese"
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Cardiologia",
+      "Ortopedia",
+      "Ostetricia e Ginecologia",
+      "Chirurgia Generale",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "FE_PS_OST_CENTO",
+    "tipologia": "Pronto Soccorso Ostetrico",
+    "nome": "Punto Nascita Ospedale Cento",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Cento",
+    "frazione": "",
+    "indirizzo": "Via Vicini, 2 (Reparto Maternità)",
+    "contatti": {
+      "telefono": "051 6838420",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto ostetricia"
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Assistenza Neonatale",
+      "Urgenze Ginecologiche"
+    ]
+  },
+  {
+    "id": "FE_CDC_BONDENO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Bondeno (Ex Ospedale Borselli)",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Bondeno",
+    "frazione": "",
+    "indirizzo": "Via Dux, 1",
+    "contatti": {
+      "telefono": "0532 884111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-13:00",
+      "domenica": "Chiuso",
+      "note": "Polo sanitario di confine regionale"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Hospice Territoriale",
+      "Poliambulatorio Specialistico",
+      "Guardia Medica (Sede)"
+    ]
+  },
+  {
+    "id": "FE_CDC_POGGIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Terre del Reno (Poggio Renatico)",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Poggio Renatico",
+    "frazione": "",
+    "indirizzo": "Via Salvo D'Acquisto, 1",
+    "contatti": {
+      "telefono": "0532 824111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Servizio per Poggio Renatico e Terre del Reno"
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Pediatria di Comunità",
+      "Ambulatorio Infermieristico"
+    ]
+  },
+  {
+    "id": "FE_CDC_VIGARANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Vigarano Mainarda",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Vigarano Mainarda",
+    "frazione": "",
+    "indirizzo": "Via Argine Reno, 88",
+    "contatti": {
+      "telefono": "0532 436111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Consultorio Familiare"
+    ]
+  },
+  {
+    "id": "FE_CDC_SANTAGOSTINO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Sant'Agostino (Terre del Reno)",
+    "provincia": "FE",
+    "distretto": "Distretto Ovest",
+    "comune": "Terre del Reno",
+    "frazione": "Sant'Agostino",
+    "indirizzo": "Viale Europa, 14",
+    "contatti": {
+      "telefono": "0532 84111",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "07:30-12:30",
+      "martedi": "07:30-12:30",
+      "mercoledi": "07:30-12:30",
+      "giovedi": "07:30-12:30",
+      "venerdi": "07:30-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Medicina Generale",
+      "CUP"
+    ]
+  },
+  {
+    "id": "FE_HOSPICE_ADO",
+    "tipologia": "Hospice",
+    "nome": "Hospice ADO Ferrara - Casa della Solidarietà",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "",
+    "indirizzo": "Via Veneziani, 54",
+    "contatti": {
+      "telefono": "0532 977672",
+      "web": "https://www.adohtf.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Struttura per cure palliative residenziali"
+    },
+    "servizi_disponibili": [
+      "Cure Palliative",
+      "Assistenza Psicologica",
+      "Ricovero H24"
+    ]
+  },
+  {
+    "id": "FE_GM_CENTRALE",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Ferrara (Provinciale)",
+    "provincia": "FE",
+    "distretto": "Tutti",
+    "comune": "Ferrara (Sede Operativa)",
+    "frazione": "",
+    "indirizzo": "Accesso Centralizzato Telefonico",
+    "contatti": {
+      "telefono": "800 572 725",
+      "web": "https://www.ausl.fe.it/guardia-medica"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Numero Verde unico gratuito 800 572 725. Visite ambulatoriali o domiciliari su valutazione medica."
+    },
+    "servizi_disponibili": [
+      "Visite mediche non differibili",
+      "Certificati di malattia (turni festivi)",
+      "Consulto telefonico"
+    ]
+  },
+  {
+    "id": "FE_CSM_FERRARA",
+    "tipologia": "CSM",
+    "nome": "Centro Salute Mentale Ferrara",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "Centro",
+    "indirizzo": "Via della Ghiara, 38",
+    "contatti": {
+      "telefono": "0532 235425",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-14:00",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Visite Psichiatriche",
+      "Colloqui Psicologici",
+      "Somministrazione Farmaci"
+    ]
+  },
+  {
+    "id": "FE_SERDP_FERRARA",
+    "tipologia": "SerDP",
+    "nome": "Servizio Dipendenze Patologiche Ferrara",
+    "provincia": "FE",
+    "distretto": "Distretto Centro-Nord",
+    "comune": "Ferrara",
+    "frazione": "",
+    "indirizzo": "Via Quartieri, 29",
+    "contatti": {
+      "telefono": "0532 235074",
+      "web": "https://www.ausl.fe.it"
+    },
+    "orari": {
+      "lunedi": "08:00-13:30",
+      "martedi": "08:00-13:30",
+      "mercoledi": "08:00-13:30",
+      "giovedi": "08:00-13:30",
+      "venerdi": "08:00-13:30",
+      "sabato": "08:00-12:00",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Trattamento Dipendenze",
+      "Supporto Psicologico",
+      "Terapie Farmacologiche"
+    ]
+  }
+]

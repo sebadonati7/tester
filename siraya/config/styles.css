@@ -1,0 +1,340 @@
+/* 
+ * SIRAYA Health Navigator - Styles
+ * V1.0: Il "Guardaroba" - All CSS in one place
+ * 
+ * Color Palette:
+ * - Primary Blue: #4A90E2
+ * - Medical Blue: #1565C0
+ * - Background Light: #F8FAFC
+ * - Sidebar Dark: #1E293B
+ */
+
+/* ============================================================================
+ * IMPORTS
+ * ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ============================================================================
+ * GLOBAL STYLES
+ * ============================================================================ */
+* {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.main {
+    background-color: #F8FAFC;
+}
+
+/* Hide Streamlit defaults */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+.st-emotion-cache-15zrgzn { display: none; }
+
+/* ============================================================================
+ * SIDEBAR STYLES
+ * ============================================================================ */
+[data-testid="stSidebar"] {
+    background-color: #F0F4F8;
+    background-image: linear-gradient(180deg, #E3F2FD 0%, #FFFFFF 100%);
+    border-right: 1px solid #D1D5DB;
+}
+
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebar"] p {
+    color: #1F2937 !important;
+}
+
+/* Sidebar Logo */
+.sidebar-logo {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.sidebar-logo h1 {
+    font-size: 2em;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: #4A90E2;
+    margin: 0;
+}
+
+.sidebar-logo p {
+    font-size: 0.85em;
+    color: #6B7280;
+    margin-top: 5px;
+}
+
+/* ============================================================================
+ * BUTTON STYLES
+ * ============================================================================ */
+.stButton > button {
+    width: 100%;
+    border-radius: 8px;
+    height: 3em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid #E5E7EB;
+    color: #000000 !important;
+    background-color: #FFFFFF;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    border-color: #4A90E2;
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Primary Button */
+.stButton > button[kind="primary"] {
+    background-color: #4A90E2;
+    color: #FFFFFF !important;
+    border: none;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #3A7BC8;
+}
+
+/* ============================================================================
+ * CHAT INTERFACE
+ * ============================================================================ */
+.stChatMessage {
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+/* User message bubble */
+[data-testid="stChatMessage"][data-testid*="user"] {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+/* Assistant message bubble */
+[data-testid="stChatMessage"][data-testid*="assistant"] {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+}
+
+/* Chat input */
+.stChatInput textarea {
+    border-radius: 12px;
+    border: 2px solid #E5E7EB;
+    transition: border-color 0.3s ease;
+}
+
+.stChatInput textarea:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* ============================================================================
+ * URGENCY BADGES
+ * ============================================================================ */
+.urgency-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: white;
+}
+
+.urgency-1 { background-color: #00C853; } /* Verde */
+.urgency-2 { background-color: #64DD17; } /* Verde chiaro */
+.urgency-3 { background-color: #FFEB3B; color: #000; } /* Giallo */
+.urgency-4 { background-color: #FF9800; } /* Arancione */
+.urgency-5 { background-color: #F44336; } /* Rosso */
+
+/* ============================================================================
+ * EMERGENCY BANNER
+ * ============================================================================ */
+.emergency-banner {
+    background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+    border-left: 4px solid #DC2626;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+}
+
+.emergency-banner h4 {
+    color: #991B1B;
+    margin: 0 0 10px 0;
+}
+
+.emergency-banner p {
+    color: #7F1D1D;
+    margin: 0;
+}
+
+/* ============================================================================
+ * PROGRESS BAR
+ * ============================================================================ */
+.triage-progress {
+    background-color: #E5E7EB;
+    border-radius: 10px;
+    height: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.triage-progress-fill {
+    background: linear-gradient(90deg, #4A90E2 0%, #1565C0 100%);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* ============================================================================
+ * CARDS & CONTAINERS
+ * ============================================================================ */
+.info-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.facility-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.facility-card .facility-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1F2937;
+    margin-bottom: 10px;
+}
+
+.facility-card .facility-type {
+    display: inline-block;
+    background-color: #E3F2FD;
+    color: #1565C0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    margin-bottom: 10px;
+}
+
+/* ============================================================================
+ * METRICS
+ * ============================================================================ */
+.metric-card {
+    background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.metric-card .metric-icon {
+    font-size: 2em;
+    margin-bottom: 5px;
+}
+
+.metric-card .metric-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.metric-card .metric-value {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* ============================================================================
+ * SBAR REPORT
+ * ============================================================================ */
+.sbar-report {
+    background: #FFFFFF;
+    border: 2px solid #4A90E2;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.sbar-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.sbar-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.sbar-section h4 {
+    color: #4A90E2;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.sbar-section p {
+    color: #1F2937;
+    margin: 0;
+}
+
+/* ============================================================================
+ * ANIMATIONS
+ * ============================================================================ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* ============================================================================
+ * RESPONSIVE DESIGN
+ * ============================================================================ */
+@media (max-width: 768px) {
+    .stButton > button {
+        height: 2.5em;
+        font-size: 0.9em;
+    }
+    
+    .metric-card {
+        padding: 15px;
+    }
+    
+    .metric-card .metric-value {
+        font-size: 1.5em;
+    }
+}
+
+/* ============================================================================
+ * DARK MODE SUPPORT (if enabled)
+ * ============================================================================ */
+@media (prefers-color-scheme: dark) {
+    /* Dark mode overrides can be added here if needed */
+}
+

@@ -1,0 +1,1045 @@
+[
+  {
+    "id": "RA_HUB_OSP_PS",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Generale - Ospedale S. Maria delle Croci",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "",
+    "indirizzo": "Viale Vincenzo Randi, 5, 48121 Ravenna RA (Ingresso PS)",
+    "contatti": {
+      "telefono": "118",
+      "web": "https://www.auslromagna.it/ospedali/ravenna"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "HUB DEA II LIVELLO. Accesso ESCLUSIVO per emergenze (Codici Rossi/Arancioni/Azzurri). Per codici bianchi recarsi al CAU CMP."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Trauma Center",
+      "Cardiologia Emodinamica H24",
+      "Stroke Unit (Ictus)",
+      "Rianimazione",
+      "Chirurgia d'Urgenza"
+    ]
+  },
+  {
+    "id": "RA_HUB_OSP_PED",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Pediatrico - Ospedale S. Maria delle Croci",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Viale Vincenzo Randi, 5, 48121 Ravenna RA (Piano 5 o percorso dedicato)",
+    "contatti": {
+      "telefono": "0544 285111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto per urgenze pediatriche (0-14 anni)."
+    },
+    "servizi_disponibili": [
+      "Visita pediatrica urgente",
+      "Osservazione Breve Intensiva Pediatrica"
+    ]
+  },
+  {
+    "id": "RA_HUB_OSP_OST",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ostetrico-Ginecologico Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Viale Vincenzo Randi, 5, 48121 Ravenna RA (Blocco Parto)",
+    "contatti": {
+      "telefono": "0544 285257"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto per gravide (>24 sett) e urgenze ginecologiche."
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Visita ginecologica urgente"
+    ]
+  },
+  {
+    "id": "RA_HUB_OSP_OCU",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Oculistico Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Viale Vincenzo Randi, 5, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 285111"
+    },
+    "orari": {
+      "lunedi": "08:00-19:00",
+      "martedi": "08:00-19:00",
+      "mercoledi": "08:00-19:00",
+      "giovedi": "08:00-19:00",
+      "venerdi": "08:00-19:00",
+      "sabato": "08:00-13:00",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto diurno. Notte e festivi rivolgersi al PS Generale."
+    },
+    "servizi_disponibili": [
+      "Visita oculistica urgente"
+    ]
+  },
+  {
+    "id": "RA_CAU_CMP",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Ravenna (c/o CMP)",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "",
+    "indirizzo": "Via Fiume Montone Abbandonato, 134, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286661",
+      "web": "https://www.auslromagna.it/luoghi/cau"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Accesso diretto per Codici Bianchi e Verdi. Hub per la bassa complessità."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Piccola traumatologia",
+      "Medicazioni",
+      "Prescrizioni urgenti"
+    ]
+  },
+  {
+    "id": "RA_CMP_PRELIEVI",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi CMP Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Fiume Montone Abbandonato, 134, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286611",
+      "web": "https://www.auslromagna.it/servizi/laboratorio-analisi"
+    },
+    "orari": {
+      "lunedi": "07:00-12:30",
+      "martedi": "07:00-12:30",
+      "mercoledi": "07:00-12:30",
+      "giovedi": "07:00-12:30",
+      "venerdi": "07:00-12:30",
+      "sabato": "07:00-12:30",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione. Urgenze (U) ad accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici",
+      "Consegna campioni",
+      "Curve glicemiche"
+    ]
+  },
+  {
+    "id": "RA_CMP_NPI",
+    "tipologia": "Specialistica Ambulatoriale",
+    "nome": "Neuropsichiatria Infantile (NPI) Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Fiume Montone Abbandonato, 134, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286762"
+    },
+    "orari": {
+      "lunedi": "08:30-17:00",
+      "martedi": "08:30-17:00",
+      "mercoledi": "08:30-17:00",
+      "giovedi": "08:30-17:00",
+      "venerdi": "08:30-13:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Su appuntamento."
+    },
+    "servizi_disponibili": [
+      "Visite neuropsichiatriche",
+      "Psicologia età evolutiva"
+    ]
+  },
+  {
+    "id": "RA_CMP_VACCINI",
+    "tipologia": "Igiene Pubblica",
+    "nome": "Ambulatorio Vaccinale CMP Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Fiume Montone Abbandonato, 134, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286666"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "08:30-12:00",
+      "domenica": "Chiuso",
+      "note": "Solo su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Vaccinazioni adulti",
+      "Vaccinazioni viaggiatori"
+    ]
+  },
+  {
+    "id": "RA_CDC_RUSSI",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità di Russi",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Russi",
+    "indirizzo": "Piazza Farini, 39, 48026 Russi RA",
+    "contatti": {
+      "telefono": "0544 586411",
+      "web": "https://www.auslromagna.it/luoghi/case-della-salute"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Hub territoriale per l'area Ovest del distretto."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Punto Prelievi",
+      "Specialistica Ambulatoriale",
+      "Infermiere di Famiglia",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_RUSSI",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Russi",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Russi",
+    "indirizzo": "Piazza Farini, 39, Russi RA",
+    "contatti": {
+      "telefono": "0544 586411"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CAU_CERVIA",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Cervia (Ospedale San Giorgio)",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Cervia",
+    "indirizzo": "Via Ospedale, 17, 48015 Cervia RA",
+    "contatti": {
+      "telefono": "0544 917611",
+      "web": "https://www.auslromagna.it/ospedali/cervia"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto H24. Funge anche da Punto di Primo Intervento."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni",
+      "Radiologia (diurna)",
+      "Dialisi Turistica"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_CERVIA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Cervia",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Cervia",
+    "indirizzo": "Via Ospedale, 17, Cervia RA",
+    "contatti": {
+      "telefono": "0544 917611"
+    },
+    "orari": {
+      "lunedi": "07:30-10:00",
+      "martedi": "07:30-10:00",
+      "mercoledi": "07:30-10:00",
+      "giovedi": "07:30-10:00",
+      "venerdi": "07:30-10:00",
+      "sabato": "07:30-10:00",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_MEZZANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Mezzano",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Mezzano",
+    "indirizzo": "Piazza della Repubblica, 10, 48123 Mezzano RA",
+    "contatti": {
+      "telefono": "0544 521011"
+    },
+    "orari": {
+      "lunedi": "08:00-18:00",
+      "martedi": "08:00-18:00",
+      "mercoledi": "08:00-18:00",
+      "giovedi": "08:00-18:00",
+      "venerdi": "08:00-18:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio area Nord del forese."
+    },
+    "servizi_disponibili": [
+      "Medicina di Gruppo",
+      "Infermiere di Comunità",
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_MEZZANO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Mezzano",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Mezzano",
+    "indirizzo": "Piazza della Repubblica, 10, Mezzano RA",
+    "contatti": {
+      "telefono": "0544 521011"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:00",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:00",
+      "venerdi": "Chiuso",
+      "sabato": "07:30-09:00",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar, Gio, Sab."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_SPIETRO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Pietro in Vincoli",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "San Pietro in Vincoli",
+    "indirizzo": "Via Pistocchi, 41, 48125 San Pietro in Vincoli RA",
+    "contatti": {
+      "telefono": "0544 557511"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio area Sud (Ville Unite)."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Pediatria",
+      "Ambulatorio Vaccinale"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_SPIETRO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi San Pietro in Vincoli",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "San Pietro in Vincoli",
+    "indirizzo": "Via Pistocchi, 41, San Pietro in Vincoli RA",
+    "contatti": {
+      "telefono": "0544 557511"
+    },
+    "orari": {
+      "lunedi": "07:30-09:00",
+      "martedi": "Chiuso",
+      "mercoledi": "07:30-09:00",
+      "giovedi": "Chiuso",
+      "venerdi": "07:30-09:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Lun, Mer, Ven."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_SANTALBERTO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Sant'Alberto",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Sant'Alberto",
+    "indirizzo": "Via Nigrisoli, 25, 48123 Sant'Alberto RA",
+    "contatti": {
+      "telefono": "0544 529111"
+    },
+    "orari": {
+      "lunedi": "08:00-12:30",
+      "martedi": "08:00-12:30",
+      "mercoledi": "08:00-12:30",
+      "giovedi": "08:00-12:30",
+      "venerdi": "08:00-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Medicina di Base"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_SANTALBERTO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Sant'Alberto",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Sant'Alberto",
+    "indirizzo": "Via Nigrisoli, 25, Sant'Alberto RA",
+    "contatti": {
+      "telefono": "0544 529111"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:00",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:00",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar e Gio."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_PIANGIPANE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Piangipane",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Piangipane",
+    "indirizzo": "Piazza XXII Giugno 1944, 48124 Piangipane RA",
+    "contatti": {
+      "telefono": "0544 418811"
+    },
+    "orari": {
+      "lunedi": "08:00-12:00",
+      "martedi": "08:00-12:00",
+      "mercoledi": "08:00-12:00",
+      "giovedi": "08:00-12:00",
+      "venerdi": "08:00-12:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Medicina Generale",
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_PIANGIPANE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Piangipane",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Piangipane",
+    "indirizzo": "Piazza XXII Giugno 1944, Piangipane RA",
+    "contatti": {
+      "telefono": "0544 418811"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:00",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:00",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar e Gio."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_CASTIGLIONE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Castiglione di Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Castiglione di Ravenna",
+    "indirizzo": "Via Vittorio Veneto, 21, 48125 Castiglione di Ravenna RA",
+    "contatti": {
+      "telefono": "0544 950116"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio zona sud forese."
+    },
+    "servizi_disponibili": [
+      "Medicina Generale",
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_CASTIGLIONE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Castiglione di Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Castiglione di Ravenna",
+    "indirizzo": "Via Vittorio Veneto, 21, Castiglione di Ravenna RA",
+    "contatti": {
+      "telefono": "0544 950116"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:00",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:00",
+      "venerdi": "Chiuso",
+      "sabato": "07:30-09:00",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar, Gio, Sab."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_MARINA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità del Mare - Marina di Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Marina di Ravenna",
+    "indirizzo": "Largo Walter Magnavacchi, 4, 48122 Marina di Ravenna RA",
+    "contatti": {
+      "telefono": "0544 530347"
+    },
+    "orari": {
+      "lunedi": "08:00-18:00",
+      "martedi": "08:00-18:00",
+      "mercoledi": "08:00-18:00",
+      "giovedi": "08:00-18:00",
+      "venerdi": "08:00-18:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio Lidi Nord."
+    },
+    "servizi_disponibili": [
+      "Medicina di Gruppo",
+      "Punto Prelievi",
+      "Guardia Medica Turistica"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_MARINA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Marina di Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Marina di Ravenna",
+    "indirizzo": "Largo Walter Magnavacchi, 4, Marina di Ravenna RA",
+    "contatti": {
+      "telefono": "0544 530347"
+    },
+    "orari": {
+      "lunedi": "07:30-09:00",
+      "martedi": "Chiuso",
+      "mercoledi": "07:30-09:00",
+      "giovedi": "Chiuso",
+      "venerdi": "07:30-09:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Lun, Mer, Ven."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CDC_LIDOADRIANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità del Mare - Lido Adriano",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Lido Adriano",
+    "indirizzo": "Viale Leonardo da Vinci, 51, 48122 Lido Adriano RA",
+    "contatti": {
+      "telefono": "0544 286611"
+    },
+    "orari": {
+      "lunedi": "08:00-14:00",
+      "martedi": "08:00-14:00",
+      "mercoledi": "08:00-14:00",
+      "giovedi": "08:00-14:00",
+      "venerdi": "08:00-14:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio Lidi Sud."
+    },
+    "servizi_disponibili": [
+      "Ambulatorio Infermieristico",
+      "Punto Prelievi",
+      "Guardia Medica Turistica"
+    ]
+  },
+  {
+    "id": "RA_PRELIEVI_LIDOADRIANO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Lido Adriano",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Lido Adriano",
+    "indirizzo": "Viale Leonardo da Vinci, 51, Lido Adriano RA",
+    "contatti": {
+      "telefono": "0544 286611"
+    },
+    "orari": {
+      "lunedi": "Chiuso",
+      "martedi": "07:30-09:30",
+      "mercoledi": "Chiuso",
+      "giovedi": "07:30-09:30",
+      "venerdi": "Chiuso",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Aperto Mar e Gio."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "RA_CONS_RAVENNA",
+    "tipologia": "Consultorio",
+    "nome": "Consultorio Familiare Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Berlinguer, 11, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286930"
+    },
+    "orari": {
+      "lunedi": "08:30-13:00",
+      "martedi": "08:30-13:00",
+      "mercoledi": "08:30-13:00",
+      "giovedi": "08:30-13:00",
+      "venerdi": "08:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Spazio Giovani: Lun, Mer, Ven 14:00-17:00."
+    },
+    "servizi_disponibili": [
+      "Ostetricia",
+      "Ginecologia",
+      "Spazio Giovani",
+      "Contraccezione"
+    ]
+  },
+  {
+    "id": "RA_GM_RAVENNA",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Ravenna (Sede Centrale)",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Fiume Montone Abbandonato, 134, Ravenna RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Numero unico gratuito provinciale."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Consulti telefonici",
+      "Certificati"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_MARINA",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Marina di Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Marina di Ravenna",
+    "indirizzo": "Piazzale Marinai d'Italia, 18, Marina di Ravenna RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_LIDOADRIANO",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Lido Adriano",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Lido Adriano",
+    "indirizzo": "Viale Petrarca, 385, Lido Adriano RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_LIDOCLASSE",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Lido di Classe",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Lido di Classe",
+    "indirizzo": "Viale Fratelli Vivaldi, 21, Lido di Classe RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_LIDOSAVIO",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Lido di Savio",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Lido di Savio",
+    "indirizzo": "Via Bagnacavallo, 18, Lido di Savio RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_PUNTAMARINA",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Punta Marina",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Punta Marina",
+    "indirizzo": "Via della Fontana, 4, Punta Marina RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_CASALBORSETTI",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Casalborsetti",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Casalborsetti",
+    "indirizzo": "Via delle Viole, 1, Casalborsetti RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_MARINAROMEA",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Marina Romea",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "frazione": "Marina Romea",
+    "indirizzo": "Via Ferrara, 2/A, Marina Romea RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_GM_TUR_PINARELLA",
+    "tipologia": "Guardia Medica Turistica",
+    "nome": "Guardia Medica Turistica Pinarella di Cervia",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Cervia",
+    "frazione": "Pinarella",
+    "indirizzo": "Via Tritone, 13, Pinarella RA",
+    "contatti": {
+      "telefono": "800 244 244"
+    },
+    "orari": {
+      "lunedi": "09:00-19:00",
+      "martedi": "09:00-19:00",
+      "mercoledi": "09:00-19:00",
+      "giovedi": "09:00-19:00",
+      "venerdi": "09:00-19:00",
+      "sabato": "09:00-19:00",
+      "domenica": "09:00-19:00",
+      "note": "SERVIZIO STAGIONALE (Giugno-Settembre)."
+    },
+    "servizi_disponibili": [
+      "Assistenza turisti"
+    ]
+  },
+  {
+    "id": "RA_SERDP_RAVENNA",
+    "tipologia": "SerDP",
+    "nome": "SerDP Ravenna (Dipendenze Patologiche)",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Missiroli, 10, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 286311"
+    },
+    "orari": {
+      "lunedi": "08:30-13:00",
+      "martedi": "08:30-13:00",
+      "mercoledi": "08:30-13:00",
+      "giovedi": "08:30-13:00",
+      "venerdi": "08:30-13:00",
+      "sabato": "08:30-11:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Trattamento dipendenze",
+      "Counselling"
+    ]
+  },
+  {
+    "id": "RA_CSM_RAVENNA",
+    "tipologia": "CSM - Centro Salute Mentale",
+    "nome": "CSM Ravenna",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Piazza della Magnolie, 5, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 287050"
+    },
+    "orari": {
+      "lunedi": "08:30-16:30",
+      "martedi": "08:30-16:30",
+      "mercoledi": "08:30-16:30",
+      "giovedi": "08:30-16:30",
+      "venerdi": "08:30-16:30",
+      "sabato": "08:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Accesso diretto per urgenze."
+    },
+    "servizi_disponibili": [
+      "Visite psichiatriche",
+      "Supporto psicologico"
+    ]
+  },
+  {
+    "id": "RA_HOSPICE_VILLA_ADALGISA",
+    "tipologia": "Hospice",
+    "nome": "Hospice Villa Adalgisa",
+    "provincia": "RA",
+    "distretto": "Distretto di Ravenna",
+    "comune": "Ravenna",
+    "indirizzo": "Via Fiume Montone Abbandonato, 73, 48121 Ravenna RA",
+    "contatti": {
+      "telefono": "0544 458311"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Struttura residenziale cure palliative."
+    },
+    "servizi_disponibili": [
+      "Cure Palliative"
+    ]
+  }
+]
