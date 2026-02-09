@@ -16,9 +16,25 @@ Usage:
     streamlit run app.py
 """
 
-import streamlit as st
-from pathlib import Path
+# ============================================================================
+# CRITICAL FIX: sys.path adjustment BEFORE any imports
+# ============================================================================
 import sys
+from pathlib import Path
+
+# Get absolute paths
+_current_file = Path(__file__).resolve()
+_siraya_dir = _current_file.parent  # siraya/
+_project_root = _siraya_dir.parent  # parent of siraya/
+
+# Add project root to sys.path (first priority)
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+# ============================================================================
+# STREAMLIT IMPORTS
+# ============================================================================
+import streamlit as st
 
 # ============================================================================
 # PAGE CONFIGURATION (MUST BE FIRST STREAMLIT CALL)
@@ -32,31 +48,17 @@ st.set_page_config(
 )
 
 # ============================================================================
-# PATH SETUP (Ensure siraya package is importable)
-# ============================================================================
-
-# Add parent directory to path for imports
-_current_dir = Path(__file__).parent
-_project_root = _current_dir.parent
-
-if str(_project_root) not in sys.path:
-    sys.path.insert(0, str(_project_root))
-
-if str(_current_dir) not in sys.path:
-    sys.path.insert(0, str(_current_dir))
-
-# ============================================================================
-# IMPORTS (After page config and path setup)
+# ABSOLUTE IMPORTS (After page config and path setup)
 # ============================================================================
 
 try:
-    from config.settings import Settings, UI_THEME
-    from core.state_manager import init_session_state, get_state, StateKeys
-    from core.navigation import get_navigation, PageName
-    from core.authentication import get_auth_manager
+    from siraya.config.settings import Settings, UI_THEME
+    from siraya.core.state_manager import init_session_state, get_state, StateKeys
+    from siraya.core.navigation import get_navigation, PageName
+    from siraya.core.authentication import get_auth_manager
     
     # Import views
-    from views import chat_view, sidebar_view, dashboard_view, map_view, report_view
+    from siraya.views import chat_view, sidebar_view, dashboard_view, map_view, report_view
     
     IMPORTS_OK = True
 except ImportError as e:
@@ -70,7 +72,7 @@ except ImportError as e:
 
 def load_css() -> None:
     """Load CSS from external file or inline fallback."""
-    css_path = _current_dir / "config" / "styles.css"
+    css_path = _siraya_dir / "config" / "styles.css"
     
     if css_path.exists():
         try:
@@ -242,7 +244,7 @@ def route_to_page(page_name: str) -> None:
         
         if st.button("🏠 Torna al Chatbot"):
             try:
-                from core.navigation import switch_to
+                from siraya.core.navigation import switch_to
                 switch_to(PageName.CHAT)
             except:
                 # Hard reset
@@ -293,18 +295,18 @@ def render_import_error_page() -> None:
     st.markdown("### 📋 Status Moduli")
     
     modules_to_check = [
-        ("config.settings", "Configurazione"),
-        ("core.state_manager", "State Manager"),
-        ("core.navigation", "Navigazione"),
-        ("core.authentication", "Autenticazione"),
-        ("services.llm_service", "LLM Service"),
-        ("services.data_loader", "Data Loader"),
-        ("services.analytics_service", "Analytics Service"),
-        ("controllers.triage_controller", "Triage Controller"),
-        ("views.chat_view", "Chat View"),
-        ("views.dashboard_view", "Dashboard View"),
-        ("views.map_view", "Map View"),
-        ("views.sidebar_view", "Sidebar View"),
+        ("siraya.config.settings", "Configurazione"),
+        ("siraya.core.state_manager", "State Manager"),
+        ("siraya.core.navigation", "Navigazione"),
+        ("siraya.core.authentication", "Autenticazione"),
+        ("siraya.services.llm_service", "LLM Service"),
+        ("siraya.services.data_loader", "Data Loader"),
+        ("siraya.services.analytics_service", "Analytics Service"),
+        ("siraya.controllers.triage_controller", "Triage Controller"),
+        ("siraya.views.chat_view", "Chat View"),
+        ("siraya.views.dashboard_view", "Dashboard View"),
+        ("siraya.views.map_view", "Map View"),
+        ("siraya.views.sidebar_view", "Sidebar View"),
     ]
     
     for module_path, module_name in modules_to_check:
