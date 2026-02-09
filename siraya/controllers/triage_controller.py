@@ -151,10 +151,9 @@ class TriageController:
             ai_response = self.llm.get_ai_response(user_message, context)
             
             # Parse JSON response (if LLM returns structured output)
-            import json
             try:
-                # Try to extract JSON from response
-                json_match = re.search(r'```json\s*(\{.*?\})\s*```', ai_response, re.DOTALL)
+                # Try to extract JSON from markdown code block
+                json_match = re.search(r'```json\s*(\{[^`]*\})\s*```', ai_response, re.DOTALL)
                 if json_match:
                     clinical_decision = json.loads(json_match.group(1))
                 else:

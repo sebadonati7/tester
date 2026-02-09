@@ -167,8 +167,14 @@ class RAGService:
         
         # Persist to disk
         if self.vectorstore:
-            self.vectorstore.persist()
-            logger.info(f"💾 ChromaDB persisted to {self.persist_dir}")
+            # Note: persist() is deprecated in ChromaDB 0.4.x but still supported
+            # The vector store auto-persists on updates in newer versions
+            try:
+                self.vectorstore.persist()
+                logger.info(f"💾 ChromaDB persisted to {self.persist_dir}")
+            except AttributeError:
+                # Newer ChromaDB versions auto-persist
+                logger.info(f"💾 ChromaDB auto-persisted to {self.persist_dir}")
         
         return results
     

@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import streamlit as st
 
-from ..config.settings import APIConfig, EMERGENCY_RULES, ClinicalMappings
+from ..config.settings import APIConfig, EMERGENCY_RULES, ClinicalMappings, RAGConfig
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +213,7 @@ class LLMService:
             rag = get_rag_service()
             
             # Retrieve clinical context from RAG
-            protocol_docs = rag.retrieve_context(user_symptoms, k=5)
+            protocol_docs = rag.retrieve_context(user_symptoms, k=RAGConfig.TOP_K_CHUNKS)
             protocol_context = rag.format_context_for_llm(protocol_docs)
         except Exception as e:
             logger.warning(f"RAG retrieval failed: {e}. Using generic prompt.")
