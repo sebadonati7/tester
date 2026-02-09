@@ -372,3 +372,19 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     
     return R * c
+class UI_THEME:
+    """Configurazione tema dell'interfaccia utente - Medical Blue Palette"""
+    
+    # Colori primari e secondari
+    PRIMARY = "#0E4E8E"      # Blu Istituzionale
+    SECONDARY = "#4DA6FF"    # Azzurro Chiaro
+    
+    # Colori base
+    BACKGROUND = "#FFFFFF"   # Bianco
+    TEXT = "#262730"         # Grigio Scuro per leggibilità
+    
+    # Colori di stato
+    SUCCESS = "#28a745"      # Verde conferma
+    WARNING = "#ffc107"      # Giallo alert
+    ERROR = "#dc3545"        # Rosso errore
+    INFO = "#17a2b8"         # Ciano info
