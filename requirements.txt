@@ -11,9 +11,12 @@ pydantic>=2.0.0
 requests>=2.31.0
 supabase>=2.3.0
 
-# RAG Stack (add at end of file)
-langchain==0.1.20
-langchain-community==0.0.38
+# RAG Stack - Updated to fix security vulnerabilities
+# CVE: langchain-community < 0.3.27 vulnerable to XXE and pickle deserialization
+langchain>=0.3.18
+langchain-community>=0.3.27
+langchain-core>=0.3.33
+langchain-text-splitters>=0.3.3
 chromadb==0.4.24
 pypdf==4.0.1
 sentence-transformers==2.5.1
