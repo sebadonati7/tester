@@ -10,6 +10,7 @@ This controller:
 - Handles emergency detection
 """
 
+import re
 import time
 import json
 import logging
@@ -112,95 +113,155 @@ class TriageController:
         session_id: str
     ) -> Tuple[str, Dict[str, Any]]:
         """
-        Main entry point: Process user message through triage pipeline.
+        HYBRID TRIAGE PIPELINE
         
-        Steps:
-        1. Start timing
-        2. Check for emergency keywords
-        3. Call LLM service
-        4. Extract and store data
-        5. Update phase
-        6. Log to Supabase
-        
+        Step 1: RAG + LLM → Determine clinical decision
+                - Codice colore (urgency)
+                - Specializzazione needed
+                
+        Step 2: JSON Query → Find nearest facility
+                - Use data_loader to query master_kb.json
+                - Filter by specialization + location
+                
+        Step 3: Log to Supabase
+                - Save complete triage result
+                
         Args:
-            user_message: User's input text
-            session_id: Current session identifier
+            user_message: User's symptom description
+            session_id: Current session ID
             
         Returns:
-            Tuple of (response_text, metadata_dict)
+            (response_text, metadata_dict)
         """
         start_time = time.time()
         
-        # Step 1: Emergency check (CRITICAL - before AI call)
-        emergency_response, emergency_meta = self._check_emergency(user_message)
-        if emergency_response:
-            duration_ms = int((time.time() - start_time) * 1000)
+        # Get current context
+        context = self.state.get(StateKeys.COLLECTED_DATA, {})
+        
+        # Add any existing state data to context
+        context["patient_age"] = self.state.get(StateKeys.PATIENT_AGE, "N/D")
+        context["patient_sex"] = self.state.get(StateKeys.PATIENT_SEX, "N/D")
+        context["patient_location"] = self.state.get(StateKeys.PATIENT_LOCATION, "Bologna")
+        
+        # STEP 1: Clinical Brain (RAG + LLM)
+        logger.info("🧠 STEP 1: RAG + LLM Analysis")
+        
+        try:
+            # LLM with RAG context determines clinical decision
+            ai_response = self.llm.get_ai_response(user_message, context)
             
-            # Log emergency to Supabase
+            # Parse JSON response (if LLM returns structured output)
+            try:
+                # Try to extract JSON from markdown code block
+                json_match = re.search(r'```json\s*(\{[^`]*\})\s*```', ai_response, re.DOTALL)
+                if json_match:
+                    clinical_decision = json.loads(json_match.group(1))
+                else:
+                    # Try to parse entire response as JSON
+                    clinical_decision = json.loads(ai_response)
+                
+                codice_colore = clinical_decision.get("codice_colore", "VERDE")
+                specializzazione = clinical_decision.get("specializzazione", "Generale")
+                urgenza = clinical_decision.get("urgenza", 3)
+                ragionamento = clinical_decision.get("ragionamento", "")
+                red_flags = clinical_decision.get("red_flags", [])
+            except (json.JSONDecodeError, AttributeError):
+                # Fallback if LLM doesn't return JSON
+                codice_colore = "VERDE"
+                specializzazione = "Generale"
+                urgenza = 3
+                ragionamento = ai_response
+                red_flags = []
+            
+            logger.info(f"✅ Clinical decision: {codice_colore} - {specializzazione}")
+            
+            # Update state with clinical decision
+            self.state.set(StateKeys.URGENCY_LEVEL, urgenza)
+            self.state.set(StateKeys.SPECIALIZATION, specializzazione)
+            if red_flags:
+                self.state.set(StateKeys.RED_FLAGS, red_flags)
+            
+        except Exception as e:
+            logger.error(f"❌ STEP 1 failed: {e}")
+            return (
+                f"⚠️ Errore nell'analisi clinica: {str(e)}",
+                {"error": str(e)}
+            )
+        
+        # STEP 2: Logistic Brain (JSON Query)
+        logger.info("🗺️ STEP 2: JSON Facility Search")
+        
+        facility_name = "N/D"
+        facility_address = "N/D"
+        facility_distance = 0
+        location_text = ""
+        
+        try:
+            from ..services.data_loader import get_data_loader
+            
+            data_loader = get_data_loader()
+            user_location = context.get("patient_location", "Bologna")
+            
+            # Query facilities by specialization using smart search
+            facilities = data_loader.find_facilities_smart(
+                query_service=specializzazione,
+                query_comune=user_location,
+                limit=3
+            )
+            
+            if facilities:
+                top_facility = facilities[0]
+                facility_name = top_facility.get("nome", "N/D")
+                facility_address = top_facility.get("indirizzo", "N/D")
+                facility_comune = top_facility.get("comune", "N/D")
+                
+                location_text = (
+                    f"\n\n📍 STRUTTURA CONSIGLIATA:\n"
+                    f"{facility_name}\n"
+                    f"{facility_address}, {facility_comune}"
+                )
+            else:
+                location_text = "\n\n⚠️ Nessuna struttura trovata nelle vicinanze."
+            
+            logger.info(f"✅ Found {len(facilities)} facilities")
+            
+        except Exception as e:
+            logger.error(f"❌ STEP 2 failed: {e}")
+            location_text = "\n\n⚠️ Errore nella ricerca strutture."
+        
+        # Build final response
+        final_response = f"{ragionamento}{location_text}"
+        
+        # STEP 3: Log to Supabase
+        logger.info("💾 STEP 3: Supabase Logging")
+        
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        metadata = {
+            "session_id": session_id,
+            "codice_colore": codice_colore,
+            "specializzazione": specializzazione,
+            "urgenza": urgenza,
+            "struttura_consigliata": facility_name,
+            "processing_time_ms": duration_ms,
+            "phase": self.state.get(StateKeys.CURRENT_PHASE, "Unknown"),
+            "triage_path": self.state.get(StateKeys.TRIAGE_PATH, "C"),
+        }
+        
+        try:
             _log_to_supabase(
                 session_id=session_id,
                 user_input=user_message,
-                bot_response=emergency_response,
-                metadata=emergency_meta,
+                bot_response=final_response,
+                metadata=metadata,
                 duration_ms=duration_ms
             )
-            
-            return emergency_response, emergency_meta
-        
-        # Step 2: Call LLM
-        try:
-            collected_data = self.state.get(StateKeys.COLLECTED_DATA, {})
-            current_phase = self.state.get(StateKeys.CURRENT_PHASE, "INTENT_DETECTION")
-            triage_path = self.state.get(StateKeys.TRIAGE_PATH, "C")
-            
-            response, response_meta = self.llm.process_message(
-                user_message=user_message,
-                session_id=session_id,
-                collected_data=collected_data,
-                current_phase=current_phase,
-                triage_path=triage_path
-            )
-            
+            logger.info("✅ Logged to Supabase")
         except Exception as e:
-            logger.error(f"LLM error: {e}")
-            response = self.llm.get_fallback_response(
-                self.state.get(StateKeys.CURRENT_PHASE, "INIT")
-            )
-            response_meta = {"fallback_used": True, "error": str(e)}
+            logger.error(f"❌ Supabase logging failed: {e}")
+            print(f"⚠️ WARNING: Could not log to Supabase: {e}")
         
-        # Step 3: Extract data from response
-        self._extract_data_from_response(user_message, response_meta)
-        
-        # Step 4: Update phase based on collected data
-        self._update_phase()
-        
-        # Step 5: Calculate duration and build final metadata
-        duration_ms = int((time.time() - start_time) * 1000)
-        
-        final_metadata = {
-            "phase": self.state.get(StateKeys.CURRENT_PHASE, "Unknown"),
-            "triage_path": self.state.get(StateKeys.TRIAGE_PATH, "C"),
-            "urgency": self.state.get(StateKeys.URGENCY_LEVEL, 3),
-            "specialization": self.state.get(StateKeys.SPECIALIZATION, "Generale"),
-            "location": self.state.get(StateKeys.PATIENT_LOCATION, "N/D"),
-            "chief_complaint": self.state.get(StateKeys.CHIEF_COMPLAINT, ""),
-            "pain_scale": self.state.get(StateKeys.PAIN_SCALE, None),
-            "red_flags": self.state.get(StateKeys.RED_FLAGS, []),
-            "question_count": self.state.get(StateKeys.QUESTION_COUNT, 0),
-            "processing_time_ms": duration_ms,
-            **response_meta  # Merge LLM metadata
-        }
-        
-        # Step 6: Log to Supabase
-        _log_to_supabase(
-            session_id=session_id,
-            user_input=user_message,
-            bot_response=response,
-            metadata=final_metadata,
-            duration_ms=duration_ms
-        )
-        
-        return response, final_metadata
+        return (final_response, metadata)
     
     def _check_emergency(
         self,

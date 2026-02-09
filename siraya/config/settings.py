@@ -125,6 +125,41 @@ class UITheme:
 
 
 # ============================================================================
+# RAG CONFIGURATION
+# ============================================================================
+
+class RAGConfig:
+    """
+    RAG (Retrieval-Augmented Generation) configuration.
+    
+    Controls how clinical protocols are indexed and retrieved.
+    """
+    # Vector store settings
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    CHROMA_PERSIST_DIR: Path = DATA_DIR / "chroma_db"
+    
+    # Chunking settings
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 200
+    
+    # Retrieval settings
+    TOP_K_CHUNKS: int = 5
+    MAX_CONTEXT_LENGTH: int = 4000
+    
+    # Protocol files mapping
+    PROTOCOLS_DIR: Path = DATA_DIR / "protocols"
+    
+    PROTOCOL_PRIORITIES = {
+        "Manuale-Triage-Lazio.pdf": 1,          # Primary source
+        "Sistema-Dispatch-Toscana.pdf": 2,      # Emergency dispatch
+        "Linee-Guida-Piemonte.pdf": 3,          # Regional guidelines
+        "WAST_ViolenzaDomestica.pdf": 10,       # Special cases
+        "ASQ_AbuseSostanze.pdf": 10,            # Special cases
+        "18A0052000100030110001.pdf": 99,       # Legal/normative
+    }
+
+
+# ============================================================================
 # TRIAGE CONFIGURATION
 # ============================================================================
 
