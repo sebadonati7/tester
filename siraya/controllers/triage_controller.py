@@ -203,11 +203,10 @@ class TriageController:
             data_loader = get_data_loader()
             user_location = context.get("patient_location", "Bologna")
             
-            # Query facilities by specialization
-            facilities = data_loader.find_facilities_by_specialization(
-                specialization=specializzazione,
-                location=user_location,
-                max_distance_km=50,
+            # Query facilities by specialization using smart search
+            facilities = data_loader.find_facilities_smart(
+                query_service=specializzazione,
+                query_comune=user_location,
                 limit=3
             )
             
@@ -215,13 +214,12 @@ class TriageController:
                 top_facility = facilities[0]
                 facility_name = top_facility.get("nome", "N/D")
                 facility_address = top_facility.get("indirizzo", "N/D")
-                facility_distance = top_facility.get("distance_km", 0)
+                facility_comune = top_facility.get("comune", "N/D")
                 
                 location_text = (
                     f"\n\n📍 STRUTTURA CONSIGLIATA:\n"
                     f"{facility_name}\n"
-                    f"{facility_address}\n"
-                    f"Distanza: {facility_distance:.1f} km"
+                    f"{facility_address}, {facility_comune}"
                 )
             else:
                 location_text = "\n\n⚠️ Nessuna struttura trovata nelle vicinanze."
