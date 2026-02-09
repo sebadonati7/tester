@@ -143,12 +143,21 @@ class TriageController:
         context["patient_sex"] = self.state.get(StateKeys.PATIENT_SEX, "N/D")
         context["patient_location"] = self.state.get(StateKeys.PATIENT_LOCATION, "Bologna")
         
-        # STEP 1: Clinical Brain (RAG + LLM)
+               # STEP 1: Clinical Brain (RAG + LLM)
         logger.info("🧠 STEP 1: RAG + LLM Analysis")
         
         try:
             # LLM with RAG context determines clinical decision
             ai_response = self.llm.get_ai_response(user_message, context)
+            
+            # --- CRASH PROTECTION: Handle None response ---
+            if ai_response is None or not ai_response.strip():
+                logger.warning("⚠️ AI returned None/empty response. Using fallback.")
+                return (
+                    "Mi scuso, il sistema sta ancora inizializzando la conoscenza clinica. "
+                    "Per favore, riprova tra qualche secondo oppure contatta direttamente il numero di emergenza **118** se urgente.",
+                    {"error": "AI response was None", "fallback": True}
+                )
             
             # Parse JSON response (if LLM returns structured output)
             try:
@@ -165,12 +174,13 @@ class TriageController:
                 urgenza = clinical_decision.get("urgenza", 3)
                 ragionamento = clinical_decision.get("ragionamento", "")
                 red_flags = clinical_decision.get("red_flags", [])
-            except (json.JSONDecodeError, AttributeError):
+            except (json.JSONDecodeError, AttributeError, TypeError) as json_error:
                 # Fallback if LLM doesn't return JSON
+                logger.info(f"JSON parse failed ({json_error}), using text response")
                 codice_colore = "VERDE"
                 specializzazione = "Generale"
                 urgenza = 3
-                ragionamento = ai_response
+                ragionamento = ai_response  # Use raw text response
                 red_flags = []
             
             logger.info(f"✅ Clinical decision: {codice_colore} - {specializzazione}")
