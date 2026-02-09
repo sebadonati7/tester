@@ -1,6 +1,6 @@
 """
 SIRAYA Health Navigator - RAG Service
-V1.0: Clinical Brain - Protocol Retrieval
+V2.0: Clinical Brain with AUTO-INGESTION for Cloud deployment
 
 CRITICAL: This service is the ONLY source of clinical decision-making.
 Do NOT hallucinate protocols. Use ONLY the indexed PDF content.
@@ -26,8 +26,12 @@ class RAGService:
     """
     Retrieval-Augmented Generation for clinical protocols.
     
+    V2.0 Features:
+    - AUTO-INGESTION: If DB is empty, automatically indexes PDFs on startup
+    - No manual script needed for Streamlit Cloud deployment
+    
     Workflow:
-    1. Ingest PDFs → ChromaDB vector store
+    1. Ingest PDFs → ChromaDB vector store (automatic if empty)
     2. User symptom query → Semantic search
     3. Return top-K relevant protocol chunks
     4. Format context for LLM system prompt
@@ -51,7 +55,12 @@ class RAGService:
         self._init_vectorstore()
     
     def _init_vectorstore(self) -> None:
-        """Initialize or load ChromaDB."""
+        """
+        Initialize or load ChromaDB with AUTO-INGESTION.
+        
+        NEW: If ChromaDB is empty, automatically ingest all PDFs from protocols directory.
+        This eliminates the need for manual scripts on Streamlit Cloud.
+        """
         try:
             if self.persist_dir.exists():
                 logger.info(f"📚 Loading ChromaDB from {self.persist_dir}")
@@ -63,23 +72,72 @@ class RAGService:
                 # Verify content
                 count = self.vectorstore._collection.count()
                 if count == 0:
-                    logger.warning("⚠️ ChromaDB is empty. Run ingest_protocols.py")
+                    logger.warning("⚠️ ChromaDB is empty. Starting AUTO-INGESTION...")
+                    self._auto_ingest_protocols()
                 else:
                     logger.info(f"✅ ChromaDB loaded: {count} chunks indexed")
             else:
                 logger.warning(f"⚠️ ChromaDB not found at {self.persist_dir}")
-                logger.warning("⚠️ Creating empty store. Run ingest_protocols.py to populate.")
+                logger.warning("⚠️ Creating empty store and starting AUTO-INGESTION...")
                 self.persist_dir.mkdir(parents=True, exist_ok=True)
                 self.vectorstore = Chroma(
                     persist_directory=str(self.persist_dir),
                     embedding_function=self.embeddings
                 )
+                
+                # AUTO-INGESTION: Index PDFs automatically
+                self._auto_ingest_protocols()
+                
         except Exception as e:
             logger.error(f"❌ ChromaDB initialization error: {e}")
             self.vectorstore = None
     
+    def _auto_ingest_protocols(self) -> None:
+        """
+        AUTO-INGESTION: Automatically index all protocols if DB is empty.
+        
+        This method runs at startup if ChromaDB is empty or missing.
+        Essential for Streamlit Cloud where manual scripts can't run.
+        """
+        protocols_dir = RAGConfig.PROTOCOLS_DIR
+        
+        if not protocols_dir.exists():
+            logger.error(f"❌ Protocols directory not found: {protocols_dir}")
+            logger.error("⚠️ RAG will work in degraded mode without clinical knowledge.")
+            return
+        
+        pdf_files = sorted(
+            protocols_dir.glob("*.pdf"),
+            key=lambda p: RAGConfig.PROTOCOL_PRIORITIES.get(p.name, 99)
+        )
+        
+        if not pdf_files:
+            logger.error(f"❌ No PDF files found in {protocols_dir}")
+            return
+        
+        logger.info(f"🚀 AUTO-INGESTION: Found {len(pdf_files)} PDF files")
+        logger.info("⏳ This may take 30-60 seconds on first startup...")
+        
+        total_chunks = 0
+        for i, pdf_path in enumerate(pdf_files, 1):
+            logger.info(f"📄 [{i}/{len(pdf_files)}] Processing: {pdf_path.name}")
+            chunk_count = self.ingest_pdf(pdf_path)
+            total_chunks += chunk_count
+        
+        # Persist to disk
+        if self.vectorstore:
+            try:
+                self.vectorstore.persist()
+                logger.info(f"💾 ChromaDB persisted to {self.persist_dir}")
+            except AttributeError:
+                # Newer ChromaDB versions auto-persist
+                logger.info(f"💾 ChromaDB auto-persisted to {self.persist_dir}")
+        
+        logger.info(f"✅ AUTO-INGESTION COMPLETE: {total_chunks} chunks indexed")
+        logger.info("🎉 RAG Service ready with full clinical knowledge!")
+    
     # ========================================================================
-    # INGESTION (Used by scripts/ingest_protocols.py)
+    # INGESTION (Used by scripts/ingest_protocols.py AND auto-ingestion)
     # ========================================================================
     
     def ingest_pdf(
@@ -167,8 +225,6 @@ class RAGService:
         
         # Persist to disk
         if self.vectorstore:
-            # Note: persist() is deprecated in ChromaDB 0.4.x but still supported
-            # The vector store auto-persists on updates in newer versions
             try:
                 self.vectorstore.persist()
                 logger.info(f"💾 ChromaDB persisted to {self.persist_dir}")
