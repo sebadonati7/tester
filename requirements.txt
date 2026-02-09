@@ -11,3 +11,10 @@ pydantic>=2.0.0
 requests>=2.31.0
 supabase>=2.3.0
 
+# RAG Stack (add at end of file)
+langchain==0.1.20
+langchain-community==0.0.38
+chromadb==0.4.24
+pypdf==4.0.1
+sentence-transformers==2.5.1
+faiss-cpu==1.8.0

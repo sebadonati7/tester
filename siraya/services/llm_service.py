@@ -186,6 +186,83 @@ class LLMService:
             except Exception as e:
                 logger.error(f"Gemini init error: {e}")
     
+    def _build_system_prompt_with_rag(
+        self,
+        user_symptoms: str,
+        context: Dict[str, Any]
+    ) -> str:
+        """
+        Build system prompt with RAG-retrieved clinical protocols.
+        
+        HYBRID APPROACH:
+        1. Retrieve relevant protocol chunks from PDFs
+        2. Inject into system prompt
+        3. LLM uses protocols to decide urgency + specialization
+        4. Controller uses decision to query JSON for hospitals
+        
+        Args:
+            user_symptoms: User-reported symptoms
+            context: Current triage context (location, age, etc.)
+            
+        Returns:
+            System prompt with embedded protocol context
+        """
+        # Import RAG service
+        try:
+            from .rag_service import get_rag_service
+            rag = get_rag_service()
+            
+            # Retrieve clinical context from RAG
+            protocol_docs = rag.retrieve_context(user_symptoms, k=5)
+            protocol_context = rag.format_context_for_llm(protocol_docs)
+        except Exception as e:
+            logger.warning(f"RAG retrieval failed: {e}. Using generic prompt.")
+            protocol_context = "⚠️ Protocolli clinici non disponibili. Procedi con cautela usando linee guida generali."
+        
+        # Extract patient info
+        age = context.get("patient_age", "N/D")
+        sex = context.get("patient_sex", "N/D")
+        location = context.get("patient_location", "N/D")
+        
+        # Build hybrid prompt
+        system_prompt = f"""Sei SIRAYA, un assistente medico di triage certificato per l'Emilia-Romagna.
+
+{protocol_context}
+
+=== CONTESTO PAZIENTE ===
+Età: {age}
+Sesso: {sex}
+Località: {location}
+
+=== TUO COMPITO ===
+1. Analizza i sintomi del paziente usando ESCLUSIVAMENTE i protocolli sopra
+2. Determina il CODICE COLORE (Rosso/Giallo/Verde/Bianco)
+3. Identifica la SPECIALIZZAZIONE necessaria (es. Cardiologia, Traumatologia, Oculistica)
+4. Spiega brevemente il razionale clinico
+
+REGOLE FERREE:
+- NON fare diagnosi ("Hai l'infarto" ❌). Usa solo "Sospetto di..." o "Quadro compatibile con..."
+- NON prescrivere farmaci
+- NON indicare ospedali (lo farà il sistema automaticamente)
+- Cita SEMPRE la fonte del protocollo usato (es. "[Manuale Lazio, pag. 42]")
+
+=== OUTPUT RICHIESTO ===
+Rispondi in questo formato JSON:
+```json
+{{
+  "codice_colore": "ROSSO|GIALLO|VERDE|BIANCO",
+  "specializzazione": "Nome specializzazione",
+  "urgenza": 1-5,
+  "ragionamento": "Breve spiegazione clinica con citazione protocollo",
+  "red_flags": ["Lista eventuali sintomi allarmanti rilevati"]
+}}
+```
+
+Sintomi paziente: {user_symptoms}
+"""
+        
+        return system_prompt
+    
     def _load_prompts(self) -> Dict[str, str]:
         """Load triage prompt templates."""
         return {
@@ -572,6 +649,61 @@ FORMATO RISPOSTA JSON:
     "metadata": {{ "urgenza": 3, "area": "Generale", "confidence": 0.8 }}
 }}
 """
+    
+    def get_ai_response(
+        self,
+        user_input: str,
+        context: Dict[str, Any]
+    ) -> str:
+        """
+        Get AI response with RAG-augmented system prompt.
+        
+        Args:
+            user_input: User message
+            context: Triage context
+            
+        Returns:
+            AI response text
+        """
+        try:
+            # Build RAG-enhanced system prompt
+            system_prompt = self._build_system_prompt_with_rag(user_input, context)
+            
+            # Build messages array
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ]
+            
+            # Call AI API
+            response_text = ""
+            
+            # Try Groq first
+            if self._groq_client:
+                try:
+                    response_text = self._call_groq_sync(messages)
+                except Exception as e:
+                    logger.error(f"Groq API error: {e}")
+            
+            # Fallback to Gemini
+            if not response_text and self._gemini_model:
+                try:
+                    response_text = self._call_gemini_sync(messages)
+                except Exception as e:
+                    logger.error(f"Gemini API error: {e}")
+            
+            # Final fallback
+            if not response_text:
+                return "⚠️ ERRORE: Servizio AI temporaneamente non disponibile. Riprova tra qualche istante."
+            
+            # Sanitize response (remove diagnoses)
+            sanitized = DiagnosisSanitizer.sanitize(response_text)
+            
+            return sanitized
+            
+        except Exception as e:
+            logger.error(f"❌ LLM error: {e}")
+            return f"⚠️ Errore nella generazione della risposta: {str(e)}"
     
     def _build_context_section(self, collected_data: Dict) -> str:
         """Build context section from collected data."""
