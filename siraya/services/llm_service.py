@@ -177,7 +177,7 @@ class LLMService:
         
         if gemini_key:
             try:
-                import google.generativeai as genai
+                import google.genai as genai
                 genai.configure(api_key=gemini_key)
                 self._gemini_model = genai.GenerativeModel(APIConfig.GEMINI_MODEL)
                 logger.info("Gemini model initialized")
