@@ -107,221 +107,222 @@ class TriageController:
         self.llm = get_llm_service()
         self.nav = get_navigation()
     
-   def handle_user_input(
-    self,
-    user_message: str,
-    session_id: str
-) -> Tuple[str, Dict[str, Any]]:
-    """
-    HYBRID TRIAGE PIPELINE con Smart Routing + RAG Intelligente
-    
-    Step 1: Smart Router → Determina percorso (A/B/C/INFO)
-    Step 2: RAG (solo se necessario) → Recupera protocolli
-    Step 3: Groq LLM → Genera risposta
-    Step 4: Log Supabase
-    
-    Args:
-        user_message: User's symptom description
-        session_id: Current session ID
+    def handle_user_input(
+        self,
+        user_message: str,
+        session_id: str
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        HYBRID TRIAGE PIPELINE con Smart Routing + RAG Intelligente
         
-    Returns:
-        (response_text, metadata_dict)
-    """
-    start_time = time.time()
-    
-    # === STEP 1: SMART ROUTING ===
-    logger.info("🧭 STEP 1: Smart Routing")
-    from ..controllers.smart_router import SmartRouter
-    
-    percorso, route_metadata = SmartRouter.route(user_message)
-    logger.info(f"   → Percorso {percorso}: {route_metadata['message']}")
-    
-    # Salva percorso nello state
-    self.state.set(StateKeys.TRIAGE_PATH, percorso)
-    
-    # Estrai località se presente
-    location = SmartRouter.extract_location(user_message)
-    if location != "Non specificato":
-        self.state.set(StateKeys.PATIENT_LOCATION, location)
-        logger.info(f"   → Località: {location}")
-    
-    # === DETERMINA FASE ===
-    current_phase = self.state.get(StateKeys.CURRENT_PHASE, "INIT")
-    
-    # Aggiorna fase basandosi sul percorso
-    if current_phase == "INIT":
-        if percorso == "A":
-            current_phase = "FAST_TRIAGE_A"
-        elif percorso == "B":
-            current_phase = "VALUTAZIONE_RISCHIO_B"
-        elif percorso == "C":
-            current_phase = "FASE_4_TRIAGE"
-        # INFO non cambia fase
-    
-    self.state.set(StateKeys.CURRENT_PHASE, current_phase)
-    logger.info(f"   → Fase: {current_phase}")
-    
-    # === STEP 2: RAG INTELLIGENTE ===
-    logger.info("🧠 STEP 2: RAG Check")
-    from ..services.rag_service import get_rag_service
-    
-    rag = get_rag_service()
-    rag_context = ""
-    
-    # Usa RAG solo se necessario
-    if rag.should_use_rag(current_phase, user_message):
-        logger.info("   → RAG ATTIVATO (domanda clinica)")
+        Step 1: Smart Router → Determina percorso (A/B/C/INFO)
+        Step 2: RAG (solo se necessario) → Recupera protocolli
+        Step 3: Groq LLM → Genera risposta
+        Step 4: Log Supabase
         
-        # Filtra protocolli per percorso
-        protocol_filter = None
-        if percorso == "B":
-            protocol_filter = "salute-mentale"
-        
-        chunks = rag.retrieve_context(
-            user_message, 
-            k=5,
-            protocol_filter=protocol_filter
-        )
-        
-        rag_context = rag.format_context_for_llm(chunks, current_phase)
-    else:
-        logger.info("   → RAG NON necessario (conversazione generale)")
-    
-    # === STEP 3: GROQ LLM ===
-    logger.info("💬 STEP 3: Groq LLM")
-    
-    try:
-        # Costruisci context completo
-        context = self.state.get(StateKeys.COLLECTED_DATA, {})
-        context["patient_age"] = self.state.get(StateKeys.PATIENT_AGE, "N/D")
-        context["patient_sex"] = self.state.get(StateKeys.PATIENT_SEX, "N/D")
-        context["patient_location"] = self.state.get(StateKeys.PATIENT_LOCATION, location)
-        context["percorso"] = percorso
-        context["fase"] = current_phase
-        
-        # Aggiungi RAG context se presente
-        if rag_context:
-            context["protocolli_clinici"] = rag_context
-        
-        # Chiamata LLM
-        ai_response = self.llm.get_ai_response(user_message, context)
-        
-        # --- CRASH PROTECTION ---
-        if ai_response is None or not ai_response.strip():
-            logger.warning("⚠️ AI returned None/empty response")
-            return (
-                "Mi scuso, il sistema sta elaborando. Riprova tra qualche secondo.",
-                {"error": "AI response was None", "fallback": True}
-            )
-        
-        # Parse risposta (se JSON)
-        try:
-            json_match = re.search(r'```json\s*(\{[^`]*\})\s*```', ai_response, re.DOTALL)
-            if json_match:
-                clinical_decision = json.loads(json_match.group(1))
-            else:
-                clinical_decision = json.loads(ai_response)
+        Args:
+            user_message: User's symptom description
+            session_id: Current session ID
             
-            codice_colore = clinical_decision.get("codice_colore", "VERDE")
-            specializzazione = clinical_decision.get("specializzazione", "Generale")
-            urgenza = clinical_decision.get("urgenza", 3)
-            ragionamento = clinical_decision.get("ragionamento", "")
-            red_flags = clinical_decision.get("red_flags", [])
-        except (json.JSONDecodeError, AttributeError, TypeError):
-            # Fallback: usa risposta testuale
-            codice_colore = "VERDE"
-            specializzazione = "Generale"
-            urgenza = 3
-            ragionamento = ai_response
-            red_flags = []
+        Returns:
+            (response_text, metadata_dict)
+        """
+        start_time = time.time()
         
-        logger.info(f"   → Decisione: {codice_colore} - {specializzazione}")
+        # === STEP 1: SMART ROUTING ===
+        logger.info("🧭 STEP 1: Smart Routing")
+        from ..controllers.smart_router import SmartRouter
         
-        # Aggiorna state
-        self.state.set(StateKeys.URGENCY_LEVEL, urgenza)
-        self.state.set(StateKeys.SPECIALIZATION, specializzazione)
-        if red_flags:
-            self.state.set(StateKeys.RED_FLAGS, red_flags)
+        percorso, route_metadata = SmartRouter.route(user_message)
+        logger.info(f"   → Percorso {percorso}: {route_metadata['message']}")
         
-    except Exception as e:
-        logger.error(f"❌ STEP 3 failed: {e}")
-        return (
-            f"⚠️ Errore nell'analisi: {str(e)}",
-            {"error": str(e)}
-        )
-    
-    # === STEP 4: FACILITY SEARCH (se non INFO) ===
-    location_text = ""
-    facility_name = "N/D"
-    
-    if percorso != "INFO":
-        logger.info("🗺️ STEP 4: Facility Search")
+        # Salva percorso nello state
+        self.state.set(StateKeys.TRIAGE_PATH, percorso)
         
-        try:
-            from ..services.data_loader import get_data_loader
+        # Estrai località se presente
+        location = SmartRouter.extract_location(user_message)
+        if location != "Non specificato":
+            self.state.set(StateKeys.PATIENT_LOCATION, location)
+            logger.info(f"   → Località: {location}")
+        
+        # === DETERMINA FASE ===
+        current_phase = self.state.get(StateKeys.CURRENT_PHASE, "INIT")
+        
+        # Aggiorna fase basandosi sul percorso
+        if current_phase == "INIT":
+            if percorso == "A":
+                current_phase = "FAST_TRIAGE_A"
+            elif percorso == "B":
+                current_phase = "VALUTAZIONE_RISCHIO_B"
+            elif percorso == "C":
+                current_phase = "FASE_4_TRIAGE"
+            # INFO non cambia fase
+        
+        self.state.set(StateKeys.CURRENT_PHASE, current_phase)
+        logger.info(f"   → Fase: {current_phase}")
+        
+        # === STEP 2: RAG INTELLIGENTE ===
+        logger.info("🧠 STEP 2: RAG Check")
+        from ..services.rag_service import get_rag_service
+        
+        rag = get_rag_service()
+        rag_context = ""
+        
+        # Usa RAG solo se necessario
+        if rag.should_use_rag(current_phase, user_message):
+            logger.info("   → RAG ATTIVATO (domanda clinica)")
             
-            data_loader = get_data_loader()
-            user_location = context.get("patient_location", "Bologna")
+            # Filtra protocolli per percorso
+            protocol_filter = None
+            if percorso == "B":
+                protocol_filter = "salute-mentale"
             
-            facilities = data_loader.find_facilities_smart(
-                query_service=specializzazione,
-                query_comune=user_location,
-                limit=3
+            chunks = rag.retrieve_context(
+                user_message, 
+                k=5,
+                protocol_filter=protocol_filter
             )
             
-            if facilities:
-                top_facility = facilities[0]
-                facility_name = top_facility.get("nome", "N/D")
-                facility_address = top_facility.get("indirizzo", "N/D")
-                facility_comune = top_facility.get("comune", "N/D")
-                
-                location_text = (
-                    f"\n\n📍 STRUTTURA CONSIGLIATA:\n"
-                    f"{facility_name}\n"
-                    f"{facility_address}, {facility_comune}"
+            rag_context = rag.format_context_for_llm(chunks, current_phase)
+        else:
+            logger.info("   → RAG NON necessario (conversazione generale)")
+        
+        # === STEP 3: GROQ LLM ===
+        logger.info("💬 STEP 3: Groq LLM")
+        
+        try:
+            # Costruisci context completo
+            context = self.state.get(StateKeys.COLLECTED_DATA, {})
+            context["patient_age"] = self.state.get(StateKeys.PATIENT_AGE, "N/D")
+            context["patient_sex"] = self.state.get(StateKeys.PATIENT_SEX, "N/D")
+            context["patient_location"] = self.state.get(StateKeys.PATIENT_LOCATION, location)
+            context["percorso"] = percorso
+            context["fase"] = current_phase
+            
+            # Aggiungi RAG context se presente
+            if rag_context:
+                context["protocolli_clinici"] = rag_context
+            
+            # Chiamata LLM
+            ai_response = self.llm.get_ai_response(user_message, context)
+            
+            # --- CRASH PROTECTION ---
+            if ai_response is None or not ai_response.strip():
+                logger.warning("⚠️ AI returned None/empty response")
+                return (
+                    "Mi scuso, il sistema sta elaborando. Riprova tra qualche secondo.",
+                    {"error": "AI response was None", "fallback": True}
                 )
-            else:
-                location_text = "\n\n⚠️ Nessuna struttura trovata nelle vicinanze."
             
-            logger.info(f"   → Trovate {len(facilities)} strutture")
+            # Parse risposta (se JSON)
+            try:
+                json_match = re.search(r'```json\s*(\{[^`]*\})\s*```', ai_response, re.DOTALL)
+                if json_match:
+                    clinical_decision = json.loads(json_match.group(1))
+                else:
+                    clinical_decision = json.loads(ai_response)
+                
+                codice_colore = clinical_decision.get("codice_colore", "VERDE")
+                specializzazione = clinical_decision.get("specializzazione", "Generale")
+                urgenza = clinical_decision.get("urgenza", 3)
+                ragionamento = clinical_decision.get("ragionamento", "")
+                red_flags = clinical_decision.get("red_flags", [])
+            except (json.JSONDecodeError, AttributeError, TypeError):
+                # Fallback: usa risposta testuale
+                codice_colore = "VERDE"
+                specializzazione = "Generale"
+                urgenza = 3
+                ragionamento = ai_response
+                red_flags = []
+            
+            logger.info(f"   → Decisione: {codice_colore} - {specializzazione}")
+            
+            # Aggiorna state
+            self.state.set(StateKeys.URGENCY_LEVEL, urgenza)
+            self.state.set(StateKeys.SPECIALIZATION, specializzazione)
+            if red_flags:
+                self.state.set(StateKeys.RED_FLAGS, red_flags)
             
         except Exception as e:
-            logger.error(f"❌ STEP 4 failed: {e}")
-            location_text = "\n\n⚠️ Errore ricerca strutture."
+            logger.error(f"❌ STEP 3 failed: {e}")
+            return (
+                f"⚠️ Errore nell'analisi: {str(e)}",
+                {"error": str(e)}
+            )
+        
+        # === STEP 4: FACILITY SEARCH (se non INFO) ===
+        location_text = ""
+        facility_name = "N/D"
+        
+        if percorso != "INFO":
+            logger.info("🗺️ STEP 4: Facility Search")
+            
+            try:
+                from ..services.data_loader import get_data_loader
+                
+                data_loader = get_data_loader()
+                user_location = context.get("patient_location", "Bologna")
+                
+                facilities = data_loader.find_facilities_smart(
+                    query_service=specializzazione,
+                    query_comune=user_location,
+                    limit=3
+                )
+                
+                if facilities:
+                    top_facility = facilities[0]
+                    facility_name = top_facility.get("nome", "N/D")
+                    facility_address = top_facility.get("indirizzo", "N/D")
+                    facility_comune = top_facility.get("comune", "N/D")
+                    
+                    location_text = (
+                        f"\n\n📍 STRUTTURA CONSIGLIATA:\n"
+                        f"{facility_name}\n"
+                        f"{facility_address}, {facility_comune}"
+                    )
+                else:
+                    location_text = "\n\n⚠️ Nessuna struttura trovata nelle vicinanze."
+                
+                logger.info(f"   → Trovate {len(facilities)} strutture")
+                
+            except Exception as e:
+                logger.error(f"❌ STEP 4 failed: {e}")
+                location_text = "\n\n⚠️ Errore ricerca strutture."
+        
+        # Build final response
+        final_response = f"{ragionamento}{location_text}"
+        
+        # === STEP 5: LOG SUPABASE ===
+        logger.info("💾 STEP 5: Supabase Logging")
+        
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        metadata = {
+            "session_id": session_id,
+            "percorso": percorso,
+            "codice_colore": codice_colore,
+            "specializzazione": specializzazione,
+            "urgenza": urgenza,
+            "struttura_consigliata": facility_name,
+            "processing_time_ms": duration_ms,
+            "phase": current_phase,
+            "rag_used": bool(rag_context)
+        }
+        
+        try:
+            _log_to_supabase(
+                session_id=session_id,
+                user_input=user_message,
+                bot_response=final_response,
+                metadata=metadata,
+                duration_ms=duration_ms
+            )
+            logger.info("   → Logged OK")
+        except Exception as e:
+            logger.error(f"❌ Supabase logging failed: {e}")
+        
+        return (final_response, metadata)
     
-    # Build final response
-    final_response = f"{ragionamento}{location_text}"
-    
-    # === STEP 5: LOG SUPABASE ===
-    logger.info("💾 STEP 5: Supabase Logging")
-    
-    duration_ms = int((time.time() - start_time) * 1000)
-    
-    metadata = {
-        "session_id": session_id,
-        "percorso": percorso,
-        "codice_colore": codice_colore,
-        "specializzazione": specializzazione,
-        "urgenza": urgenza,
-        "struttura_consigliata": facility_name,
-        "processing_time_ms": duration_ms,
-        "phase": current_phase,
-        "rag_used": bool(rag_context)
-    }
-    
-    try:
-        _log_to_supabase(
-            session_id=session_id,
-            user_input=user_message,
-            bot_response=final_response,
-            metadata=metadata,
-            duration_ms=duration_ms
-        )
-        logger.info("   → Logged OK")
-    except Exception as e:
-        logger.error(f"❌ Supabase logging failed: {e}")
-    
-    return (final_response, metadata)
     def _check_emergency(
         self,
         message: str
