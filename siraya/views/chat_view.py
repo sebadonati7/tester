@@ -149,6 +149,8 @@ def render_step_tracker() -> None:
         """
 
     step_html += "</div>"
+    
+    # ✅ CRITICAL: Always use unsafe_allow_html=True for HTML rendering
     st.markdown(step_html, unsafe_allow_html=True)
 
 

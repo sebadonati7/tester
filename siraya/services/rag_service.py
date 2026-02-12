@@ -19,6 +19,7 @@ class RAGService:
     def __init__(self):
         """Inizializza connessione Supabase via SupabaseConfig (nested + flat)."""
         self.supabase = None
+        self.connection_tested = False
         try:
             from ..config.settings import SupabaseConfig
 
@@ -28,12 +29,23 @@ class RAGService:
                     SupabaseConfig.get_url(),
                     SupabaseConfig.get_key()
                 )
-                logger.info("✅ RAG Service connesso a Supabase")
+                
+                # Test connection with a simple query
+                try:
+                    # Try to query protocol_chunks table (if exists) or logs table
+                    test_result = self.supabase.table("triage_logs").select("id").limit(1).execute()
+                    self.connection_tested = True
+                    logger.info("✅ RAG Service connesso a Supabase (test connessione OK)")
+                except Exception as test_e:
+                    logger.warning(f"⚠️ Supabase connesso ma test query fallito: {test_e}")
+                    # Still keep connection, might be a table permission issue
+                    self.connection_tested = False
             else:
                 logger.warning("⚠️ Supabase non configurato — RAG disabilitato")
         except Exception as e:
             logger.error(f"❌ RAG Supabase init failed: {type(e).__name__} - {e}")
             self.supabase = None
+            self.connection_tested = False
     
     def should_use_rag(self, phase: str, user_message: str) -> bool:
         """

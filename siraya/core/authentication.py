@@ -127,6 +127,11 @@ class AuthManager:
         """
         Attempt admin login.
         
+        Password check order:
+        1. st.secrets["ADMIN_PASSWORD"] (if set)
+        2. st.secrets["BACKEND_PASSWORD"] (if set)
+        3. DEFAULT_ADMIN_PASSWORD ("ciaociao")
+        
         Args:
             password: Admin password to verify
             
@@ -150,7 +155,9 @@ class AuthManager:
         if password == correct_password:
             st.session_state[AuthKeys.ADMIN_LOGGED_IN] = True
             st.session_state[AuthKeys.ADMIN_USERNAME] = "admin"
+            logger.info("✅ Admin login successful")
             return True
+        logger.warning("❌ Admin login failed: incorrect password")
         return False
     
     def admin_logout(self) -> None:
