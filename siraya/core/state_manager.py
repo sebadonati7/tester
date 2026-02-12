@@ -89,8 +89,8 @@ DEFAULT_STATE: Dict[str, Any] = {
     # Chat
     StateKeys.MESSAGES: [],
     StateKeys.COLLECTED_DATA: {},
-    StateKeys.CURRENT_PHASE: "INTENT_DETECTION",
-    StateKeys.TRIAGE_PATH: "C",
+    StateKeys.CURRENT_PHASE: "INTAKE",       # V3: starts as INTAKE (not INTENT_DETECTION)
+    StateKeys.TRIAGE_PATH: None,             # V3: None until SmartRouter assigns it
     StateKeys.QUESTION_COUNT: 0,
     
     # Patient

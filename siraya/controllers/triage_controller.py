@@ -161,34 +161,8 @@ class TriageController:
         self.state.set(StateKeys.CURRENT_PHASE, current_phase)
         logger.info(f"   → Fase: {current_phase}")
         
-        # === STEP 2: RAG INTELLIGENTE ===
-        logger.info("🧠 STEP 2: RAG Check")
-        from ..services.rag_service import get_rag_service
-        
-        rag = get_rag_service()
-        rag_context = ""
-        
-        # Usa RAG solo se necessario
-        if rag.should_use_rag(current_phase, user_message):
-            logger.info("   → RAG ATTIVATO (domanda clinica)")
-            
-            # Filtra protocolli per percorso
-            protocol_filter = None
-            if percorso == "B":
-                protocol_filter = "salute-mentale"
-            
-            chunks = rag.retrieve_context(
-                user_message, 
-                k=5,
-                protocol_filter=protocol_filter
-            )
-            
-            rag_context = rag.format_context_for_llm(chunks, current_phase)
-        else:
-            logger.info("   → RAG NON necessario (conversazione generale)")
-        
-        # === STEP 3: GROQ LLM ===
-        logger.info("💬 STEP 3: Groq LLM")
+        # === STEP 2: COSTRUZIONE CONTESTO & GROQ LLM (Lazy RAG) ===
+        logger.info("💬 STEP 2: Groq LLM (Lazy RAG)")
         
         try:
             # Costruisci context completo
@@ -197,13 +171,13 @@ class TriageController:
             context["patient_sex"] = self.state.get(StateKeys.PATIENT_SEX, "N/D")
             context["patient_location"] = self.state.get(StateKeys.PATIENT_LOCATION, location)
             context["percorso"] = percorso
-            context["fase"] = current_phase
+            # Esplicita la fase corrente per il motore LLM/RAG
+            context["phase"] = current_phase
+            # Esponi anche il contatore domande per la logica "5-7 domande"
+            context["question_count"] = self.state.get(StateKeys.QUESTION_COUNT, 0)
             
-            # Aggiungi RAG context se presente
-            if rag_context:
-                context["protocolli_clinici"] = rag_context
-            
-            # Chiamata LLM
+            # Chiamata LLM (che internamente decide se attivare RAG
+            # in base alla fase e al contesto - Lazy RAG)
             ai_response = self.llm.get_ai_response(user_message, context)
             
             # --- CRASH PROTECTION ---

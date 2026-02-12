@@ -88,51 +88,53 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
 # ============================================================================
 
 def render_step_tracker() -> None:
-    """Render dynamic step tracker showing triage progress."""
-    controller = get_triage_controller()
+    """Render dynamic step tracker showing triage progress (V3 phases)."""
     state = get_state_manager()
-    
-    current_phase = state.get(StateKeys.CURRENT_PHASE, "INTENT_DETECTION")
-    completion = controller.get_completion_percentage()
-    
-    # Step definitions with icons
+
+    current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
+    triage_path = state.get(StateKeys.TRIAGE_PATH)
+
+    # V3 step definitions – aligned with the new state machine
     steps = [
-        ("LOCATION", "📍", "Dove"),
-        ("CHIEF_COMPLAINT", "🩺", "Sintomo"),
-        ("PAIN_ASSESSMENT", "📊", "Dolore"),
-        ("RED_FLAGS", "🚨", "Allarmi"),
-        ("DEMOGRAPHICS", "👤", "Dati"),
-        ("DISPOSITION", "🏥", "Esito"),
+        ("INTAKE",           "👋", "Accoglienza"),
+        ("CLINICAL_TRIAGE",  "🩺", "Triage"),
+        ("RECOMMENDATION",   "🏥", "Esito"),
     ]
-    
-    # Create step tracker HTML
+
+    # Determine current index
+    phase_order = [s[0] for s in steps]
+    current_idx = phase_order.index(current_phase) if current_phase in phase_order else 0
+    # INFO branch maps to step 1 (Triage area)
+    if current_phase == "INFO":
+        current_idx = 1
+
+    # Build HTML
     step_html = """
-    <div style="display: flex; justify-content: space-around; 
+    <div style="display: flex; justify-content: space-around;
                 padding: 10px 0; margin-bottom: 15px;
                 background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
                 border-radius: 10px;">
     """
-    
-    phase_order = [s[0] for s in steps]
-    current_idx = phase_order.index(current_phase) if current_phase in phase_order else -1
-    
+
     for idx, (phase, icon, label) in enumerate(steps):
         if idx < current_idx:
-            # Completed
-            bg_color = "#10B981"
-            text_color = "white"
-            opacity = "1"
+            bg_color = "#10B981"; text_color = "white"; opacity = "1"
         elif idx == current_idx:
-            # Current
-            bg_color = "#4A90E2"
-            text_color = "white"
-            opacity = "1"
+            bg_color = "#4A90E2"; text_color = "white"; opacity = "1"
         else:
-            # Pending
-            bg_color = "#e5e7eb"
-            text_color = "#9ca3af"
-            opacity = "0.6"
-        
+            bg_color = "#e5e7eb"; text_color = "#9ca3af"; opacity = "0.6"
+
+        # Show path badge on triage step
+        extra = ""
+        if idx == 1 and triage_path:
+            path_colors = {"A": "#dc2626", "B": "#7c3aed", "C": "#16a34a", "INFO": "#2563eb"}
+            badge_bg = path_colors.get(triage_path, "#6b7280")
+            extra = (
+                f'<div style="font-size:0.55em;margin-top:2px;'
+                f'background:{badge_bg};color:white;border-radius:6px;'
+                f'padding:1px 5px;display:inline-block;">{triage_path}</div>'
+            )
+
         step_html += f"""
         <div style="text-align: center; opacity: {opacity};">
             <div style="width: 36px; height: 36px; border-radius: 50%;
@@ -142,11 +144,11 @@ def render_step_tracker() -> None:
                 {icon}
             </div>
             <div style="font-size: 0.7em; color: {text_color};">{label}</div>
+            {extra}
         </div>
         """
-    
+
     step_html += "</div>"
-    
     st.markdown(step_html, unsafe_allow_html=True)
 
 
@@ -276,7 +278,7 @@ def render() -> None:
     
     # === CHECK IF DISPOSITION COMPLETE ===
     current_phase = state.get(StateKeys.CURRENT_PHASE, "")
-    if current_phase == "DISPOSITION" and messages:
+    if current_phase in ("DISPOSITION", "RECOMMENDATION") and messages:
         _render_disposition_summary()
         return
     
@@ -309,37 +311,37 @@ def _process_user_input(
     state
 ) -> None:
     """
-    Process user input through the controller.
-    
-    Args:
-        user_input: User's message
-        controller: TriageController instance
-        state: StateManager instance
+    Process user input through the LLM state-machine.
+
+    V3: delega tutta la logica a LLMService.generate_response().
+    Il controller NON è più il decision-maker; è mantenuto solo per
+    backward-compat (reset, survey options).
     """
     # Add user message to history
     state.add_message("user", user_input)
-    
-    # Get session ID
-    session_id = state.get(StateKeys.SESSION_ID, "unknown")
-    
-    # Process through controller (handles LLM call + Supabase logging)
+
+    # ── Call the state machine ──
+    from ..services.llm_service import get_llm_service
+    llm = get_llm_service()
+
     with st.spinner("Analisi in corso..."):
-        response, metadata = controller.handle_user_input(user_input, session_id)
-    
+        response = llm.generate_response(user_input, st.session_state)
+
     # Add assistant response to history
     state.add_message("assistant", response)
-    
-    # Check if response has survey options
-    if metadata.get("opzioni"):
-        controller.set_survey_options(metadata["opzioni"])
-    
-    # Check for emergency - show alert
-    if metadata.get("is_emergency"):
-        emergency_type = metadata.get("emergency_type", "")
-        
-        if emergency_type == "CRITICAL":
-            st.error("🚨 **EMERGENZA RILEVATA** - Chiama immediatamente il **118**")
-        elif emergency_type == "MENTAL_HEALTH":
+
+    # ── Survey options (parsed inside generate_response) ──
+    pending = st.session_state.get("pending_survey_options")
+    if pending:
+        controller.set_survey_options(pending)
+
+    # ── Emergency alert ──
+    urgency = st.session_state.get("urgency_level", 3)
+    if urgency >= 5:
+        st.error("🚨 **EMERGENZA RILEVATA** - Chiama immediatamente il **118**")
+    elif urgency >= 4:
+        phase = st.session_state.get("current_phase", "")
+        if st.session_state.get("triage_path") == "B":
             st.warning("⚫ **Supporto Urgente** - Contatta il numero verde **800.274.274**")
 
 

@@ -1,0 +1,324 @@
+# ============================================================================
+# QUESTO FILE DEVE ESSERE AGGIORNATO DA CURSOR OGNI VOLTA CHE VIENE
+# MODIFICATA LA STRUTTURA O AGGIUNTA UNA FUNZIONE.
+# ============================================================================
+# SIRAYA Health Navigator — Project Map
+# Ultima modifica: 2026-02-12
+# ============================================================================
+
+================================================================================
+siraya/app.py  —  Application Entry Point
+================================================================================
+  Responsabilità : Configura la pagina Streamlit, carica CSS, inizializza lo
+                   stato di sessione, renderizza la sidebar e instrada verso
+                   la view corretta (CHAT / DASHBOARD / MAP / REPORT).
+  Funzioni principali:
+    - main()                  → entry-point principale
+    - route_to_page(page)     → routing tra le view
+    - load_css()              → caricamento foglio di stile
+    - _inject_fallback_css()  → CSS inline di riserva
+
+================================================================================
+siraya/config/settings.py  —  Configurazione Centralizzata
+================================================================================
+  Responsabilità : Contiene TUTTE le costanti, configurazioni API, regole di
+                   emergenza, mapping clinici, distanze geografiche e temi UI.
+  Classi / costanti:
+    - PATHS             → path dati e CSS
+    - SupabaseConfig    → URL, KEY, nomi tabelle Supabase
+    - APIConfig         → modelli Groq/Gemini, temperature, timeout
+    - Settings          → titolo app, layout
+    - UITheme / UI_THEME→ palette colori
+    - RAGConfig         → embedding model, chunk size, top_k
+    - TriageConfig      → fasi, fallback options
+    - EMERGENCY_RULES   → keyword emergenze (critical, high, mental, info)
+    - ClinicalMappings  → red-flags, sintomi comuni, specializzazioni,
+                          CANONICAL_KB (normalizzazione sintomi), stop-words
+    - haversine_distance()  → distanza geodetica tra coordinate
+
+================================================================================
+siraya/core/state_manager.py  —  State Manager ("Il Cervelletto")
+================================================================================
+  Responsabilità : Wrapper sicuro attorno a st.session_state. Inizializza
+                   chiavi con default, espone get/set, reset triage,
+                   gestione messaggi e privacy GDPR.
+  Classi / funzioni:
+    - StateKeys          → costanti per ogni chiave di sessione
+    - DEFAULT_STATE      → valori iniziali
+    - StateManager       → init, get, set, update, reset_triage,
+                           get_patient_data, update_collected_data,
+                           add_message, accept_privacy
+    - get_state_manager()   → singleton
+    - init_session_state()  → convenience per app.py
+
+================================================================================
+siraya/core/navigation.py  —  Navigazione ("Il Navigatore")
+================================================================================
+  Responsabilità : Routing tra le pagine, gestione pagina precedente.
+  Classi / funzioni:
+    - PageName (Enum)    → LANDING, CHAT, MAP, REPORT, DASHBOARD, ADMIN
+    - PAGE_CONFIG        → metadata per pagina (titolo, icona, permessi)
+    - Navigation         → go_to, go_back, is_current, get_page_config
+    - switch_to(page)    → scorciatoia
+    - go_to_chat/dashboard/map/report()
+
+================================================================================
+siraya/core/authentication.py  —  Autenticazione ("Il Portinaio")
+================================================================================
+  Responsabilità : Gestione privacy/GDPR e accesso admin.
+  Classi / funzioni:
+    - AuthKeys           → chiavi privacy/admin
+    - AuthManager        → is_privacy_accepted, accept_privacy, revoke_privacy,
+                           admin_login, admin_logout
+    - check_privacy_accepted()
+    - require_privacy / require_admin  → decoratori
+    - render_admin_login()
+    - render_privacy_consent()
+
+================================================================================
+siraya/services/llm_service.py  —  LLM Service (The State Machine)
+================================================================================
+  Responsabilità : Gestore AUTONOMO della conversazione.  Il metodo pubblico
+                   generate_response(user_input, session_state) incapsula
+                   l'intera logica decisionale:
+                   INTAKE → CLINICAL_TRIAGE → RECOMMENDATION.
+  Classi / funzioni:
+    - SymptomNormalizer          → fuzzy-matching sintomi (medicalizzazione)
+    - DiagnosisSanitizer         → blocco diagnosi/prescrizioni vietate
+    - LLMService
+        ── generate_response()   → ★ ENTRY POINT: state-machine autonoma
+        ── _determine_phase()    → rileva INTAKE / CLINICAL / RECOMMENDATION / INFO
+        ── _extract_inline_data()→ estrae età, sesso, località, dolore dall'input
+        ── _phase_intake()       → fase 1: accoglienza, dati base, ZERO RAG
+        ── _phase_clinical()     → fase 2: triage clinico con Lazy RAG
+        ── _phase_recommendation()→ fase 3: SBAR + ricerca struttura
+        ── _phase_info()         → branch INFO: interroga master_kb.json
+        ── _call_llm()           → chiamata API low-level (Groq → Gemini fallback)
+        ── _parse_options()      → estrae opzioni A/B/C dalla risposta LLM
+        ── _get_conversation_ctx()→ formatta ultimi messaggi per il prompt
+        ── _log_interaction()    → logging Supabase
+        ── check_emergency()     → keyword emergenze critiche
+        ── get_ai_response()     → metodo legacy (chiama _call_llm internamente)
+        ── _build_intake_prompt / _build_system_prompt_with_rag /
+           _build_recommendation_prompt → prompt-builder per ogni fase
+    - get_llm_service()  → singleton
+
+================================================================================
+siraya/services/rag_service.py  —  RAG Service (Lazy RAG)
+================================================================================
+  Responsabilità : Retrieval-Augmented Generation tramite full-text search
+                   su Supabase.  Attivato SOLO nelle fasi cliniche esplicite
+                   (FASE_4_TRIAGE, FAST_TRIAGE_A, VALUTAZIONE_RISCHIO_B).
+  Classi / funzioni:
+    - RAGService
+        ── should_use_rag(phase, msg)   → gatekeeper (Lazy RAG)
+        ── retrieve_context(query, k)   → cerca chunks
+        ── format_context_for_llm()     → formatta per prompt
+        ── get_stats()                  → statistiche DB
+    - get_rag_service()  → singleton (st.cache_resource)
+
+================================================================================
+siraya/services/data_loader.py  —  Data Loader
+================================================================================
+  Responsabilità : Accesso centralizzato ai dati strutture sanitarie.
+                   Supabase-first con fallback a JSON locali.
+  Classi / funzioni:
+    - DataLoader
+        ── get_all_facilities()
+        ── get_facilities_by_type / by_comune
+        ── find_facilities_smart()       → ricerca gerarchica con proximity-score
+        ── find_nearest_facilities_geo() → ricerca geo con haversine
+        ── load_districts / get_all_comuni / is_valid_comune_er
+        ── get_comune_coordinates / get_district_for_comune
+        ── get_all_available_services()  → catalogo servizi
+    - get_data_loader()   → singleton
+    - Convenience: load_master_kb, load_districts, load_map_data, …
+
+================================================================================
+siraya/services/analytics_service.py  —  Analytics Engine
+================================================================================
+  Responsabilità : Lettura log da Supabase, calcolo 15+ KPI volumetrici,
+                   clinici, context-aware, avanzati. Output puro (no UI).
+  Classi / funzioni:
+    - AnalyticsService
+        ── get_all_logs / fetch_logs
+        ── get_enriched_records / _enrich_record
+        ── calculate_kpi_volumetrici / kpi_clinici / kpi_context_aware
+        ── calculate_kpi_completo()      → tutti i 15 KPI
+        ── get_recent_critical_cases()
+    - get_analytics_service()  → singleton
+
+================================================================================
+siraya/services/pdf_service.py  —  PDF Service
+================================================================================
+  Responsabilità : Generazione PDF per report SBAR (reportlab o text fallback).
+  Classi / funzioni:
+    - PDFService
+        ── generate_sbar_pdf()
+        ── _generate_with_reportlab()
+        ── _generate_text_fallback()
+    - get_pdf_service()  → singleton
+
+================================================================================
+siraya/controllers/triage_controller.py  —  Triage Controller
+================================================================================
+  Responsabilità : Orchestrazione chiamata LLM, aggiornamento stato,
+                   logging Supabase, gestione emergenze e survey options.
+  Classi / funzioni:
+    - _log_to_supabase()   → inserisce record in triage_logs
+    - TriageController
+        ── handle_user_input()       → pipeline ibrida (SmartRouter + LLM + log)
+        ── _check_emergency()
+        ── _extract_data_from_response / _extract_from_user_input
+        ── _update_phase()
+        ── get/set/clear_survey_options()
+        ── reset_triage()
+        ── get_completion_percentage / can_generate_report
+    - get_triage_controller()  → singleton
+
+================================================================================
+siraya/controllers/smart_router.py  —  Smart Router
+================================================================================
+  Responsabilità : Analizza l'input utente e determina il percorso di triage
+                   (A = Emergenza, B = Salute Mentale, C = Standard, INFO).
+  Classi / funzioni:
+    - SmartRouter
+        ── route(user_message)          → (percorso, metadata)
+        ── extract_location(message)    → nome comune o "Non specificato"
+
+================================================================================
+siraya/controllers/admin_controller.py  —  Admin Controller
+================================================================================
+  Responsabilità : Gestione dashboard admin: filtri, export CSV/Excel, KPI.
+  Classi / funzioni:
+    - AdminController
+        ── login / logout / is_authenticated
+        ── get_filtered_logs()
+        ── export_to_csv / export_to_excel
+        ── get_kpi_summary / clear_old_logs
+    - get_admin_controller()  → singleton
+
+================================================================================
+siraya/models/definitions.py  —  Data Models ("Il Vocabolario")
+================================================================================
+  Responsabilità : Enum, modelli Pydantic, type-definitions.
+  Classi:
+    - PageName, TriagePath, TriagePhase, TriageBranch (Enum)
+    - QuestionType, DispositionType, UrgencyLevel (Enum)
+    - PatientInfo, ClinicalData, TriageMetadata (Pydantic)
+    - DispositionRecommendation
+    - TriageState       → FSM principale con get_completion_percentage,
+                          to_sbar_summary
+    - TriageResponse    → schema risposta AI per frontend
+    - PatientData       → aggregato per logging/analytics
+
+================================================================================
+siraya/views/chat_view.py  —  Chat View (Frontend "Stupido")
+================================================================================
+  Responsabilità : Renderizza la chat.  Delega TUTTA la logica a
+                   llm_service.generate_response().
+  Funzioni:
+    - render()                    → entry-point della view
+    - _process_user_input()       → chiama generate_response e visualizza
+    - render_survey_buttons()     → bottoni A/B/C
+    - render_step_tracker()       → progress bar fasi
+    - render_disclaimer()         → disclaimer medico
+    - text_to_speech_button()     → TTS via Web Speech API
+    - _render_disposition_summary()
+
+================================================================================
+siraya/views/sidebar_view.py  —  Sidebar View
+================================================================================
+  Responsabilità : Logo, navigazione, checkbox privacy, progress bar,
+                   stato sistema, admin section, reset.
+  Funzioni:
+    - render() → str           → renderizza sidebar e restituisce pagina
+    - _render_logo / _render_navigation / _render_extended_navigation
+    - _render_privacy_checkbox / _render_progress / _render_system_status
+    - _render_collected_data_preview / render_admin_section / render_reset_button
+
+================================================================================
+siraya/views/map_view.py  —  Map View
+================================================================================
+  Responsabilità : Mappa interattiva strutture sanitarie (Folium + fallback).
+  Funzioni:
+    - render()                    → entry-point della view
+    - render_folium_map()         → mappa Folium con marker
+    - _render_simple_map()        → fallback st.map
+    - format_facility_card()      → card HTML struttura
+    - render_emergency_facilities()→ vista rapida PS + CAU
+
+================================================================================
+siraya/views/dashboard_view.py  —  Dashboard View
+================================================================================
+  Responsabilità : Dashboard analytics con 15 KPI e grafici Plotly.
+  Funzioni:
+    - render()                → entry-point (admin-only)
+    - render_throughput_chart / render_urgenza_pie / render_funnel_chart
+    - render_geographic_chart / render_sintomi_table
+    - render_critical_alerts()
+    - render_filters_sidebar()
+
+================================================================================
+siraya/views/report_view.py  —  Report View
+================================================================================
+  Responsabilità : Visualizzazione e download report SBAR (PDF + TXT).
+  Funzioni:
+    - render()               → entry-point
+    - _render_patient_info / _render_sbar_summary / _generate_sbar
+    - _render_recommendation / _render_export_options
+
+================================================================================
+siraya/data/master_kb.json  —  Knowledge Base Strutture Sanitarie
+================================================================================
+  Responsabilità : Database JSON con 483 strutture sanitarie dell'Emilia-Romagna.
+  Struttura: { metadata, facilities: [ { id, tipologia, nome, provincia,
+               distretto, comune, indirizzo, contatti, orari,
+               servizi_disponibili } ] }
+
+siraya/data/distretti_sanitari_er.json  —  Distretti Sanitari
+  Responsabilità : Mapping comuni → distretti sanitari.
+
+siraya/data/mappa_er.json  —  Dati Geografici
+  Responsabilità : Coordinate e topografia dei comuni ER per la mappa.
+
+siraya/data/protocols/*.pdf  —  Protocolli Clinici (6 PDF)
+  Responsabilità : Manuali di triage e linee guida regionali usati dal RAG.
+
+================================================================================
+SCRIPT DI UTILITY
+================================================================================
+siraya/carica_dati.py       → Script di ingestione dati JSON in Supabase
+siraya/ingest_protocols.py  → Ingestione PDF protocolli clinici in Supabase
+siraya/upload_simple.py     → Upload semplificato PDF su Supabase (senza embeddings)
+siraya/test_import.py       → Test rapido importazioni dipendenze
+
+================================================================================
+DEV TOOLS
+================================================================================
+dev_start.bat              → Launcher locale: attiva venv, verifica deps, avvia
+                             Streamlit su porta 8501 con headless mode.
+                             (.gitignore esclude *.bat dal repo)
+
+================================================================================
+FILE EXTRA
+================================================================================
+.streamlit/secrets.toml     → Chiavi API (GEMINI, GROQ, SUPABASE) — NON committare
+.gitignore                  → Regole di esclusione Git (include *.bat)
+siraya/requirements_local.txt → Dipendenze pip per sviluppo locale
+IMPLEMENTATION_SUMMARY.md   → Documentazione architettura V2
+
+================================================================================
+CHANGELOG V3 (2026-02-12)
+================================================================================
+  - llm_service.py: riscrittura completa → generate_response() è la state-machine
+    autonoma; 4 fasi (INTAKE, CLINICAL_TRIAGE, RECOMMENDATION, INFO); Lazy RAG;
+    Percorsi A/B/C integrati; medicalizzazione input; SBAR + facility search.
+  - state_manager.py: CURRENT_PHASE default cambiato da "INTENT_DETECTION" → "INTAKE";
+    TRIAGE_PATH default cambiato da "C" → None (assegnato dallo SmartRouter).
+  - chat_view.py: _process_user_input() ora delega a llm_service.generate_response()
+    invece che a triage_controller.handle_user_input().  Step tracker ridisegnato
+    per le 3 macro-fasi V3 con badge percorso.
+  - .gitignore: aggiunto *.bat; ripulito contenuto corrotto.
+  - dev_start.bat: nuovo launcher per sviluppo locale.
+

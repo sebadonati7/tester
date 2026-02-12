@@ -44,29 +44,17 @@ class RAGService:
         Returns:
             True se RAG necessario
         """
-        # Fasi che richiedono RAG
+        # Fasi che richiedono RAG (Lazy RAG - solo durante il triage clinico)
         rag_phases = [
             "FASE_4_TRIAGE",           # Percorso C - Indagine clinica
             "FAST_TRIAGE_A",           # Percorso A - Domande emergenza
             "VALUTAZIONE_RISCHIO_B"    # Percorso B - Valutazione salute mentale
         ]
-        
-        # Parole chiave che indicano necessità clinica
-        clinical_keywords = [
-            "dolore", "sintomo", "male", "febbre", "tosse", 
-            "nausea", "vomito", "diarrea", "sangue", "gonfiore",
-            "respiro", "petto", "testa", "stomaco", "schiena"
-        ]
-        
-        if phase in rag_phases:
-            return True
-        
-        # Fallback: se l'utente descrive sintomi anche fuori fase
-        msg_lower = user_message.lower()
-        if any(keyword in msg_lower for keyword in clinical_keywords):
-            return True
-        
-        return False
+
+        # Lazy RAG: usa i protocolli **solo** nelle fasi cliniche esplicite.
+        # Niente fallback basato su keyword generiche: evita attivazioni premature
+        # durante la fase di accoglienza/intake.
+        return phase in rag_phases
     
     def retrieve_context(
         self, 
