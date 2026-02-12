@@ -156,43 +156,87 @@ class LLMService:
     # ------------------------------------------------------------------
 
     def _init_clients(self) -> None:
-        """Inizializza i client Groq e Gemini."""
-        # Groq
-        try:
-            groq_api_key = None
-            if hasattr(st, "secrets"):
-                try:
-                    groq_api_key = st.secrets["groq"]["api_key"]
-                except Exception:
-                    groq_api_key = st.secrets.get("GROQ_API_KEY")
-            if not groq_api_key:
-                groq_api_key = os.getenv("GROQ_API_KEY")
-            if groq_api_key:
-                self._groq_client = Groq(api_key=groq_api_key)
-                logger.info("Groq client initialized")
-        except Exception as e:
-            logger.error(f"Groq init failed: {e}")
+        """Inizializza i client Groq e Gemini tramite APIConfig (nested + flat)."""
+        from ..config.settings import APIConfig
 
-        # Gemini
-        try:
-            gemini_api_key = None
-            if hasattr(st, "secrets"):
-                try:
-                    gemini_api_key = st.secrets["gemini"]["api_key"]
-                except Exception:
-                    gemini_api_key = st.secrets.get("GEMINI_API_KEY")
-            if not gemini_api_key:
-                gemini_api_key = os.getenv("GEMINI_API_KEY")
-            if gemini_api_key:
+        # ── Groq ──
+        groq_api_key = APIConfig.get_groq_key()
+        if groq_api_key:
+            try:
+                self._groq_client = Groq(api_key=groq_api_key)
+                # Test connessione reale
+                self._groq_client.models.list()
+                logger.info("✅ Groq client initialized and connected")
+            except Exception as e:
+                logger.error(
+                    f"❌ Groq init/test failed: {type(e).__name__} - {e}"
+                )
+                self._groq_client = None
+        else:
+            logger.warning("⚠️ GROQ_API_KEY not found in secrets or env")
+
+        # ── Gemini ──
+        gemini_api_key = APIConfig.get_gemini_key()
+        if gemini_api_key:
+            try:
                 genai.configure(api_key=gemini_api_key)
-                self._gemini_model = genai.GenerativeModel("gemini-pro")
-                logger.info("Gemini client initialized")
-        except Exception as e:
-            logger.error(f"Gemini init failed: {e}")
+                self._gemini_model = genai.GenerativeModel(APIConfig.GEMINI_MODEL)
+                logger.info("✅ Gemini client initialized")
+            except Exception as e:
+                logger.error(
+                    f"❌ Gemini init failed: {type(e).__name__} - {e}"
+                )
+                self._gemini_model = None
+        else:
+            logger.warning("⚠️ GEMINI_API_KEY not found in secrets or env")
 
     def is_available(self) -> bool:
         """Almeno un LLM disponibile?"""
         return self._groq_client is not None or self._gemini_model is not None
+
+    def test_api_connections(self) -> Dict[str, bool]:
+        """
+        Testa tutte le connessioni API.  Utile per debug / sidebar.
+
+        Returns:
+            {"groq": bool, "gemini": bool, "supabase": bool}
+        """
+        results = {"groq": False, "gemini": False, "supabase": False}
+
+        # Groq
+        if self._groq_client:
+            try:
+                self._groq_client.models.list()
+                results["groq"] = True
+                logger.info("✅ Groq connection test: OK")
+            except Exception as e:
+                logger.error(f"❌ Groq test: {type(e).__name__} - {e}")
+
+        # Gemini
+        if self._gemini_model:
+            try:
+                self._gemini_model.generate_content("Rispondi solo: OK")
+                results["gemini"] = True
+                logger.info("✅ Gemini connection test: OK")
+            except Exception as e:
+                logger.error(f"❌ Gemini test: {type(e).__name__} - {e}")
+
+        # Supabase
+        try:
+            if SupabaseConfig.is_configured():
+                from supabase import create_client
+                client = create_client(
+                    SupabaseConfig.get_url(), SupabaseConfig.get_key()
+                )
+                client.table(SupabaseConfig.TABLE_LOGS).select(
+                    "id"
+                ).limit(1).execute()
+                results["supabase"] = True
+                logger.info("✅ Supabase connection test: OK")
+        except Exception as e:
+            logger.error(f"❌ Supabase test: {type(e).__name__} - {e}")
+
+        return results
 
     # ------------------------------------------------------------------
     # PROMPT TEMPLATES
@@ -377,9 +421,8 @@ class LLMService:
         # ── Escalation dinamica durante il triage ──
         # Se durante il flusso C emergono sintomi gravi → switch a A
         if current_path == "C":
-            percorso_check, _ = SmartRouter.route(user_input)
-            if percorso_check == "A":
-                logger.warning("⚡ Escalation: C → A")
+            if SmartRouter.check_escalation(user_input):
+                logger.warning("⚡ Escalation: C → A (symptom worsening)")
                 ss["triage_path"] = "A"
                 ss["urgency_level"] = max(ss.get("urgency_level", 3), 4)
 
@@ -885,45 +928,65 @@ Se non hai informazioni sufficienti, suggerisci di contattare il CUP regionale.
     # LOW-LEVEL LLM CALL
     # ==================================================================
 
-    def _call_llm(self, system_prompt: str, user_message: str) -> str:
+    def _call_llm(self, system_prompt: str, user_message: str,
+                  max_retries: int = 2) -> str:
         """
-        Chiamata API al modello (Groq primario, Gemini fallback).
+        Chiamata API con retry e backoff esponenziale.
+        Groq primario → Gemini fallback → fallback statico.
+        """
+        from ..config.settings import APIConfig
 
-        Returns:
-            Risposta testuale o fallback statico.
-        """
-        # ── Groq ──
+        last_error = None
+
+        # ── Groq (con retry) ──
         if self._groq_client:
-            try:
-                response = self._groq_client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message},
-                    ],
-                    temperature=0.7,
-                    max_tokens=1024,
-                )
-                text = response.choices[0].message.content
-                if text and text.strip():
-                    return text
-            except Exception as e:
-                logger.error(f"Groq call failed: {e}")
+            for attempt in range(max_retries + 1):
+                try:
+                    response = self._groq_client.chat.completions.create(
+                        model=APIConfig.GROQ_MODEL,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_message},
+                        ],
+                        temperature=APIConfig.TEMPERATURE,
+                        max_tokens=1024,
+                    )
+                    text = response.choices[0].message.content
+                    if text and text.strip():
+                        return text
+                except Exception as e:
+                    last_error = e
+                    wait = 2 ** attempt
+                    logger.warning(
+                        f"Groq attempt {attempt + 1}/{max_retries + 1} failed: "
+                        f"{type(e).__name__} - {e}"
+                    )
+                    if attempt < max_retries:
+                        time.sleep(wait)
 
-        # ── Gemini fallback ──
+        # ── Gemini fallback (con retry) ──
         if self._gemini_model:
-            try:
-                full = f"{system_prompt}\n\n{user_message}"
-                response = self._gemini_model.generate_content(full)
-                text = response.text
-                if text and text.strip():
-                    return text
-            except Exception as e:
-                logger.error(f"Gemini call failed: {e}")
+            for attempt in range(max_retries + 1):
+                try:
+                    full = f"{system_prompt}\n\n{user_message}"
+                    response = self._gemini_model.generate_content(full)
+                    text = response.text
+                    if text and text.strip():
+                        return text
+                except Exception as e:
+                    last_error = e
+                    wait = 2 ** attempt
+                    logger.warning(
+                        f"Gemini attempt {attempt + 1}/{max_retries + 1} failed: "
+                        f"{type(e).__name__} - {e}"
+                    )
+                    if attempt < max_retries:
+                        time.sleep(wait)
 
         # ── Fallback statico ──
+        logger.error(f"All LLM calls failed. Last error: {last_error}")
         return (
-            "Mi dispiace, si è verificato un problema tecnico. "
+            "Mi dispiace, si è verificato un problema tecnico temporaneo. "
             "Puoi riprovare tra qualche secondo?"
         )
 

@@ -50,24 +50,40 @@ class PATHS:
 class SupabaseConfig:
     """
     Supabase connection settings.
-    
-    Reads from st.secrets or environment variables.
+
+    Reads from st.secrets (nested [supabase] or flat) or environment variables.
     """
     # Table names
     TABLE_LOGS: str = "triage_logs"
-    TABLE_FACILITIES: str = "facilities"  # Future migration
-    TABLE_SESSIONS: str = "sessions"  # Future migration
-    
+    TABLE_FACILITIES: str = "facilities"
+    TABLE_SESSIONS: str = "sessions"
+
     @staticmethod
     def get_url() -> str:
-        """Get Supabase URL from secrets or env."""
-        return st.secrets.get("SUPABASE_URL", os.environ.get("SUPABASE_URL", ""))
-    
+        """Get Supabase URL — tries [supabase].url → flat SUPABASE_URL → env."""
+        try:
+            return st.secrets["supabase"]["url"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["SUPABASE_URL"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        return os.environ.get("SUPABASE_URL", "")
+
     @staticmethod
     def get_key() -> str:
-        """Get Supabase anon key from secrets or env."""
-        return st.secrets.get("SUPABASE_KEY", os.environ.get("SUPABASE_KEY", ""))
-    
+        """Get Supabase key — tries [supabase].key → flat SUPABASE_KEY → env."""
+        try:
+            return st.secrets["supabase"]["key"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["SUPABASE_KEY"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        return os.environ.get("SUPABASE_KEY", "")
+
     @staticmethod
     def is_configured() -> bool:
         """Check if Supabase is properly configured."""
@@ -81,26 +97,44 @@ class SupabaseConfig:
 class APIConfig:
     """
     API keys and model configuration.
+
+    Supports both nested secrets ([groq].api_key) and flat (GROQ_API_KEY).
     """
     # Model names
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GEMINI_MODEL: str = "gemini-2.5-flash"
-    
+
     # Temperature for generation
     TEMPERATURE: float = 0.1
-    
+
     # Timeout settings
     API_TIMEOUT_SECONDS: int = 60
-    
+
     @staticmethod
     def get_groq_key() -> str:
-        """Get Groq API key."""
-        return st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
-    
+        """Get Groq API key — tries [groq].api_key → flat GROQ_API_KEY → env."""
+        try:
+            return st.secrets["groq"]["api_key"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["GROQ_API_KEY"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        return os.environ.get("GROQ_API_KEY", "")
+
     @staticmethod
     def get_gemini_key() -> str:
-        """Get Gemini API key."""
-        return st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
+        """Get Gemini API key — tries [gemini].api_key → flat GEMINI_API_KEY → env."""
+        try:
+            return st.secrets["gemini"]["api_key"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["GEMINI_API_KEY"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        return os.environ.get("GEMINI_API_KEY", "")
 
 
 # ============================================================================

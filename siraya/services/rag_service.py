@@ -4,7 +4,6 @@ Usa RAG SOLO per indagine clinica (Fase 4)
 """
 
 import streamlit as st
-from supabase import create_client
 from typing import List, Dict, Optional
 import logging
 
@@ -16,17 +15,24 @@ class RAGService:
     RAG Service con ricerca full-text PostgreSQL.
     Attivato SOLO per domande cliniche specifiche.
     """
-    
+
     def __init__(self):
-        """Inizializza connessione Supabase."""
+        """Inizializza connessione Supabase via SupabaseConfig (nested + flat)."""
+        self.supabase = None
         try:
-            self.supabase = create_client(
-                st.secrets["supabase"]["url"],
-                st.secrets["supabase"]["service_role_key"]
-            )
-            logger.info("✅ RAG Service connesso a Supabase")
+            from ..config.settings import SupabaseConfig
+
+            if SupabaseConfig.is_configured():
+                from supabase import create_client
+                self.supabase = create_client(
+                    SupabaseConfig.get_url(),
+                    SupabaseConfig.get_key()
+                )
+                logger.info("✅ RAG Service connesso a Supabase")
+            else:
+                logger.warning("⚠️ Supabase non configurato — RAG disabilitato")
         except Exception as e:
-            logger.error(f"❌ Errore connessione Supabase: {e}")
+            logger.error(f"❌ RAG Supabase init failed: {type(e).__name__} - {e}")
             self.supabase = None
     
     def should_use_rag(self, phase: str, user_message: str) -> bool:

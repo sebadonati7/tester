@@ -3,7 +3,7 @@
 # MODIFICATA LA STRUTTURA O AGGIUNTA UNA FUNZIONE.
 # ============================================================================
 # SIRAYA Health Navigator — Project Map
-# Ultima modifica: 2026-02-12
+# Ultima modifica: 2026-02-12 (V3.1 — Fix Connessioni API)
 # ============================================================================
 
 ================================================================================
@@ -26,7 +26,10 @@ siraya/config/settings.py  —  Configurazione Centralizzata
   Classi / costanti:
     - PATHS             → path dati e CSS
     - SupabaseConfig    → URL, KEY, nomi tabelle Supabase
+                          get_url/get_key: nested [supabase].url → flat → env
     - APIConfig         → modelli Groq/Gemini, temperature, timeout
+                          get_groq_key: nested [groq].api_key → flat → env
+                          get_gemini_key: nested [gemini].api_key → flat → env
     - Settings          → titolo app, layout
     - UITheme / UI_THEME→ palette colori
     - RAGConfig         → embedding model, chunk size, top_k
@@ -86,21 +89,25 @@ siraya/services/llm_service.py  —  LLM Service (The State Machine)
     - SymptomNormalizer          → fuzzy-matching sintomi (medicalizzazione)
     - DiagnosisSanitizer         → blocco diagnosi/prescrizioni vietate
     - LLMService
+        ── _init_clients()       → init via APIConfig (nested+flat), test connessione
+        ── test_api_connections() → diagnostica: testa Groq, Gemini, Supabase
         ── generate_response()   → ★ ENTRY POINT: state-machine autonoma
         ── _determine_phase()    → rileva INTAKE / CLINICAL / RECOMMENDATION / INFO
         ── _extract_inline_data()→ estrae età, sesso, località, dolore dall'input
+        ── _smart_route()        → assegna percorso + check_escalation C→A
         ── _phase_intake()       → fase 1: accoglienza, dati base, ZERO RAG
         ── _phase_clinical()     → fase 2: triage clinico con Lazy RAG
+        ── _clinical_path_a()    → percorso A: 3-4 domande emergenza SI/NO
+        ── _clinical_path_b()    → percorso B: consenso→farmaci→valutazione
+        ── _clinical_path_c()    → percorso C: 5-7 domande A/B/C + medicalizzazione
         ── _phase_recommendation()→ fase 3: SBAR + ricerca struttura
         ── _phase_info()         → branch INFO: interroga master_kb.json
-        ── _call_llm()           → chiamata API low-level (Groq → Gemini fallback)
+        ── _call_llm()           → API con retry+backoff (Groq → Gemini)
         ── _parse_options()      → estrae opzioni A/B/C dalla risposta LLM
         ── _get_conversation_ctx()→ formatta ultimi messaggi per il prompt
         ── _log_interaction()    → logging Supabase
         ── check_emergency()     → keyword emergenze critiche
-        ── get_ai_response()     → metodo legacy (chiama _call_llm internamente)
-        ── _build_intake_prompt / _build_system_prompt_with_rag /
-           _build_recommendation_prompt → prompt-builder per ogni fase
+        ── get_ai_response()     → metodo legacy (backward-compat)
     - get_llm_service()  → singleton
 
 ================================================================================
@@ -109,8 +116,10 @@ siraya/services/rag_service.py  —  RAG Service (Lazy RAG)
   Responsabilità : Retrieval-Augmented Generation tramite full-text search
                    su Supabase.  Attivato SOLO nelle fasi cliniche esplicite
                    (FASE_4_TRIAGE, FAST_TRIAGE_A, VALUTAZIONE_RISCHIO_B).
+                   Connessione Supabase via SupabaseConfig (nested+flat).
   Classi / funzioni:
     - RAGService
+        ── __init__()                   → connessione via SupabaseConfig
         ── should_use_rag(phase, msg)   → gatekeeper (Lazy RAG)
         ── retrieve_context(query, k)   → cerca chunks
         ── format_context_for_llm()     → formatta per prompt
@@ -181,9 +190,13 @@ siraya/controllers/smart_router.py  —  Smart Router
 ================================================================================
   Responsabilità : Analizza l'input utente e determina il percorso di triage
                    (A = Emergenza, B = Salute Mentale, C = Standard, INFO).
+                   V3.1: scoring emergenze + escalation C→A.
   Classi / funzioni:
     - SmartRouter
-        ── route(user_message)          → (percorso, metadata)
+        ── EMERGENCY_KEYWORDS          → keyword emergenze con scoring
+        ── ESCALATION_KEYWORDS         → keyword peggioramento (nuovo)
+        ── route(user_message)          → (percorso, metadata) con score
+        ── check_escalation(message)    → True se C deve diventare A (nuovo)
         ── extract_location(message)    → nome comune o "Non specificato"
 
 ================================================================================
@@ -321,4 +334,20 @@ CHANGELOG V3 (2026-02-12)
     per le 3 macro-fasi V3 con badge percorso.
   - .gitignore: aggiunto *.bat; ripulito contenuto corrotto.
   - dev_start.bat: nuovo launcher per sviluppo locale.
+
+================================================================================
+CHANGELOG V3.1 — FIX CONNESSIONI API (2026-02-12)
+================================================================================
+  - settings.py: APIConfig.get_groq_key/get_gemini_key ora supportano formato
+    nested ([groq].api_key) E flat (GROQ_API_KEY), con fallback env var.
+    SupabaseConfig.get_url/get_key stessa logica tri-livello.
+  - llm_service.py: _init_clients() usa APIConfig + testa connessione Groq reale
+    (models.list()). Aggiunto test_api_connections() per diagnostica.
+    _call_llm() ha retry con backoff esponenziale (2^attempt sec).
+    _smart_route() usa SmartRouter.check_escalation() per escalation C→A.
+  - rag_service.py: __init__() usa SupabaseConfig.get_url/get_key (non più
+    st.secrets["supabase"]["service_role_key"] hardcoded).
+  - smart_router.py: V3.1 — aggiunto ESCALATION_KEYWORDS, scoring emergenze
+    multiplo, check_escalation() per peggioramento sintomi durante percorso C.
+  - secrets.toml: migrato a formato nested ([groq]/[gemini] sections).
 
