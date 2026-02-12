@@ -3,7 +3,7 @@
 # MODIFICATA LA STRUTTURA O AGGIUNTA UNA FUNZIONE.
 # ============================================================================
 # SIRAYA Health Navigator — Project Map
-# Ultima modifica: 2026-02-12 (V3.1 — Fix Connessioni API)
+# Ultima modifica: 2026-02-12 (V4.0 — Modular LLM + Multi-Fix)
 # ============================================================================
 
 ================================================================================
@@ -40,6 +40,13 @@ siraya/config/settings.py  —  Configurazione Centralizzata
     - haversine_distance()  → distanza geodetica tra coordinate
 
 ================================================================================
+siraya/config/styles.css  —  Foglio di Stile
+================================================================================
+  Responsabilità : CSS centralizzato per tutta l'app.
+  V4.0: Fix button flex-layout per evitare sovrapposizione icone/testo.
+         Aggiunto gap, min-height, inline-flex, text-overflow su bottoni.
+
+================================================================================
 siraya/core/state_manager.py  —  State Manager ("Il Cervelletto")
 ================================================================================
   Responsabilità : Wrapper sicuro attorno a st.session_state. Inizializza
@@ -69,46 +76,74 @@ siraya/core/navigation.py  —  Navigazione ("Il Navigatore")
 siraya/core/authentication.py  —  Autenticazione ("Il Portinaio")
 ================================================================================
   Responsabilità : Gestione privacy/GDPR e accesso admin.
+  V4.0: Password admin = "ciaociao" (DEFAULT_ADMIN_PASSWORD).
+        admin_login() cerca ADMIN_PASSWORD → BACKEND_PASSWORD → default.
   Classi / funzioni:
     - AuthKeys           → chiavi privacy/admin
     - AuthManager        → is_privacy_accepted, accept_privacy, revoke_privacy,
-                           admin_login, admin_logout
+                           admin_login (cerca ADMIN_PASSWORD o BACKEND_PASSWORD),
+                           admin_logout
     - check_privacy_accepted()
     - require_privacy / require_admin  → decoratori
     - render_admin_login()
     - render_privacy_consent()
 
 ================================================================================
-siraya/services/llm_service.py  —  LLM Service (The State Machine)
+siraya/services/llm_service.py  —  LLM Service (Orchestrator)
 ================================================================================
-  Responsabilità : Gestore AUTONOMO della conversazione.  Il metodo pubblico
-                   generate_response(user_input, session_state) incapsula
-                   l'intera logica decisionale:
-                   INTAKE → CLINICAL_TRIAGE → RECOMMENDATION.
+  Responsabilità : Orchestratore MODULARE della conversazione.
+                   V4.0: logica delle fasi delegata a llm_phases/.
+                   generate_response() è l'UNICO entry-point per il frontend.
   Classi / funzioni:
-    - SymptomNormalizer          → fuzzy-matching sintomi (medicalizzazione)
-    - DiagnosisSanitizer         → blocco diagnosi/prescrizioni vietate
     - LLMService
         ── _init_clients()       → init via APIConfig (nested+flat), test connessione
         ── test_api_connections() → diagnostica: testa Groq, Gemini, Supabase
-        ── generate_response()   → ★ ENTRY POINT: state-machine autonoma
+        ── generate_response()   → ★ ENTRY POINT: dispatcha alle fasi
         ── _determine_phase()    → rileva INTAKE / CLINICAL / RECOMMENDATION / INFO
-        ── _extract_inline_data()→ estrae età, sesso, località, dolore dall'input
         ── _smart_route()        → assegna percorso + check_escalation C→A
-        ── _phase_intake()       → fase 1: accoglienza, dati base, ZERO RAG
-        ── _phase_clinical()     → fase 2: triage clinico con Lazy RAG
-        ── _clinical_path_a()    → percorso A: 3-4 domande emergenza SI/NO
-        ── _clinical_path_b()    → percorso B: consenso→farmaci→valutazione
-        ── _clinical_path_c()    → percorso C: 5-7 domande A/B/C + medicalizzazione
-        ── _phase_recommendation()→ fase 3: SBAR + ricerca struttura
-        ── _phase_info()         → branch INFO: interroga master_kb.json
-        ── _call_llm()           → API con retry+backoff (Groq → Gemini)
-        ── _parse_options()      → estrae opzioni A/B/C dalla risposta LLM
-        ── _get_conversation_ctx()→ formatta ultimi messaggi per il prompt
-        ── _log_interaction()    → logging Supabase
         ── check_emergency()     → keyword emergenze critiche
+        ── _log_interaction()    → logging Supabase
         ── get_ai_response()     → metodo legacy (backward-compat)
     - get_llm_service()  → singleton
+
+================================================================================
+siraya/services/llm_utils.py  —  LLM Shared Utilities  [NUOVO V4.0]
+================================================================================
+  Responsabilità : Utilità condivise da tutti i moduli LLM.
+  Classi / funzioni:
+    - SymptomNormalizer      → fuzzy-matching sintomi (medicalizzazione)
+    - DiagnosisSanitizer     → blocco diagnosi/prescrizioni vietate
+    - PROMPTS                → template prompt per tutte le fasi
+    - MAX_QUESTIONS          → max domande per percorso {A:4, B:6, C:7}
+    - call_llm()             → API con retry+backoff (Groq → Gemini → fallback)
+    - get_conversation_ctx() → formatta ultimi messaggi
+    - get_rag_context()      → recupera contesto RAG (Lazy)
+    - parse_options()        → estrae opzioni A/B/C dalla risposta
+    - has_symptom_keywords() → rileva keyword sintomatiche
+
+================================================================================
+siraya/services/llm_phases/  —  Phase Handlers  [NUOVO V4.0]
+================================================================================
+  __init__.py              → re-export IntakePhase, TriagePhase,
+                             RecommendationPhase, InfoPhase
+
+  intake_phase.py          → IntakePhase
+    ── handle()            → accoglienza, raccolta dati, ZERO RAG
+    ── extract_inline_data() → estrae età/sesso/località/dolore/sintomo
+
+  triage_phase.py          → TriagePhase
+    ── handle()            → dispatcha a _path_a/b/c
+    ── _path_a()           → Percorso A: 3-4 domande emergenza SI/NO
+    ── _path_b()           → Percorso B: consenso→farmaci→rischio
+    ── _path_c()           → Percorso C: 5-7 domande A/B/C + medicalizzazione
+
+  recommendation_phase.py  → RecommendationPhase
+    ── handle()            → genera SBAR + cerca struttura
+    ── _search_facility()  → interroga data_loader
+
+  info_phase.py            → InfoPhase
+    ── handle()            → branch informativo da master_kb.json
+    ── _search_kb()        → ricerca fuzzy strutture
 
 ================================================================================
 siraya/services/rag_service.py  —  RAG Service (Lazy RAG)
@@ -138,7 +173,8 @@ siraya/services/data_loader.py  —  Data Loader
         ── find_facilities_smart()       → ricerca gerarchica con proximity-score
         ── find_nearest_facilities_geo() → ricerca geo con haversine
         ── load_districts / get_all_comuni / is_valid_comune_er
-        ── get_comune_coordinates / get_district_for_comune
+        ── get_comune_coordinates()      → restituisce Tuple[float,float] o None
+        ── get_district_for_comune
         ── get_all_available_services()  → catalogo servizi
     - get_data_loader()   → singleton
     - Convenience: load_master_kb, load_districts, load_map_data, …
@@ -194,9 +230,9 @@ siraya/controllers/smart_router.py  —  Smart Router
   Classi / funzioni:
     - SmartRouter
         ── EMERGENCY_KEYWORDS          → keyword emergenze con scoring
-        ── ESCALATION_KEYWORDS         → keyword peggioramento (nuovo)
+        ── ESCALATION_KEYWORDS         → keyword peggioramento
         ── route(user_message)          → (percorso, metadata) con score
-        ── check_escalation(message)    → True se C deve diventare A (nuovo)
+        ── check_escalation(message)    → True se C deve diventare A
         ── extract_location(message)    → nome comune o "Non specificato"
 
 ================================================================================
@@ -254,6 +290,8 @@ siraya/views/sidebar_view.py  —  Sidebar View
 siraya/views/map_view.py  —  Map View
 ================================================================================
   Responsabilità : Mappa interattiva strutture sanitarie (Folium + fallback).
+  V4.0: Fix coords tuple/dict handling, fix session_state widget key
+        (usa _map_quick_service come chiave temporanea per quick-link).
   Funzioni:
     - render()                    → entry-point della view
     - render_folium_map()         → mappa Folium con marker
@@ -265,6 +303,7 @@ siraya/views/map_view.py  —  Map View
 siraya/views/dashboard_view.py  —  Dashboard View
 ================================================================================
   Responsabilità : Dashboard analytics con 15 KPI e grafici Plotly.
+                   Accesso protetto: password admin "ciaociao" (BACKEND_PASSWORD).
   Funzioni:
     - render()                → entry-point (admin-only)
     - render_throughput_chart / render_urgenza_pie / render_funnel_chart
@@ -327,27 +366,49 @@ CHANGELOG V3 (2026-02-12)
   - llm_service.py: riscrittura completa → generate_response() è la state-machine
     autonoma; 4 fasi (INTAKE, CLINICAL_TRIAGE, RECOMMENDATION, INFO); Lazy RAG;
     Percorsi A/B/C integrati; medicalizzazione input; SBAR + facility search.
-  - state_manager.py: CURRENT_PHASE default cambiato da "INTENT_DETECTION" → "INTAKE";
-    TRIAGE_PATH default cambiato da "C" → None (assegnato dallo SmartRouter).
-  - chat_view.py: _process_user_input() ora delega a llm_service.generate_response()
-    invece che a triage_controller.handle_user_input().  Step tracker ridisegnato
-    per le 3 macro-fasi V3 con badge percorso.
+  - state_manager.py: CURRENT_PHASE default → "INTAKE"; TRIAGE_PATH default → None.
+  - chat_view.py: _process_user_input() delega a llm_service.generate_response().
   - .gitignore: aggiunto *.bat; ripulito contenuto corrotto.
   - dev_start.bat: nuovo launcher per sviluppo locale.
 
 ================================================================================
 CHANGELOG V3.1 — FIX CONNESSIONI API (2026-02-12)
 ================================================================================
-  - settings.py: APIConfig.get_groq_key/get_gemini_key ora supportano formato
-    nested ([groq].api_key) E flat (GROQ_API_KEY), con fallback env var.
-    SupabaseConfig.get_url/get_key stessa logica tri-livello.
-  - llm_service.py: _init_clients() usa APIConfig + testa connessione Groq reale
-    (models.list()). Aggiunto test_api_connections() per diagnostica.
-    _call_llm() ha retry con backoff esponenziale (2^attempt sec).
-    _smart_route() usa SmartRouter.check_escalation() per escalation C→A.
-  - rag_service.py: __init__() usa SupabaseConfig.get_url/get_key (non più
-    st.secrets["supabase"]["service_role_key"] hardcoded).
-  - smart_router.py: V3.1 — aggiunto ESCALATION_KEYWORDS, scoring emergenze
-    multiplo, check_escalation() per peggioramento sintomi durante percorso C.
-  - secrets.toml: migrato a formato nested ([groq]/[gemini] sections).
+  - settings.py: APIConfig.get_groq_key/get_gemini_key con formato nested + flat.
+  - llm_service.py: _init_clients() + test_api_connections() + retry backoff.
+  - rag_service.py: SupabaseConfig.get_url/get_key.
+  - smart_router.py: ESCALATION_KEYWORDS + check_escalation().
+  - secrets.toml: formato nested ([groq]/[gemini]).
+
+================================================================================
+CHANGELOG V4.0 — MODULAR LLM + MULTI-FIX (2026-02-12)
+================================================================================
+  1. REFACTOR llm_service.py (1271 → ~300 righe):
+     Nuovi file:
+       - services/llm_utils.py          → utilità condivise (SymptomNormalizer,
+                                          DiagnosisSanitizer, call_llm, PROMPTS, ecc.)
+       - services/llm_phases/__init__.py → re-export 4 classi
+       - services/llm_phases/intake_phase.py
+       - services/llm_phases/triage_phase.py
+       - services/llm_phases/recommendation_phase.py
+       - services/llm_phases/info_phase.py
+     llm_service.py ora è un orchestratore sottile che dispatcha alle fasi.
+
+  2. FIX map_view.py — coords tuple:
+     get_comune_coordinates() restituisce Optional[Tuple] non dict.
+     Aggiunto isinstance check (tuple/dict/None) prima di accedere lat/lon.
+
+  3. FIX map_view.py — session_state widget:
+     I quick-link buttons ora scrivono su _map_quick_service (chiave temp)
+     che viene trasferita a "map_service" PRIMA della creazione del selectbox
+     nel ciclo successivo (st.rerun pattern).
+
+  4. FIX styles.css — bottoni icon/text overlap:
+     Aggiunto inline-flex, gap:8px, min-height, text-overflow, overflow
+     su .stButton > button per impedire sovrapposizione icone/testo.
+
+  5. FIX authentication.py — password admin:
+     DEFAULT_ADMIN_PASSWORD = "ciaociao".
+     admin_login() ora cerca st.secrets["ADMIN_PASSWORD"] →
+     st.secrets["BACKEND_PASSWORD"] → default.
 

@@ -204,6 +204,11 @@ def render() -> None:
         render_privacy_consent()
         return
     
+    # === PRE-WIDGET SESSION STATE TRANSFERS ===
+    # Quick-link buttons set a temp key; transfer it BEFORE widget creation
+    if "_map_quick_service" in st.session_state:
+        st.session_state["map_service"] = st.session_state.pop("_map_quick_service")
+    
     # === HEADER ===
     st.markdown("""
     <div style="text-align: center; padding: 10px 0;">
@@ -229,6 +234,10 @@ def render() -> None:
         # Service type selection
         available_services = data_loader.get_all_available_services()
         service_options = ["Tutti i servizi"] + available_services
+        
+        # Initialize widget key before creation
+        if "map_service" not in st.session_state:
+            st.session_state["map_service"] = "Tutti i servizi"
         
         selected_service = st.selectbox(
             "🩺 Tipo di Servizio",
@@ -281,8 +290,13 @@ def render() -> None:
             # Get center from patient location or first facility
             if location:
                 coords = data_loader.get_comune_coordinates(location)
-                center_lat = coords.get('lat', DEFAULT_LAT)
-                center_lon = coords.get('lon', DEFAULT_LON)
+                if isinstance(coords, tuple):
+                    center_lat, center_lon = coords
+                elif isinstance(coords, dict):
+                    center_lat = coords.get('lat', DEFAULT_LAT)
+                    center_lon = coords.get('lon', DEFAULT_LON)
+                else:
+                    center_lat, center_lon = DEFAULT_LAT, DEFAULT_LON
             elif facilities:
                 first = facilities[0]
                 center_lat = first.get('lat') or first.get('latitude') or DEFAULT_LAT
@@ -327,17 +341,17 @@ def render() -> None:
         
         with col1:
             if st.button("🏥 Pronto Soccorso", use_container_width=True):
-                st.session_state["map_service"] = "Pronto Soccorso"
+                st.session_state["_map_quick_service"] = "Pronto Soccorso"
                 st.rerun()
         
         with col2:
             if st.button("🩺 CAU", use_container_width=True):
-                st.session_state["map_service"] = "CAU"
+                st.session_state["_map_quick_service"] = "CAU"
                 st.rerun()
         
         with col3:
             if st.button("💊 Farmacia", use_container_width=True):
-                st.session_state["map_service"] = "Farmacia"
+                st.session_state["_map_quick_service"] = "Farmacia"
                 st.rerun()
     
     # === BACK BUTTON ===

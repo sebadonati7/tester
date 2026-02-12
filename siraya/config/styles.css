@@ -70,12 +70,23 @@ footer { visibility: hidden; }
 .stButton > button {
     width: 100%;
     border-radius: 8px;
-    height: 3em;
+    min-height: 3em;
+    height: auto;
     font-weight: 500;
     transition: all 0.3s ease;
     border: 1px solid #E5E7EB;
     color: #000000 !important;
     background-color: #FFFFFF;
+    /* Prevent icon/text overlap */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px;
+    padding: 8px 16px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
 }
 
 .stButton > button:hover {
@@ -97,6 +108,12 @@ footer { visibility: hidden; }
 
 .stButton > button[kind="primary"]:hover {
     background-color: #3A7BC8;
+}
+
+/* Sidebar button specifics */
+[data-testid="stSidebar"] .stButton > button {
+    font-size: 0.9em;
+    min-height: 2.5em;
 }
 
 /* ============================================================================

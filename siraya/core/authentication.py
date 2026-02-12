@@ -51,7 +51,7 @@ class AuthManager:
     """
     
     # Default admin credentials (should be in secrets in production)
-    DEFAULT_ADMIN_PASSWORD = "siraya_admin_2024"
+    DEFAULT_ADMIN_PASSWORD = "ciaociao"
     
     def __init__(self):
         """Initialize auth manager."""
@@ -133,8 +133,19 @@ class AuthManager:
         Returns:
             True if login successful
         """
-        # Get password from secrets or use default
-        correct_password = st.secrets.get("ADMIN_PASSWORD", self.DEFAULT_ADMIN_PASSWORD)
+        # Get password from secrets (try ADMIN_PASSWORD, then BACKEND_PASSWORD)
+        correct_password = None
+        try:
+            correct_password = st.secrets.get("ADMIN_PASSWORD")
+        except (KeyError, TypeError, AttributeError):
+            pass
+        if not correct_password:
+            try:
+                correct_password = st.secrets.get("BACKEND_PASSWORD")
+            except (KeyError, TypeError, AttributeError):
+                pass
+        if not correct_password:
+            correct_password = self.DEFAULT_ADMIN_PASSWORD
         
         if password == correct_password:
             st.session_state[AuthKeys.ADMIN_LOGGED_IN] = True
