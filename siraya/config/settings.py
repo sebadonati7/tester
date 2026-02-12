@@ -84,7 +84,7 @@ class APIConfig:
     """
     # Model names
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
-    GEMINI_MODEL: str = "gemini-2.0-flash-exp"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     
     # Temperature for generation
     TEMPERATURE: float = 0.1
