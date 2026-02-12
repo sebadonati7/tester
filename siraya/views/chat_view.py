@@ -199,7 +199,9 @@ def render_survey_buttons(options: List[str], question_key: str) -> Optional[str
 
 def render_disclaimer() -> None:
     """Render medical disclaimer notice."""
-    st.markdown("""
+    import streamlit.components.v1 as components
+    
+    html = """
     <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; 
                 padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
         <strong>⚠️ Nota Importante</strong><br>
@@ -208,7 +210,9 @@ def render_disclaimer() -> None:
         il parere medico. In caso di emergenza, chiama immediatamente il <strong>118</strong>.
         </small>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    components.html(html, height=80)
 
 
 # ============================================================================
@@ -222,6 +226,8 @@ def render() -> None:
     Main entry point for the chat view.
     Visual Parity with legacy frontend.py.
     """
+    import streamlit.components.v1 as components
+    
     # Get services
     state = get_state_manager()
     controller = get_triage_controller()
@@ -232,7 +238,7 @@ def render() -> None:
         return
     
     # === HEADER ===
-    st.markdown("""
+    header_html = """
     <div style="text-align: center; padding: 10px 0;">
         <h1 style="color: #4A90E2; font-weight: 300; letter-spacing: 0.1em; margin: 0;">
             🏥 SIRAYA Health Navigator
@@ -241,7 +247,8 @@ def render() -> None:
             Assistente Intelligente per la Navigazione Sanitaria
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    components.html(header_html, height=100)
     
     # === DISCLAIMER ===
     render_disclaimer()

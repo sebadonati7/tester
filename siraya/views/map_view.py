@@ -244,7 +244,9 @@ def render() -> None:
         st.session_state["map_service"] = st.session_state.pop("_map_quick_service")
     
     # === HEADER ===
-    st.markdown("""
+    import streamlit.components.v1 as components
+    
+    header_html = """
     <div style="text-align: center; padding: 10px 0;">
         <h1 style="color: #4A90E2; font-weight: 300; margin: 0;">
             🗺️ Trova Struttura Sanitaria
@@ -253,7 +255,8 @@ def render() -> None:
             Cerca la struttura più vicina per le tue esigenze
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    components.html(header_html, height=100)
     
     st.markdown("---")
     
