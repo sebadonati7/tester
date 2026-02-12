@@ -54,8 +54,42 @@ def get_facility_icon(tipologia: str) -> str:
     return FACILITY_ICONS["default"]
 
 
+def render_facility_card(facility: Dict[str, Any]) -> None:
+    """Render facility as a card using native Streamlit components (NO HTML)."""
+    icon = get_facility_icon(facility.get('tipologia', ''))
+    nome = facility.get('nome', 'N/D')
+    tipologia = facility.get('tipologia', 'N/D')
+    indirizzo = facility.get('indirizzo', 'N/D')
+    comune = facility.get('comune', 'N/D')
+    contatti = facility.get('contatti', {})
+    telefono = contatti.get('telefono', 'N/D') if isinstance(contatti, dict) else 'N/D'
+    orari = facility.get('orari', 'N/D')
+    distance = facility.get('distance_km')
+    
+    # ✅ USE STREAMLIT NATIVE COMPONENTS - NO HTML!
+    with st.container():
+        col1, col2 = st.columns([4, 1])
+        
+        with col1:
+            st.markdown(f"### {icon} {nome}")
+            st.caption(f"**Tipo**: {tipologia}")
+        
+        with col2:
+            if distance:
+                st.metric("Distanza", f"{distance:.1f} km")
+        
+        st.markdown(f"**📍 Indirizzo**: {indirizzo}, {comune}")
+        st.markdown(f"**📞 Telefono**: {telefono}")
+        st.markdown(f"**🕐 Orari**: {orari}")
+        
+        st.divider()
+
+
 def format_facility_card(facility: Dict[str, Any]) -> str:
-    """Format facility info as HTML card."""
+    """
+    DEPRECATED: Use render_facility_card() instead.
+    Format facility info as HTML card.
+    """
     icon = get_facility_icon(facility.get('tipologia', ''))
     nome = facility.get('nome', 'N/D')
     tipologia = facility.get('tipologia', 'N/D')
@@ -310,7 +344,7 @@ def render() -> None:
             st.subheader("📋 Risultati")
             
             for facility in facilities[:10]:
-                st.markdown(format_facility_card(facility), unsafe_allow_html=True)
+                render_facility_card(facility)
                 
                 # Action buttons
                 col_a, col_b = st.columns(2)

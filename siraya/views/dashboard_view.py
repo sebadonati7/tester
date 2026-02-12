@@ -282,7 +282,18 @@ def render() -> None:
     # Check admin access (optional - remove for open access)
     auth = get_auth_manager()
     if not auth.is_admin_logged_in():
-        st.warning("🔒 Accesso riservato agli amministratori")
+        st.title("🔒 Analytics Dashboard - Login Richiesto")
+        
+        # ✅ SHOW PASSWORD INFO
+        st.info("""
+        **📋 Credenziali di Accesso**
+        
+        - **Password predefinita**: `ciaociao`
+        - Per cambiarla: aggiungi `BACKEND_PASSWORD = "tuapassword"` in `.streamlit/secrets.toml`
+        
+        💡 Se non riesci ad accedere, verifica che il file secrets.toml esista e sia configurato correttamente.
+        """)
+        
         render_admin_login()
         return
     

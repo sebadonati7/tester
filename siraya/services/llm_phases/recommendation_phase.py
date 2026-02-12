@@ -84,11 +84,15 @@ NON aggiungere opzioni A/B/C. Questa è la fase finale.
                     contatti.get('telefono', 'N/D')
                     if isinstance(contatti, dict) else 'N/D'
                 )
+                # ✅ RETURN PURE MARKDOWN - NO HTML
                 return (
-                    f"\n\n📍 **STRUTTURA CONSIGLIATA:**\n"
-                    f"**{top.get('nome', 'N/D')}**\n"
-                    f"{top.get('indirizzo', 'N/D')}, {top.get('comune', 'N/D')}\n"
-                    f"📞 {telefono}"
+                    f"\n\n---\n\n"
+                    f"## 📍 STRUTTURA CONSIGLIATA\n\n"
+                    f"**{top.get('nome', 'N/D')}**\n\n"
+                    f"- **Indirizzo**: {top.get('indirizzo', 'N/D')}, {top.get('comune', 'N/D')}\n"
+                    f"- **Telefono**: {telefono}\n"
+                    f"- **Orari**: {top.get('orari', 'Consulta il sito')}\n\n"
+                    f"💡 **Come raggiungerla**: Utilizza Google Maps o un'app di navigazione."
                 )
         except Exception as e:
             logger.error(f"Facility search failed: {e}")

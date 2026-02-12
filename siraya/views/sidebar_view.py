@@ -24,7 +24,9 @@ from ..core.authentication import get_auth_manager
 
 def _render_logo() -> None:
     """Render the SIRAYA logo - Visual Parity with frontend.py."""
-    st.markdown("""
+    import streamlit.components.v1 as components
+    
+    html = """
     <div style="text-align: center; padding: 20px 0;">
         <div style="font-size: 2.2em; font-weight: 300; letter-spacing: 0.15em; color: #4A90E2;">
             SIRAYA
@@ -36,7 +38,10 @@ def _render_logo() -> None:
             🩺
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    # Use components.html() for reliable HTML rendering
+    components.html(html, height=150)
 
 
 # ============================================================================
@@ -190,33 +195,45 @@ def _render_progress() -> None:
 # ============================================================================
 
 def _render_system_status() -> None:
-    """Render system connection status."""
+    """Render system connection status with detailed diagnostics."""
     st.markdown("**📡 Stato Sistema**")
     
     # Check Supabase connection
     try:
         from ..config.settings import SupabaseConfig
         
-        if SupabaseConfig.is_configured():
-            # Try to ping Supabase
-            try:
-                from supabase import create_client
-                client = create_client(
-                    SupabaseConfig.get_url(),
-                    SupabaseConfig.get_key()
-                )
-                # Simple query to test connection
-                client.table(SupabaseConfig.TABLE_LOGS).select("session_id").limit(1).execute()
-                st.success("✅ Database Connesso")
-            except Exception as e:
-                st.warning(f"⚠️ Database Offline")
-        else:
-            st.warning("⚠️ Database Non Configurato")
+        if not SupabaseConfig.is_configured():
+            st.error("❌ Supabase: Credenziali mancanti")
+            with st.expander("🔍 Debug Info"):
+                st.code(f"URL configurato: {bool(SupabaseConfig.get_url())}")
+                st.code(f"KEY configurato: {bool(SupabaseConfig.get_key())}")
+            return
+        
+        # Test connection
+        try:
+            from supabase import create_client
+            client = create_client(
+                SupabaseConfig.get_url(),
+                SupabaseConfig.get_key()
+            )
             
-    except ImportError:
-        st.error("❌ Modulo config non trovato")
+            # Test query
+            result = client.table(SupabaseConfig.TABLE_LOGS).select("session_id").limit(1).execute()
+            
+            if result.data is not None:  # Even empty list [] is valid
+                st.success(f"✅ Database Connesso")
+                if len(result.data) > 0:
+                    st.caption(f"Ultimo test: OK")
+            else:
+                st.warning("⚠️ Database connesso ma query fallita")
+                
+        except Exception as e:
+            st.error(f"❌ Database Error: {type(e).__name__}")
+            with st.expander("🔍 Error Details"):
+                st.code(str(e))
+    
     except Exception as e:
-        st.error(f"❌ Errore: {str(e)[:30]}")
+        st.error(f"❌ Config Error: {str(e)[:50]}")
     
     # Check LLM availability
     try:

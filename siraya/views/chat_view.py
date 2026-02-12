@@ -42,6 +42,8 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
         key: Unique key for button
         auto_play: Whether to auto-play (requires user interaction first)
     """
+    import streamlit.components.v1 as components
+    
     # Sanitize text for JavaScript
     safe_text = text.replace("'", "\\'").replace("\n", " ").replace('"', '\\"')
     safe_text = safe_text[:1000]  # Limit length for TTS
@@ -80,7 +82,8 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
     </button>
     """
     
-    st.markdown(tts_html, unsafe_allow_html=True)
+    # Use components.html() for better HTML rendering
+    components.html(tts_html, height=40)
 
 
 # ============================================================================
@@ -89,6 +92,8 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
 
 def render_step_tracker() -> None:
     """Render dynamic step tracker showing triage progress (V3 phases)."""
+    import streamlit.components.v1 as components
+    
     state = get_state_manager()
 
     current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
@@ -150,8 +155,8 @@ def render_step_tracker() -> None:
 
     step_html += "</div>"
     
-    # ✅ CRITICAL: Always use unsafe_allow_html=True for HTML rendering
-    st.markdown(step_html, unsafe_allow_html=True)
+    # ✅ SOLUTION: Use st.components.v1.html() instead of st.markdown()
+    components.html(step_html, height=120)
 
 
 # ============================================================================

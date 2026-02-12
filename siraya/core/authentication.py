@@ -9,9 +9,12 @@ This module provides:
 """
 
 import streamlit as st
+import logging
 from typing import Optional, Callable
 from functools import wraps
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================

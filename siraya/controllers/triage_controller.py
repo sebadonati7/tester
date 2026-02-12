@@ -39,7 +39,7 @@ def _log_to_supabase(
     duration_ms: int = 0
 ) -> bool:
     """
-    Log interaction directly to Supabase.
+    Log interaction to Supabase with robust error handling.
     
     Args:
         session_id: Current session ID
@@ -52,40 +52,52 @@ def _log_to_supabase(
         True if logging successful
     """
     if not SupabaseConfig.is_configured():
-        logger.warning("Supabase not configured - skipping log")
+        logger.warning("⚠️ Supabase not configured - skipping log")
         return False
     
     try:
         from supabase import create_client
         
-        client = create_client(
-            SupabaseConfig.get_url(),
-            SupabaseConfig.get_key()
-        )
+        url = SupabaseConfig.get_url()
+        key = SupabaseConfig.get_key()
+        
+        # Test credentials
+        if not url or not key:
+            logger.error("❌ Supabase URL or KEY is empty")
+            return False
+        
+        client = create_client(url, key)
         
         log_record = {
             "session_id": session_id,
-            "user_input": user_input,
-            "bot_response": bot_response,
+            "user_input": user_input[:1000],  # Limit length
+            "bot_response": bot_response[:2000],
             "metadata": json.dumps(metadata, ensure_ascii=False),
             "processing_time_ms": duration_ms,
             "created_at": datetime.utcnow().isoformat()
         }
         
-        result = client.table(SupabaseConfig.TABLE_LOGS).insert(log_record).execute()
+        # Attempt insert with detailed error logging
+        try:
+            result = client.table(SupabaseConfig.TABLE_LOGS).insert(log_record).execute()
+            
+            if result.data and len(result.data) > 0:
+                logger.info(f"✅ Logged to Supabase: {session_id[:8]}...")
+                return True
+            else:
+                logger.error(f"❌ Supabase insert failed - no data returned. Result: {result}")
+                return False
         
-        if result.data:
-            logger.info(f"✅ Logged interaction to Supabase: {session_id[:8]}...")
-            return True
-        else:
-            logger.warning("Supabase insert returned no data")
+        except Exception as insert_error:
+            logger.error(f"❌ Supabase INSERT error: {type(insert_error).__name__} - {str(insert_error)}")
+            logger.error(f"   Record: {json.dumps(log_record, ensure_ascii=False)[:200]}")
             return False
             
-    except ImportError:
-        logger.error("supabase-py not installed")
+    except ImportError as e:
+        logger.error(f"❌ Import error: {e}")
         return False
     except Exception as e:
-        logger.error(f"Supabase logging error: {e}")
+        logger.error(f"❌ Supabase connection error: {type(e).__name__} - {str(e)}")
         return False
 
 
