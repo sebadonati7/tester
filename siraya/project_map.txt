@@ -3,7 +3,7 @@
 # MODIFICATA LA STRUTTURA O AGGIUNTA UNA FUNZIONE.
 # ============================================================================
 # SIRAYA Health Navigator — Project Map
-# Ultima modifica: 2026-02-12 (V4.0 — Modular LLM + Multi-Fix)
+# Ultima modifica: 2026-02-12 (V2.0 — SIRAYA PROTOCOL Refactoring)
 # ============================================================================
 
 ================================================================================

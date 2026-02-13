@@ -193,30 +193,22 @@ def _render_system_status() -> None:
     """Render system connection status."""
     st.markdown("**📡 Stato Sistema**")
     
-    # Check Supabase connection
+    # Check Database connection (usando nuovo db_service)
     try:
-        from ..config.settings import SupabaseConfig
+        from ..services.db_service import get_db_service
         
-        if SupabaseConfig.is_configured():
-            # Try to ping Supabase
-            try:
-                from supabase import create_client
-                client = create_client(
-                    SupabaseConfig.get_url(),
-                    SupabaseConfig.get_key()
-                )
-                # Simple query to test connection
-                client.table(SupabaseConfig.TABLE_LOGS).select("session_id").limit(1).execute()
-                st.success("✅ Database Connesso")
-            except Exception as e:
-                st.warning(f"⚠️ Database Offline")
+        db = get_db_service()
+        status_msg = db.get_status_message()
+        
+        if "✅" in status_msg:
+            st.success(status_msg)
+        elif "💾" in status_msg:
+            st.info(status_msg)
         else:
-            st.warning("⚠️ Database Non Configurato")
+            st.warning(status_msg)
             
-    except ImportError:
-        st.error("❌ Modulo config non trovato")
     except Exception as e:
-        st.error(f"❌ Errore: {str(e)[:30]}")
+        st.error(f"❌ Errore DB: {str(e)[:30]}")
     
     # Check LLM availability
     try:

@@ -214,11 +214,20 @@ class LLMService:
         # ── 5. PHASE DISPATCH ──
         if phase == "INTAKE":
             response = self.intake.handle(user_input, session_state)
+            # Se intake completo, passa a CLINICAL_TRIAGE
+            if session_state.get("intake_complete"):
+                session_state["current_phase"] = "CLINICAL_TRIAGE"
         elif phase == "CLINICAL_TRIAGE":
             triage_path = session_state.get("triage_path", "C")
             response = self.triage.handle(user_input, session_state, triage_path)
-            # None → max questions reached → switch to RECOMMENDATION
+            # None → max questions reached → passa a DEMOGRAPHICS
             if response is None:
+                session_state["current_phase"] = "DEMOGRAPHICS"
+                response = self._handle_demographics(user_input, session_state)
+        elif phase == "DEMOGRAPHICS":
+            response = self._handle_demographics(user_input, session_state)
+            # Se demografia completa, passa a RECOMMENDATION
+            if session_state.get("demographics_complete"):
                 session_state["current_phase"] = "RECOMMENDATION"
                 response = self.recommendation.handle(session_state)
         elif phase == "RECOMMENDATION":
@@ -240,7 +249,7 @@ class LLMService:
             session_state.get("question_count", 0) + 1
         )
 
-        # ── 9. SUPABASE LOGGING ──
+        # ── 9. DATABASE LOGGING (con modalità offline) ──
         self._log_interaction(session_state, user_input, response, start_time)
 
         return response
@@ -304,7 +313,15 @@ class LLMService:
     # ==================================================================
 
     def _determine_phase(self, ss, user_input: str) -> str:
-        """Mappa lo stato corrente nella macro-fase appropriata."""
+        """
+        Mappa lo stato corrente nella macro-fase appropriata.
+        
+        Flusso SIRAYA PROTOCOL:
+        1. INTAKE (ENGAGE → SINTOMO → LOCALIZZAZIONE → DOLORE)
+        2. CLINICAL_TRIAGE (INDAGINE CLINICA con RAG)
+        3. DEMOGRAPHICS (ETÀ → SESSO → SAFETY CHECK)
+        4. RECOMMENDATION (SBAR + struttura)
+        """
         triage_path = ss.get("triage_path")
         collected = ss.get("collected_data", {})
         q_count = ss.get("question_count", 0)
@@ -315,17 +332,128 @@ class LLMService:
         if ss.get("current_phase") == "RECOMMENDATION":
             return "RECOMMENDATION"
 
-        if triage_path is None:
+        # Se intake non completo, resta in INTAKE
+        if not ss.get("intake_complete"):
             return "INTAKE"
 
-        max_q = MAX_QUESTIONS.get(triage_path, 7)
-        if q_count >= max_q and collected.get("chief_complaint"):
+        # Se demografia non completa e triage completo, passa a DEMOGRAPHICS
+        if ss.get("demographics_complete"):
             return "RECOMMENDATION"
+        
+        if not ss.get("demographics_complete") and ss.get("triage_complete"):
+            return "DEMOGRAPHICS"
 
-        if collected.get("chief_complaint"):
+        # Se triage non completo, resta in CLINICAL_TRIAGE
+        if not ss.get("triage_complete"):
+            max_q = MAX_QUESTIONS.get(triage_path, 7)
+            if q_count >= max_q and collected.get("chief_complaint"):
+                ss["triage_complete"] = True
+                return "DEMOGRAPHICS"
             return "CLINICAL_TRIAGE"
 
         return "INTAKE"
+
+    # ==================================================================
+    # DEMOGRAPHICS PHASE (Pilastro 5: DEMOGRAFIA & CHIUSURA)
+    # ==================================================================
+
+    def _handle_demographics(self, user_input: str, ss) -> str:
+        """
+        Pilastro 5: DEMOGRAFIA & CHIUSURA.
+        
+        Chiede età e sesso SOLO alla fine, dopo le domande cliniche.
+        Poi fa safety check e passa a RECOMMENDATION.
+        """
+        collected = ss.get("collected_data", {})
+        conv_ctx = get_conversation_ctx(ss)
+        
+        # Estrai età e sesso dall'input
+        self.intake.extract_inline_data(user_input, ss)
+        collected = ss.get("collected_data", {})
+        
+        # Chiedi età se mancante
+        if not collected.get("age") and not ss.get("patient_age"):
+            age_match = re.search(r'\b(\d{1,3})\s*anni?\b', user_input.lower())
+            if age_match:
+                age = int(age_match.group(1))
+                if 0 < age < 120:
+                    collected["age"] = age
+                    ss["patient_age"] = age
+                    ss["collected_data"] = collected
+            else:
+                prompt = f"""{PROMPTS['base_rules']}
+
+## FASE 5 — DEMOGRAFIA (FINE TRIAGE)
+
+Ora che abbiamo raccolto tutte le informazioni cliniche, ho bisogno di alcuni dati anagrafici per completare il triage.
+
+Chiedi l'età del paziente.
+
+Esempio:
+"Per completare il triage, quanti anni hai?"
+
+Sii diretto e professionale.
+
+{conv_ctx}
+"""
+                response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+                ss["question_count"] = ss.get("question_count", 0) + 1
+                return response
+        
+        # Chiedi sesso se mancante
+        if not collected.get("sex") and not ss.get("patient_sex"):
+            text_lower = user_input.lower()
+            if any(w in text_lower for w in ["maschio", "uomo", "ragazzo", "m ", "mio"]):
+                collected["sex"] = "M"
+                ss["patient_sex"] = "M"
+                ss["collected_data"] = collected
+            elif any(w in text_lower for w in ["femmina", "donna", "ragazza", "f ", "mia"]):
+                collected["sex"] = "F"
+                ss["patient_sex"] = "F"
+                ss["collected_data"] = collected
+            else:
+                prompt = f"""{PROMPTS['base_rules']}
+
+## FASE 5 — DEMOGRAFIA (FINE TRIAGE)
+
+Chiedi il sesso biologico del paziente.
+
+Esempio:
+"Sei maschio o femmina? (Risposta: M / F)"
+
+Sii diretto e professionale.
+
+{conv_ctx}
+"""
+                response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+                ss["question_count"] = ss.get("question_count", 0) + 1
+                return response
+        
+        # Safety check finale
+        if not ss.get("safety_check_done"):
+            prompt = f"""{PROMPTS['base_rules']}
+
+## FASE 5 — SAFETY CHECK FINALE
+
+Prima di generare la raccomandazione, fai un safety check finale.
+
+Chiedi se c'è qualcos'altro che il paziente vuole comunicare o se ci sono altri sintomi.
+
+Esempio:
+"C'è qualcos'altro che devo sapere o altri sintomi che hai notato?"
+
+Sii empatico e professionale.
+
+{conv_ctx}
+"""
+            response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+            ss["safety_check_done"] = True
+            ss["question_count"] = ss.get("question_count", 0) + 1
+            return response
+        
+        # Demografia completa → passa a RECOMMENDATION
+        ss["demographics_complete"] = True
+        return "Grazie per tutte le informazioni. Sto generando la raccomandazione..."
 
     # ==================================================================
     # EMERGENCY DETECTION
@@ -401,17 +529,11 @@ Se hai bisogno di supporto immediato, contatta uno di questi numeri."""
     @staticmethod
     def _log_interaction(ss, user_input: str, response: str,
                          start_time: float) -> None:
-        """Log su Supabase (best-effort, non blocca il flusso)."""
-        if not SupabaseConfig.is_configured():
-            return
-
+        """Log su database (Supabase o offline) - best-effort, non blocca il flusso."""
         try:
-            from supabase import create_client
-
-            client = create_client(
-                SupabaseConfig.get_url(), SupabaseConfig.get_key()
-            )
-
+            from .db_service import get_db_service
+            
+            db = get_db_service()
             duration_ms = int((time.time() - start_time) * 1000)
             session_id = ss.get("session_id", "unknown")
 
@@ -423,17 +545,14 @@ Se hai bisogno di supporto immediato, contatta uno di questi numeri."""
                 "specializzazione": ss.get("specialization", "Generale"),
             }
 
-            record = {
-                "session_id": session_id,
-                "user_input": user_input[:500],
-                "bot_response": response[:2000],
-                "metadata": json.dumps(metadata, ensure_ascii=False),
-                "processing_time_ms": duration_ms,
-            }
-
-            client.table(SupabaseConfig.TABLE_LOGS).insert(record).execute()
+            db.save_interaction(
+                session_id=session_id,
+                user_input=user_input[:500],
+                assistant_response=response[:2000],
+                metadata=metadata
+            )
         except Exception as e:
-            logger.warning(f"Supabase log failed (non-blocking): {e}")
+            logger.warning(f"Database log failed (non-blocking): {e}")
 
     # ==================================================================
     # LEGACY: get_ai_response  (backward-compatible)

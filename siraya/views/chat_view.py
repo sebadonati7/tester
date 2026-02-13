@@ -282,7 +282,8 @@ def render() -> None:
     current_phase = state.get(StateKeys.CURRENT_PHASE, "")
     if current_phase in ("DISPOSITION", "RECOMMENDATION") and messages:
         _render_disposition_summary()
-        return
+        # Non bloccare l'input, ma mostra l'esito in un container distinto
+        st.markdown("---")
     
     # === RENDER PENDING SURVEY OPTIONS ===
     pending_options = controller.get_survey_options()
@@ -348,7 +349,11 @@ def _process_user_input(
 
 
 def _render_disposition_summary() -> None:
-    """Render final disposition summary with SBAR report."""
+    """
+    Render final disposition summary with SBAR report.
+    
+    Mostra l'SBAR in un container distinto con bordo per differenziarlo dalla chat.
+    """
     state = get_state_manager()
     
     st.markdown("---")
@@ -357,30 +362,49 @@ def _render_disposition_summary() -> None:
     collected = state.get(StateKeys.COLLECTED_DATA, {})
     urgency = state.get(StateKeys.URGENCY_LEVEL, 3)
     
-    # SBAR Summary
-    st.markdown("### 📋 Riepilogo SBAR")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**S - Situazione**")
-        st.write(f"Sintomo: {collected.get('CHIEF_COMPLAINT', 'N/D')}")
-        st.write(f"Dolore: {collected.get('PAIN_SCALE', 'N/D')}/10")
+    # SBAR Container distinto (con bordo e stile)
+    with st.container():
+        st.markdown("""
+        <style>
+        .sbar-container {
+            border: 2px solid #4A90E2;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
-        st.markdown("**B - Background**")
-        st.write(f"Età: {collected.get('age', 'N/D')}")
-        st.write(f"Località: {collected.get('LOCATION', 'N/D')}")
-    
-    with col2:
-        st.markdown("**A - Assessment**")
-        urgency_labels = {1: "🟢 Verde", 2: "🟡 Giallo", 3: "🟠 Arancione", 4: "🔴 Rosso", 5: "⚫ Critico"}
-        st.write(f"Urgenza: {urgency_labels.get(urgency, urgency)}")
+        st.markdown('<div class="sbar-container">', unsafe_allow_html=True)
+        st.markdown("### 📋 Report SBAR")
         
-        red_flags = collected.get('RED_FLAGS', [])
-        st.write(f"Red Flags: {', '.join(red_flags) if red_flags else 'Nessuno'}")
+        col1, col2 = st.columns(2)
         
-        st.markdown("**R - Raccomandazione**")
-        st.write(f"Path: {state.get(StateKeys.TRIAGE_PATH, 'C')}")
+        with col1:
+            st.markdown("**S - Situazione**")
+            st.write(f"Sintomo: {collected.get('chief_complaint', collected.get('CHIEF_COMPLAINT', 'N/D'))}")
+            st.write(f"Dolore: {collected.get('pain_scale', collected.get('PAIN_SCALE', 'N/D'))}/10")
+            
+            st.markdown("**B - Background**")
+            st.write(f"Età: {collected.get('age', 'N/D')}")
+            st.write(f"Sesso: {collected.get('sex', 'N/D')}")
+            st.write(f"Località: {collected.get('current_location', collected.get('location', collected.get('LOCATION', 'N/D')))}")
+        
+        with col2:
+            st.markdown("**A - Assessment**")
+            urgency_labels = {1: "🟢 Verde", 2: "🟡 Giallo", 3: "🟠 Arancione", 4: "🔴 Rosso", 5: "⚫ Critico"}
+            st.write(f"Urgenza: {urgency_labels.get(urgency, urgency)}")
+            
+            red_flags = collected.get('red_flags', collected.get('RED_FLAGS', []))
+            st.write(f"Red Flags: {', '.join(red_flags) if red_flags else 'Nessuno'}")
+            
+            st.markdown("**R - Raccomandazione**")
+            triage_path = state.get(StateKeys.TRIAGE_PATH, 'C')
+            path_labels = {"A": "Emergenza", "B": "Salute Mentale", "C": "Standard", "INFO": "Informazioni"}
+            st.write(f"Percorso: {path_labels.get(triage_path, triage_path)}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Action buttons
     st.markdown("---")

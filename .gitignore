@@ -2,3 +2,5 @@ siraya/.env
 .env 
 .streamlit/secrets.toml 
 sessions/
+.venv/ 
+.streamlit/

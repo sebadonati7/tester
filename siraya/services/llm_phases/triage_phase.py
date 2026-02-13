@@ -63,11 +63,13 @@ class TriagePhase:
 
 {PROMPTS['percorso_a']}
 
-## DATI PAZIENTE
-- Età: {collected.get('age', 'N/D')}
-- Località: {collected.get('location', 'N/D')}
+## DATI PAZIENTE (RACCOLTI FINORA)
+- Località corrente: {collected.get('current_location', collected.get('location', 'N/D'))}
 - Sintomo: {collected.get('chief_complaint', 'N/D')}
+- Scala dolore: {collected.get('pain_scale', 'N/D')}/10
 - Domande poste finora: {q_count}/{MAX_QUESTIONS['A']}
+
+NOTA: NON chiedere età o sesso. Concentrati solo su red flags per confermare l'emergenza.
 
 {rag_ctx}
 
@@ -81,6 +83,8 @@ A) SÌ
 B) NO
 
 Genera ora la domanda più critica.
+
+IMPORTANTE: NON chiedere dati anagrafici. Solo domande cliniche urgenti.
 
 {conv_ctx}
 """
@@ -179,19 +183,20 @@ Genera ora la domanda più critica.
 
 {PROMPTS['percorso_c']}
 
-## DATI PAZIENTE
-- Età: {collected.get('age', 'N/D')}
-- Sesso: {collected.get('sex', 'N/D')}
-- Località: {collected.get('location', 'N/D')}
+## DATI PAZIENTE (RACCOLTI FINORA)
+- Località corrente: {collected.get('current_location', collected.get('location', 'N/D'))}
 - Sintomo principale: {collected.get('chief_complaint', 'N/D')}
-- Scala dolore: {collected.get('pain_scale', 'N/D')}
+- Scala dolore: {collected.get('pain_scale', 'N/D')}/10
 - Domande poste finora: {q_count}/{MAX_QUESTIONS['C']}
+
+NOTA: NON chiedere età o sesso. Questi dati verranno raccolti alla fine del triage.
+
 {medicalized_note}
 
 {rag_ctx}
 
 ISTRUZIONI:
-Genera ESATTAMENTE UNA domanda diagnostica basata sui protocolli clinici.
+Genera ESATTAMENTE UNA domanda diagnostica basata sui protocolli clinici del Knowledge Base.
 
 **Formato obbligatorio:**
 Testo della domanda, poi 3 opzioni:
@@ -204,6 +209,8 @@ Se il paziente ha risposto con testo libero, MEDICALIZZA il termine
 e rigenera 3 opzioni specifiche.
 
 Se emergono nuovi sintomi gravi → segnala l'escalation.
+
+IMPORTANTE: NON chiedere dati anagrafici (età, sesso). Concentrati solo su domande cliniche.
 
 {conv_ctx}
 """
