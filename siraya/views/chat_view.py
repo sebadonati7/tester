@@ -141,10 +141,16 @@ def render_step_tracker() -> None:
             if collected.get(alt_key) or state.get(alt_key):
                 return True
         
-        # Caso speciale per ANAMNESI: completato se ci sono state domande
+        # Caso speciale per ANAMNESI: completato solo se siamo in fase CLINICAL_TRIAGE
+        # e ci sono state domande di triage clinico (non semplici interazioni)
         if square["key"] == "ANAMNESI":
+            current_phase = state.get(StateKeys.CURRENT_PHASE, "")
             question_count = state.get(StateKeys.QUESTION_COUNT, 0)
-            if question_count > 0:
+            # Considera completato solo se siamo in triage clinico e ci sono state domande
+            if current_phase == "CLINICAL_TRIAGE" and question_count > 0:
+                return True
+            # Oppure se abbiamo già completato il triage
+            if current_phase in ("RECOMMENDATION", "DISPOSITION"):
                 return True
         
         # Caso speciale per ESITO: completato se siamo in fase RECOMMENDATION
@@ -156,6 +162,17 @@ def render_step_tracker() -> None:
     
     # Funzione per ottenere il valore da mostrare
     def get_value(square):
+        # Per ANAMNESI, mostra il numero di domande solo se in triage clinico
+        if square["key"] == "ANAMNESI":
+            current_phase = state.get(StateKeys.CURRENT_PHASE, "")
+            if current_phase == "CLINICAL_TRIAGE":
+                question_count = state.get(StateKeys.QUESTION_COUNT, 0)
+                if question_count > 0:
+                    return f"{question_count} domande"
+            elif current_phase in ("RECOMMENDATION", "DISPOSITION"):
+                return "Completata"
+            return None
+        
         # Prova chiave principale
         value = collected.get(square["data_key"])
         if value:

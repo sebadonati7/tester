@@ -219,7 +219,12 @@ class LLMService:
                 session_state["current_phase"] = "CLINICAL_TRIAGE"
         elif phase == "CLINICAL_TRIAGE":
             triage_path = session_state.get("triage_path", "C")
-            response = self.triage.handle(user_input, session_state, triage_path)
+            # Se l'utente risponde a "Grazie per le informazioni...", ignora la risposta e fai la prima domanda
+            if user_input.lower().strip() in ["ok", "va bene", "sì", "si", "perfetto", "procediamo", "procedi"]:
+                # L'utente sta solo confermando, fai la prima domanda di triage
+                response = self.triage.handle("", session_state, triage_path)
+            else:
+                response = self.triage.handle(user_input, session_state, triage_path)
             # None → max questions reached → passa a DEMOGRAPHICS
             if response is None:
                 session_state["current_phase"] = "DEMOGRAPHICS"
@@ -244,10 +249,13 @@ class LLMService:
         options = parse_options(response)
         session_state["pending_survey_options"] = options
 
-        # ── 8. INCREMENT QUESTION COUNT ──
-        session_state["question_count"] = (
-            session_state.get("question_count", 0) + 1
-        )
+        # ── 8. INCREMENT QUESTION COUNT (solo per triage clinico) ──
+        # Incrementa solo se siamo in fase CLINICAL_TRIAGE, non durante INTAKE o INFO
+        current_phase = session_state.get("current_phase", "")
+        if current_phase == "CLINICAL_TRIAGE":
+            session_state["question_count"] = (
+                session_state.get("question_count", 0) + 1
+            )
 
         # ── 9. DATABASE LOGGING (con modalità offline) ──
         processing_time_ms = int((time.time() - start_time) * 1000)
@@ -397,7 +405,7 @@ Sii diretto e professionale.
 
 {conv_ctx}
 """
-                response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+                response = call_llm(self._groq_client, self._gemini_model, prompt, f"Utente: {user_input}")
                 ss["question_count"] = ss.get("question_count", 0) + 1
                 return response
         
@@ -426,7 +434,7 @@ Sii diretto e professionale.
 
 {conv_ctx}
 """
-                response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+                response = call_llm(self._groq_client, self._gemini_model, prompt, f"Utente: {user_input}")
                 ss["question_count"] = ss.get("question_count", 0) + 1
                 return response
         
@@ -447,7 +455,7 @@ Sii empatico e professionale.
 
 {conv_ctx}
 """
-            response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
+            response = call_llm(self._groq_client, self._gemini_model, prompt, f"Utente: {user_input}")
             ss["safety_check_done"] = True
             ss["question_count"] = ss.get("question_count", 0) + 1
             return response

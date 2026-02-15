@@ -103,7 +103,7 @@ Esempio di risposta:
 Sii professionale ma caloroso. Usa un tono rassicurante.
 """
         response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
-        ss["question_count"] = ss.get("question_count", 0) + 1
+        # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
         return response
 
     # ------------------------------------------------------------------
@@ -121,7 +121,7 @@ Sii professionale ma caloroso. Usa un tono rassicurante.
         # Se abbiamo già il sintomo, conferma e passa avanti
         if collected.get("chief_complaint"):
             symptom = collected["chief_complaint"]
-            ss["question_count"] = ss.get("question_count", 0) + 1
+            # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
             return f"Ho capito: {symptom}. Ora ho bisogno di sapere dove ti trovi in questo momento per trovare la struttura più vicina."
         
         # Altrimenti chiedi il sintomo
@@ -146,7 +146,7 @@ Sii diretto e chiaro.
 {conv_ctx}
 """
         response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
-        ss["question_count"] = ss.get("question_count", 0) + 1
+        # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
         return response
 
     # ------------------------------------------------------------------
@@ -169,7 +169,7 @@ Sii diretto e chiaro.
             collected["current_location"] = location
             ss["patient_location"] = location  # Per compatibilità
             ss["collected_data"] = collected
-            ss["question_count"] = ss.get("question_count", 0) + 1
+            # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
             return f"Perfetto, sei a {location}. Su una scala da 1 a 10, quanto è intenso il dolore o il disagio che provi? (1 = lieve, 10 = insopportabile)"
         
         # Chiedi localizzazione
@@ -194,7 +194,7 @@ Sii chiaro e diretto.
 {conv_ctx}
 """
         response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
-        ss["question_count"] = ss.get("question_count", 0) + 1
+        # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
         return response
 
     # ------------------------------------------------------------------
@@ -212,7 +212,7 @@ Sii chiaro e diretto.
             collected["pain_scale"] = pain_scale
             ss["pain_scale"] = pain_scale
             ss["collected_data"] = collected
-            ss["question_count"] = ss.get("question_count", 0) + 1
+            # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
             ss["intake_complete"] = True
             return "Grazie. Ora ti farò alcune domande più specifiche per capire meglio la situazione."
         
@@ -236,7 +236,7 @@ Sii chiaro e diretto.
 {conv_ctx}
 """
         response = call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
-        ss["question_count"] = ss.get("question_count", 0) + 1
+        # NON incrementare question_count durante INTAKE - solo durante CLINICAL_TRIAGE
         return response
 
     # ------------------------------------------------------------------
