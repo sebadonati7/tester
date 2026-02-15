@@ -262,10 +262,23 @@ siraya/
                 test_key = st.secrets.get("SUPABASE_KEY", None)
                 if test_url:
                     st.sidebar.success(f"✅ SUPABASE_URL letta con .get(): {str(test_url)[:30]}...")
+                else:
+                    st.sidebar.warning("⚠️ SUPABASE_URL non letta con .get()")
                 if test_key:
                     st.sidebar.success(f"✅ SUPABASE_KEY letta con .get(): {str(test_key)[:20]}...")
+                else:
+                    st.sidebar.warning("⚠️ SUPABASE_KEY non letta con .get()")
             except Exception as test_e:
                 st.sidebar.write(f"**Test lettura:** {test_e}")
+            
+            # Verifica formato TOML - prova a leggere come dict
+            try:
+                import toml
+                secrets_dict = dict(st.secrets)
+                st.sidebar.write(f"**Tipo st.secrets:** {type(st.secrets)}")
+                st.sidebar.write(f"**È un dict?** {isinstance(st.secrets, dict)}")
+            except Exception as toml_e:
+                st.sidebar.write(f"**Info formato:** {str(toml_e)[:50]}")
         except Exception as e:
             st.sidebar.write(f"**Errore lista chiavi:** {e}")
         
