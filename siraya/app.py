@@ -238,6 +238,24 @@ siraya/
         st.sidebar.write(f"**File esiste:** {secrets_path.exists()}")
         st.sidebar.write(f"**CWD:** `{os.getcwd()}`")
         
+        # Prova a leggere direttamente dal file (se esiste)
+        if secrets_path.exists():
+            try:
+                import toml
+                with open(secrets_path, "r", encoding="utf-8") as f:
+                    file_secrets = toml.load(f)
+                st.sidebar.write(f"**Chiavi nel file:** {', '.join(file_secrets.keys())}")
+                if "SUPABASE_URL" in file_secrets:
+                    st.sidebar.success(f"✅ SUPABASE_URL nel file: {str(file_secrets['SUPABASE_URL'])[:30]}...")
+                else:
+                    st.sidebar.warning("⚠️ SUPABASE_URL NON nel file secrets.toml")
+                if "SUPABASE_KEY" in file_secrets:
+                    st.sidebar.success(f"✅ SUPABASE_KEY nel file: {str(file_secrets['SUPABASE_KEY'])[:20]}...")
+                else:
+                    st.sidebar.warning("⚠️ SUPABASE_KEY NON nel file secrets.toml")
+            except Exception as file_err:
+                st.sidebar.write(f"**Errore lettura file:** {str(file_err)[:100]}")
+        
         # Verifica se st.secrets esiste
         if not hasattr(st, "secrets"):
             st.sidebar.error("❌ st.secrets non esiste!")
@@ -273,10 +291,19 @@ siraya/
             
             # Verifica formato TOML - prova a leggere come dict
             try:
-                import toml
                 secrets_dict = dict(st.secrets)
                 st.sidebar.write(f"**Tipo st.secrets:** {type(st.secrets)}")
                 st.sidebar.write(f"**È un dict?** {isinstance(st.secrets, dict)}")
+                st.sidebar.write(f"**Dict keys:** {list(secrets_dict.keys())}")
+                
+                # Prova accesso alternativo
+                if hasattr(st.secrets, '_secrets'):
+                    st.sidebar.write(f"**Has _secrets attr:** {hasattr(st.secrets, '_secrets')}")
+                    try:
+                        internal = st.secrets._secrets
+                        st.sidebar.write(f"**Internal keys:** {list(internal.keys()) if isinstance(internal, dict) else 'N/A'}")
+                    except:
+                        pass
             except Exception as toml_e:
                 st.sidebar.write(f"**Info formato:** {str(toml_e)[:50]}")
         except Exception as e:
