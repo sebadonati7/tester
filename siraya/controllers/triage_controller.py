@@ -760,30 +760,6 @@ ESEMPIO PER QUESTA FASE ({phase.value}):
 """
         
         return prompt
-    "options": ["Opzione A", "Opzione B", "Opzione C", "Opzione D"]
-}}
-
-ESEMPIO CORRETTO (Branch C, fase clinical_triage):
-{{
-    "question": "Il dolore addominale che descrivi, quale di queste caratteristiche corrisponde meglio?",
-    "type": "multiple_choice",
-    "options": [
-        "Dolore acuto e localizzato (crampo in punto preciso)",
-        "Dolore diffuso e costante (gonfiore, pesantezza)",
-        "Dolore intermittente (va e viene, tipo colico)",
-        "Dolore che peggiora con il movimento"
-    ]
-}}
-
-ESEMPIO CORRETTO (Branch A, fase fast_triage):
-{{
-    "question": "Hai avuto nausea o vomito insieme al dolore?",
-    "type": "multiple_choice",
-    "options": ["Sì, nausea e vomito", "Solo nausea", "Solo vomito", "No, nessuno dei due"]
-}}
-"""
-        
-        return prompt
     
     def _generate_sbar_ai(self, branch: TriageBranch, collected_data: Dict) -> Dict:
         """Genera report SBAR finale tramite AI."""

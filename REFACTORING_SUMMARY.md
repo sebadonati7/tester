@@ -353,9 +353,9 @@ classification = response.get("classification", "STANDARD").upper()
 
 ---
 
-#### **FIX 4.2: Debug Logging per FSM**
+#### **FIX 4.2: Debug Logging per FSM + SyntaxError Fix**
 
-**Problema:** Bot salta CHIEF_COMPLAINT e va a LOCALIZATION senza motivo apparente.
+**Problema 1:** Bot salta CHIEF_COMPLAINT e va a LOCALIZATION senza motivo apparente.
 
 **Soluzione: Logging dettagliato per tracciare transizioni**
 
@@ -376,6 +376,17 @@ if next_phase.value != current_phase:
 else:
     logger.info(f"⏸️ Rimango in fase: {current_phase}")
 ```
+
+**Problema 2:** `SyntaxError: unmatched '}' at line 764`
+
+**Causa:** Codice duplicato rimasto dopo modifica precedente (linee 763-786 fuori posto).
+
+**Soluzione:** Rimosso blocco duplicato del prompt con esempi.
+
+**Test validazione:**
+- [x] File compila senza errori (`python -m py_compile`) ✅
+- [x] Nessun lint error ✅
+- [x] App si avvia su Streamlit Cloud ✅
 
 **Test per debug:**
 ```bash
