@@ -238,7 +238,7 @@ def _render_collected_data_preview() -> None:
     
     state = get_state_manager()
     collected = state.get(StateKeys.COLLECTED_DATA, {})
-    current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
+    current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")  # ✅ lowercase per match con enum
     
     st.markdown("### 📋 Dati Raccolti")
     

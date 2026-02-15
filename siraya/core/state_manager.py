@@ -1,22 +1,27 @@
 """
 SIRAYA Health Navigator - State Manager
-V1.0: Il "Cervelletto" - Manages st.session_state safely.
+V2.1: Il "Cervelletto" - Manages st.session_state safely with migration support.
 
 This module handles:
 - Session state initialization
 - Safe read/write operations
 - GDPR consent management
 - Session persistence (Supabase integration)
+- V2.1 migrations (uppercase to lowercase phase values)
 """
 
 import uuid
 import streamlit as st
+import logging
 from typing import Any, Dict, List, Optional, TypeVar
 from datetime import datetime
 from pathlib import Path
 
 # Type variable for generic get/set
 T = TypeVar('T')
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -173,6 +178,14 @@ class StateManager:
                     st.session_state[key] = default_value.copy() if default_value else type(default_value)()
                 else:
                     st.session_state[key] = default_value
+        
+        # ✅ MIGRATION V2.1: Fix uppercase CURRENT_PHASE from old sessions
+        if StateKeys.CURRENT_PHASE in st.session_state:
+            phase = st.session_state[StateKeys.CURRENT_PHASE]
+            if isinstance(phase, str) and phase.isupper():
+                # Convert old uppercase values to lowercase
+                st.session_state[StateKeys.CURRENT_PHASE] = phase.lower()
+                logger.info(f"✅ Migrated CURRENT_PHASE from '{phase}' to '{phase.lower()}'")
         
         self._initialized = True
     

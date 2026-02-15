@@ -310,43 +310,63 @@ streamlit run siraya/app.py
 
 ### ⚡ HOTFIX 5: TriagePhase Enum Value Mismatch (15 Feb 2026)
 
-**Problema:** `'INTAKE' is not a valid TriagePhase`
+**Problema:** `'INTAKE' is not a valid TriagePhase` (persistente anche dopo fix iniziale)
 
-**Causa:** Mismatch tra valori enum e default state:
-- `TriagePhase.INTAKE = "intake"` (enum value in **lowercase**)
-- `DEFAULT_STATE[CURRENT_PHASE] = "INTAKE"` (default in **UPPERCASE**)
-- Quando `TriagePhase(current_phase)` prova a convertire "INTAKE" → fallisce
+**Causa Root:** 
+1. Mismatch tra valori enum e default state (già fixato)
+2. **Sessioni browser cache** con vecchi valori maiuscoli "INTAKE" che NON venivano migrati
+3. **Hardcoded fallbacks** in `chat_view.py` e `sidebar_view.py` con "INTAKE" maiuscolo
 
-**Fix:**
+**Fix Completo:**
+
+#### 1. Default state corretto
 ```python
-# siraya/core/state_manager.py
-
-# ❌ PRIMA (ERRATO):
-StateKeys.CURRENT_PHASE: "INTAKE",  # Maiuscolo
-
-# ✅ DOPO (CORRETTO):
-StateKeys.CURRENT_PHASE: "intake",  # Minuscolo (match con enum value)
+# siraya/core/state_manager.py (linea 96)
+StateKeys.CURRENT_PHASE: "intake",  # ✅ lowercase
 ```
 
-**Fix aggiuntivo - Reset triage keys:**
+#### 2. Auto-migration per sessioni cache legacy
+```python
+# siraya/core/state_manager.py (linee 178-184)
+
+# ✅ MIGRATION V2.1: Fix uppercase CURRENT_PHASE from old sessions
+if StateKeys.CURRENT_PHASE in st.session_state:
+    phase = st.session_state[StateKeys.CURRENT_PHASE]
+    if isinstance(phase, str) and phase.isupper():
+        # Convert old uppercase values to lowercase
+        st.session_state[StateKeys.CURRENT_PHASE] = phase.lower()
+        logger.info(f"✅ Migrated CURRENT_PHASE from '{phase}' to '{phase.lower()}'")
+```
+
+**Beneficio:** Se un utente ha una sessione cache con `CURRENT_PHASE = "INTAKE"` (vecchio codice), viene automaticamente convertito a `"intake"` al caricamento.
+
+#### 3. Fix fallback values in views
+```python
+# siraya/views/chat_view.py (linea 102)
+# ❌ PRIMA: current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
+# ✅ DOPO:  current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+
+# siraya/views/sidebar_view.py (linea 241)
+# ❌ PRIMA: current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
+# ✅ DOPO:  current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+```
+
+#### 4. Reset triage aggiornato
 ```python
 triage_keys = [
-    StateKeys.MESSAGES,
-    StateKeys.COLLECTED_DATA,
-    StateKeys.CURRENT_PHASE,
-    StateKeys.TRIAGE_PATH,
-    StateKeys.TRIAGE_BRANCH,        # ✅ AGGIUNTO
-    StateKeys.QUESTION_COUNT,
-    StateKeys.LAST_BOT_RESPONSE,    # ✅ AGGIUNTO
-    # ... altri keys
+    # ...
+    StateKeys.TRIAGE_BRANCH,        # ✅ AGGIUNTO (V2.1)
+    StateKeys.LAST_BOT_RESPONSE,    # ✅ AGGIUNTO (V2.1)
+    # ...
 ]
 ```
 
 **Test validazione:**
 - [x] App si avvia senza ValueError ✅
+- [x] Sessioni cache migrate automaticamente ✅
 - [x] `TriagePhase("intake")` funziona ✅
-- [x] Reset triage ripristina CURRENT_PHASE a "intake" ✅
-- [x] Reset triage pulisce anche TRIAGE_BRANCH e LAST_BOT_RESPONSE ✅
+- [x] Fallback values corretti in tutte le views ✅
+- [x] Reset triage completo con nuovi keys ✅
 
 ---
 
