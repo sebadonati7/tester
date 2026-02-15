@@ -184,15 +184,15 @@ class TriageController:
         """
         
         try:
-            response = self.llm.generate_with_json_parse(prompt, temperature=0.0, max_tokens=10)
-            if isinstance(response, dict) and "classification" in response:
-                classification = response["classification"].strip().upper()
-            else:
-                # Se response è stringa
-                classification = str(response).strip().upper()
+            # ✅ FIX: Usa generate() invece di generate_with_json_parse() per risposta semplice
+            response = self.llm.generate(prompt, temperature=0.0, max_tokens=20)
+            classification = response.strip().upper()
             
             if classification in ["EMERGENCY", "MENTAL_HEALTH", "STANDARD", "INFO"]:
                 return TriageBranch[classification]
+            
+            logger.warning(f"⚠️ Classificazione AI non valida: {classification}, uso STANDARD")
+            
         except Exception as e:
             logger.error(f"❌ Errore classify_branch AI: {e}")
         

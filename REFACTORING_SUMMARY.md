@@ -308,6 +308,57 @@ streamlit run siraya/app.py
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
 
+### ⚡ HOTFIX 4: StateKeys.USER_ID & JSON Parsing (15 Feb 2026)
+
+**Problema 1:** `AttributeError: type object 'StateKeys' has no attribute 'USER_ID'`
+
+**Causa:** `StateKeys.USER_ID` mancava da `state_manager.py` ma era usato in `_fetch_known_data_from_history()` (triage_controller.py:321)
+
+**Fix:**
+```python
+# siraya/core/state_manager.py
+class StateKeys:
+    # Core session
+    SESSION_ID = "session_id"
+    USER_ID = "user_id"  # ✅ AGGIUNTO
+    TIMESTAMP_START = "timestamp_start"
+
+DEFAULT_STATE: Dict[str, Any] = {
+    StateKeys.SESSION_ID: None,
+    StateKeys.USER_ID: "anonymous",  # ✅ AGGIUNTO con valore default
+    StateKeys.TIMESTAMP_START: None,
+}
+```
+
+**Problema 2:** `ERROR: JSON parsing error: Expecting value: line 1 column 1 (char 0)` - Response: "INFO"
+
+**Causa:** `_classify_branch()` usava `generate_with_json_parse()` per una risposta semplice (EMERGENCY/MENTAL_HEALTH/STANDARD/INFO), ma l'AI ritornava testo puro "INFO" invece di JSON.
+
+**Fix:**
+```python
+# siraya/controllers/triage_controller.py - _classify_branch()
+
+# ❌ PRIMA (ERRATO):
+# response = self.llm.generate_with_json_parse(prompt, temperature=0.0, max_tokens=10)
+# if isinstance(response, dict) and "classification" in response:
+#     classification = response["classification"].strip().upper()
+
+# ✅ DOPO (CORRETTO):
+response = self.llm.generate(prompt, temperature=0.0, max_tokens=20)
+classification = response.strip().upper()
+
+if classification in ["EMERGENCY", "MENTAL_HEALTH", "STANDARD", "INFO"]:
+    return TriageBranch[classification]
+```
+
+**Test validazione:**
+- [x] App si avvia senza AttributeError ✅
+- [x] Classificazione branch funziona senza JSON parsing error ✅
+- [x] "ciao" → Branch STANDARD (senza errori) ✅
+- [x] USER_ID default = "anonymous" ✅
+
+---
+
 ### ⚡ HOTFIX 3: UI Integration Fix - Controller Bypass (15 Feb 2026)
 
 **Problema Critico:** `AttributeError: 'TriageController' object has no attribute 'get_survey_options'`

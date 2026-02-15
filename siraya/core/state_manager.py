@@ -30,6 +30,7 @@ class StateKeys:
     """
     # Core session
     SESSION_ID = "session_id"
+    USER_ID = "user_id"  # User identifier (anonymous o autenticato)
     TIMESTAMP_START = "timestamp_start"
     
     # Navigation
@@ -77,6 +78,7 @@ class StateKeys:
 DEFAULT_STATE: Dict[str, Any] = {
     # Core
     StateKeys.SESSION_ID: None,  # Will be generated
+    StateKeys.USER_ID: "anonymous",  # Default: anonymous user
     StateKeys.TIMESTAMP_START: None,  # Will be set
     
     # Navigation

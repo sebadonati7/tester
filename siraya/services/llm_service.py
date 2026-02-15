@@ -185,7 +185,11 @@ class LLMService:
             return parsed
             
         except json.JSONDecodeError as e:
-            logger.error(f"❌ JSON parsing error: {e}\nResponse: {response_text[:200] if 'response_text' in locals() else 'N/A'}")
+            logger.error(f"❌ JSON parsing error: {e}")
+            logger.error(f"Response text: {response_text[:500] if 'response_text' in locals() else 'N/A'}")
+            # Fallback: se risposta è troppo corta, probabilmente è una risposta semplice
+            if 'response_text' in locals() and len(response_text.strip()) < 50:
+                logger.warning(f"⚠️ Risposta troppo corta per essere JSON, ritorno dict vuoto")
             return {}
         except Exception as e:
             logger.error(f"❌ LLM generate_with_json_parse error: {type(e).__name__} - {e}")
