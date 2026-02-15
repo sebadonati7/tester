@@ -207,23 +207,29 @@ siraya/
         # #region agent log
         import json
         import os
-        log_data = {
-            "location": "app.py:207",
-            "message": "Verifica secrets Supabase",
-            "data": {
-                "has_secrets": hasattr(st, "secrets"),
-                "secrets_type": str(type(st.secrets)) if hasattr(st, "secrets") else "N/A",
-                "cwd": os.getcwd(),
-                "project_root": str(_project_root),
-                "secrets_file_exists": os.path.exists(_project_root / ".streamlit" / "secrets.toml")
-            },
-            "timestamp": int(__import__("time").time() * 1000),
-            "runId": "debug_secrets",
-            "hypothesisId": "A"
-        }
-        log_path = _project_root / ".cursor" / "debug.log"
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
+        try:
+            log_data = {
+                "location": "app.py:207",
+                "message": "Verifica secrets Supabase",
+                "data": {
+                    "has_secrets": hasattr(st, "secrets"),
+                    "secrets_type": str(type(st.secrets)) if hasattr(st, "secrets") else "N/A",
+                    "cwd": os.getcwd(),
+                    "project_root": str(_project_root),
+                    "secrets_file_exists": os.path.exists(_project_root / ".streamlit" / "secrets.toml")
+                },
+                "timestamp": int(__import__("time").time() * 1000),
+                "runId": "debug_secrets",
+                "hypothesisId": "A"
+            }
+            log_dir = _project_root / ".cursor"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "debug.log"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
+        except Exception as log_err:
+            # Ignora errori di logging, non bloccare il debug
+            pass
         # #endregion
         
         # Verifica percorso secrets.toml
@@ -249,19 +255,25 @@ siraya/
         key_direct = st.secrets.get("SUPABASE_KEY", "NON TROVATO")
         
         # #region agent log
-        log_data2 = {
-            "location": "app.py:230",
-            "message": "Lettura diretta secrets",
-            "data": {
-                "url_direct": str(url_direct)[:30] if url_direct != "NON TROVATO" else "NON TROVATO",
-                "key_direct": str(key_direct)[:20] if key_direct != "NON TROVATO" else "NON TROVATO"
-            },
-            "timestamp": int(__import__("time").time() * 1000),
-            "runId": "debug_secrets",
-            "hypothesisId": "B"
-        }
-        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_data2, ensure_ascii=False) + "\n")
+        try:
+            log_data2 = {
+                "location": "app.py:240",
+                "message": "Lettura diretta secrets",
+                "data": {
+                    "url_direct": str(url_direct)[:30] if url_direct != "NON TROVATO" else "NON TROVATO",
+                    "key_direct": str(key_direct)[:20] if key_direct != "NON TROVATO" else "NON TROVATO"
+                },
+                "timestamp": int(__import__("time").time() * 1000),
+                "runId": "debug_secrets",
+                "hypothesisId": "B"
+            }
+            log_dir = _project_root / ".cursor"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "debug.log"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_data2, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
         # #endregion
         
         st.sidebar.write(f"**URL diretto:** {str(url_direct)[:30]}...")
@@ -286,20 +298,26 @@ siraya/
         is_conf = SupabaseConfig.is_configured()
         
         # #region agent log
-        log_data3 = {
-            "location": "app.py:250",
-            "message": "Lettura via SupabaseConfig",
-            "data": {
-                "url_config": str(url_config)[:30] if url_config else "VUOTO",
-                "key_config": str(key_config)[:20] if key_config else "VUOTO",
-                "is_configured": is_conf
-            },
-            "timestamp": int(__import__("time").time() * 1000),
-            "runId": "debug_secrets",
-            "hypothesisId": "C"
-        }
-        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_data3, ensure_ascii=False) + "\n")
+        try:
+            log_data3 = {
+                "location": "app.py:280",
+                "message": "Lettura via SupabaseConfig",
+                "data": {
+                    "url_config": str(url_config)[:30] if url_config else "VUOTO",
+                    "key_config": str(key_config)[:20] if key_config else "VUOTO",
+                    "is_configured": is_conf
+                },
+                "timestamp": int(__import__("time").time() * 1000),
+                "runId": "debug_secrets",
+                "hypothesisId": "C"
+            }
+            log_dir = _project_root / ".cursor"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "debug.log"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_data3, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
         # #endregion
         
         st.sidebar.write(f"**URL da Config:** {str(url_config)[:30] if url_config else 'VUOTO'}...")
@@ -312,19 +330,25 @@ siraya/
         st.sidebar.code(traceback.format_exc())
         
         # #region agent log
-        log_data4 = {
-            "location": "app.py:265",
-            "message": "Errore durante debug secrets",
-            "data": {
-                "error": str(e),
-                "error_type": type(e).__name__
-            },
-            "timestamp": int(__import__("time").time() * 1000),
-            "runId": "debug_secrets",
-            "hypothesisId": "D"
-        }
-        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_data4, ensure_ascii=False) + "\n")
+        try:
+            log_data4 = {
+                "location": "app.py:310",
+                "message": "Errore durante debug secrets",
+                "data": {
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                },
+                "timestamp": int(__import__("time").time() * 1000),
+                "runId": "debug_secrets",
+                "hypothesisId": "D"
+            }
+            log_dir = _project_root / ".cursor"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "debug.log"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_data4, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
         # #endregion
     # ============================================================================
     
