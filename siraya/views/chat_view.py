@@ -404,7 +404,9 @@ def _process_user_input(
     - Generates questions via AI (including multiple choice options)
     - Saves state and returns response with options included
     """
-    from ..core.state_manager import StateKeys  # ✅ Import esplicito per evitare scope issues
+    # ✅ Import esplicito per evitare NameError in alcuni contesti Streamlit
+    # (necessario quando la funzione viene chiamata da callback di bottoni)
+    from ..core.state_manager import StateKeys
     
     # Add user message to history
     state.add_message("user", user_input)
@@ -428,10 +430,22 @@ def _process_user_input(
     state.add_message("assistant", assistant_text)
     
     # ✅ Salva risposta nello state per rendering (con options)
-    state.set(StateKeys.LAST_BOT_RESPONSE, response)
+    try:
+        state.set(StateKeys.LAST_BOT_RESPONSE, response)
+    except NameError as e:
+        # Fallback: re-import se StateKeys non è disponibile
+        logger.warning(f"⚠️ StateKeys non disponibile, re-importing: {e}")
+        from ..core.state_manager import StateKeys
+        state.set(StateKeys.LAST_BOT_RESPONSE, response)
 
     # ── Emergency alert (basato su metadata o branch) ──
-    branch = state.get(StateKeys.TRIAGE_BRANCH, "")
+    try:
+        branch = state.get(StateKeys.TRIAGE_BRANCH, "")
+    except NameError as e:
+        # Fallback: re-import se StateKeys non è disponibile
+        logger.warning(f"⚠️ StateKeys non disponibile, re-importing: {e}")
+        from ..core.state_manager import StateKeys
+        branch = state.get(StateKeys.TRIAGE_BRANCH, "")
     if branch == "A":  # Branch EMERGENCY
         st.error("🚨 **EMERGENZA RILEVATA** - Chiama immediatamente il **118**")
     elif branch == "B":  # Branch MENTAL_HEALTH
