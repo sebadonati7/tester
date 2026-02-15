@@ -137,6 +137,8 @@ class LLMService:
         """
         Genera risposta da LLM con parsing JSON robusto.
         
+        ENFORCEMENT: Se prompt richiede multiple_choice, FORZA presenza di "options".
+        
         Args:
             prompt: Prompt completo che chiede JSON
             temperature: 0.0-1.0 (creatività)
@@ -145,6 +147,10 @@ class LLMService:
         Returns:
             Dizionario parsed o {} in caso di errore
         """
+        # Aggiungi enforcement al prompt se richiede multiple_choice
+        if "multiple_choice" in prompt.lower():
+            prompt += "\n\n⚠️ CRITICAL: Se type='multiple_choice', DEVI includere 'options' array con 2-4 opzioni."
+        
         try:
             # Chiamata LLM standard
             if self._groq_client:
@@ -169,10 +175,17 @@ class LLMService:
             
             # Parse JSON
             parsed = json.loads(response_text)
+            
+            # VALIDATION: Se type='multiple_choice' ma mancano options, fallback
+            if parsed.get("type") == "multiple_choice" and not parsed.get("options"):
+                logger.warning("⚠️ AI ha restituito multiple_choice senza options, converto a open_text")
+                parsed["type"] = "open_text"
+                parsed["options"] = None
+            
             return parsed
             
         except json.JSONDecodeError as e:
-            logger.error(f"❌ JSON parsing error: {e}\nResponse: {response_text[:200]}")
+            logger.error(f"❌ JSON parsing error: {e}\nResponse: {response_text[:200] if 'response_text' in locals() else 'N/A'}")
             return {}
         except Exception as e:
             logger.error(f"❌ LLM generate_with_json_parse error: {type(e).__name__} - {e}")

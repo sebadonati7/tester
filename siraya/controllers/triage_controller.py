@@ -187,67 +187,164 @@ class TriageController:
         return TriageBranch.STANDARD  # Default sicuro
     
     def _extract_data_ai(self, user_input: str, current_data: Dict) -> Dict:
-        """Slot filling tramite AI (estrae: località, età, sintomi, scala dolore)."""
-        prompt = f"""
-        Estrai dati strutturati da questo messaggio del paziente.
-        
-        Input: "{user_input}"
-        
-        Dati da cercare:
-        - location: Comune Emilia-Romagna (es: Bologna, Ravenna, Forlì)
-        - age: Età in anni (numero)
-        - gender: Genere (Maschio/Femmina/Altro)
-        - pain_scale: Scala dolore 1-10 (numero)
-        - main_symptom: Sintomo principale descritto
-        
-        Rispondi in JSON. Se un dato non è presente, usa null.
-        
-        Esempio output:
-        {{
-            "location": "Ravenna",
-            "age": 45,
-            "gender": null,
-            "pain_scale": 7,
-            "main_symptom": "dolore toracico"
-        }}
         """
+        Slot filling ROBUSTO con pattern matching + AI fallback.
         
-        try:
-            response = self.llm.generate_with_json_parse(prompt, temperature=0.0)
-            # Filtra solo valori non-null
-            return {k: v for k, v in response.items() if v is not None}
-        except Exception as e:
-            logger.error(f"❌ Errore extract_data_ai: {e}")
-            return {}
+        Estrae: location, age, gender, pain_scale, main_symptom, onset, medications
+        """
+        import re
+        extracted = {}
+        user_lower = user_input.lower()
+        
+        # PATTERN 1: Scala dolore (keyword + numeri)
+        pain_patterns = [
+            r'(?:scala|dolore|intensità|livello)[:\s]*(\d{1,2})',
+            r'(\d{1,2})\s*su\s*10',
+            r'(\d{1,2})/10',
+            r'sempre\s*(\d{1,2})',  # ← FIX per "sempre 6"
+            r'^(\d{1,2})$'  # ← FIX per risposta numerica secca "6"
+        ]
+        
+        for pattern in pain_patterns:
+            match = re.search(pattern, user_lower)
+            if match:
+                scale = int(match.group(1))
+                if 1 <= scale <= 10:
+                    extracted['pain_scale'] = scale
+                    logger.info(f"✅ Estratto pain_scale via regex: {scale}")
+                    break
+        
+        # PATTERN 2: Età
+        age_patterns = [
+            r'(\d{1,3})\s*ann[io]',
+            r'ho\s*(\d{1,3})\s*ann',
+            r'età[:\s]*(\d{1,3})'
+        ]
+        
+        for pattern in age_patterns:
+            match = re.search(pattern, user_lower)
+            if match:
+                age = int(match.group(1))
+                if 0 < age < 120:
+                    extracted['age'] = age
+                    logger.info(f"✅ Estratto age via regex: {age}")
+                    break
+        
+        # PATTERN 3: Località (comuni ER)
+        comuni_er = [
+            "bologna", "modena", "parma", "reggio emilia", "piacenza",
+            "ferrara", "ravenna", "forlì", "cesena", "rimini",
+            "imola", "faenza", "lugo", "cervia", "riccione"
+        ]
+        
+        for comune in comuni_er:
+            if comune in user_lower:
+                extracted['location'] = comune.title()
+                logger.info(f"✅ Estratto location via keyword: {comune}")
+                break
+        
+        # PATTERN 4: Onset temporale (ieri, oggi, stamattina)
+        onset_patterns = {
+            r'ieri': 'ieri',
+            r'stamattina|questa mattina': 'stamattina',
+            r'stasera|questa sera': 'stasera',
+            r'oggi': 'oggi',
+            r'(\d+)\s*(?:ore|ora)': lambda m: f"{m.group(1)} ore fa",
+            r'(\d+)\s*giorn[io]': lambda m: f"{m.group(1)} giorni fa"
+        }
+        
+        for pattern, value in onset_patterns.items():
+            match = re.search(pattern, user_lower)
+            if match:
+                if callable(value):
+                    extracted['onset'] = value(match)
+                else:
+                    extracted['onset'] = value
+                logger.info(f"✅ Estratto onset: {extracted['onset']}")
+                break
+        
+        # FALLBACK AI: Se regex non ha trovato nulla, chiedi all'AI
+        if not extracted:
+            prompt = f"""
+            Estrai dati strutturati da: "{user_input}"
+            
+            Dati da cercare:
+            - pain_scale: Numero 1-10 (se menzionato)
+            - age: Età in anni
+            - location: Comune Emilia-Romagna
+            - main_symptom: Sintomo principale
+            - onset: Quando è iniziato (es: "ieri", "stamattina")
+            
+            JSON output (usa null se assente):
+            {{
+                "pain_scale": null,
+                "age": null,
+                "location": null,
+                "main_symptom": null,
+                "onset": null
+            }}
+            """
+            
+            try:
+                response = self.llm.generate_with_json_parse(prompt, temperature=0.0)
+                if isinstance(response, dict):
+                    for key, value in response.items():
+                        if value and value != "null":
+                            extracted[key] = value
+                    logger.info(f"✅ Estratto via AI fallback: {list(extracted.keys())}")
+            except Exception as e:
+                logger.warning(f"⚠️ AI fallback extraction failed: {e}")
+        
+        return extracted
     
     def _fetch_known_data_from_history(self) -> Dict:
-        """Recupera dati già noti da Supabase per evitare domande duplicate."""
+        """
+        Recupera dati già noti da Supabase per evitare domande duplicate.
+        
+        Dati persistenti tra sessioni:
+        - age, location, chronic_conditions, allergies, medications
+        """
         from ..core.state_manager import StateKeys
         
-        session_id = self.state_manager.get(StateKeys.SESSION_ID, "anonymous")
-        history = self.db.fetch_user_history(session_id, limit=50)
+        user_id = self.state_manager.get(StateKeys.USER_ID, "anonymous")
+        session_id = self.state_manager.get(StateKeys.SESSION_ID, "unknown")
         
-        known = {}
-        for entry in history:
-            # metadata è già un dict (non JSON string)
-            old_metadata = entry.get("metadata", {})
-            
-            # Se metadata contiene dati estratti in sessioni precedenti
-            if isinstance(old_metadata, str):
-                try:
-                    old_metadata = json.loads(old_metadata)
-                except:
-                    old_metadata = {}
-            
-            # Cerca in collected_data storico (se presente nel metadata)
-            old_collected = old_metadata.get("collected_data", {})
-            
-            # Merge dati persistenti (età, località, patologie croniche)
-            for key in ["age", "location", "current_location", "chronic_conditions", "allergies"]:
-                if key in old_collected and key not in known:
-                    known[key] = old_collected[key]
+        # Se utente anonimo, prova con session_id
+        if user_id == "anonymous":
+            user_id = session_id
         
-        return known
+        try:
+            history = self.db.fetch_user_history(user_id, limit=30)
+            
+            known = {}
+            for entry in history:
+                # metadata è già un dict (non JSON string)
+                old_metadata = entry.get("metadata", {})
+                
+                # Se metadata è stringa JSON, parsala
+                if isinstance(old_metadata, str):
+                    try:
+                        old_metadata = json.loads(old_metadata)
+                    except:
+                        old_metadata = {}
+                
+                # Cerca in collected_data storico (se presente nel metadata)
+                old_collected = old_metadata.get("collected_data", {})
+                
+                # Merge dati persistenti (NON sintomi attuali)
+                persistent_keys = ["age", "location", "current_location", "chronic_conditions", "allergies", "medications"]
+                for key in persistent_keys:
+                    if key in old_collected and key not in known:
+                        known[key] = old_collected[key]
+            
+            if known:
+                logger.info(f"✅ Dati recuperati da storia: {list(known.keys())}")
+            
+            return known
+        
+        except Exception as e:
+            logger.warning(f"⚠️ Impossibile recuperare storia: {e}")
+            return {}
     
     def _determine_next_phase(
         self, 
@@ -256,46 +353,113 @@ class TriageController:
         collected_data: Dict,
         question_count: int
     ) -> TriagePhase:
-        """FSM semplice per determinare fase successiva."""
+        """
+        FSM con FORCE ADVANCE: Se dato già presente, salta fase automaticamente.
+        """
         
-        # Branch A: INTAKE → LOCALIZATION → FAST_TRIAGE → SBAR
+        # Branch C: Triage Standard
+        if branch == TriageBranch.STANDARD:
+            # FASE 1: Localizzazione
+            if current_phase == TriagePhase.INTAKE:
+                # Se località già nota (da memoria Supabase), salta direttamente a pain_scale
+                if "location" in collected_data or "current_location" in collected_data:
+                    logger.info("✅ Località già nota, salto LOCALIZATION")
+                    return TriagePhase.PAIN_SCALE
+                return TriagePhase.LOCALIZATION
+            
+            # FASE 2: Pain Scale
+            if current_phase == TriagePhase.LOCALIZATION:
+                # FORCE ADVANCE: Se location presente, vai avanti
+                if "location" in collected_data or "current_location" in collected_data:
+                    return TriagePhase.PAIN_SCALE
+                return TriagePhase.LOCALIZATION  # Rimani solo se manca
+            
+            if current_phase == TriagePhase.PAIN_SCALE:
+                # FORCE ADVANCE: Se pain_scale presente, vai avanti
+                if "pain_scale" in collected_data:
+                    logger.info(f"✅ Scala dolore raccolta: {collected_data['pain_scale']}, avanzo a DEMOGRAPHICS")
+                    return TriagePhase.DEMOGRAPHICS
+                return TriagePhase.PAIN_SCALE  # Rimani solo se manca
+            
+            # FASE 3: Demographics
+            if current_phase == TriagePhase.DEMOGRAPHICS:
+                # FORCE ADVANCE: Se età presente, vai a clinical triage
+                if "age" in collected_data:
+                    logger.info(f"✅ Età raccolta: {collected_data['age']}, avanzo a CLINICAL_TRIAGE")
+                    return TriagePhase.CLINICAL_TRIAGE
+                return TriagePhase.DEMOGRAPHICS
+            
+            # FASE 4: Clinical Triage (5-7 domande)
+            if current_phase == TriagePhase.CLINICAL_TRIAGE:
+                # Avanza a SBAR dopo 5-7 domande O se dati sufficienti
+                if question_count >= 5:
+                    # Verifica dati minimi per SBAR
+                    required_data = ["main_symptom", "pain_scale", "age"]
+                    has_location = "location" in collected_data or "current_location" in collected_data
+                    has_required = all(key in collected_data for key in required_data)
+                    
+                    if has_location and has_required:
+                        logger.info(f"✅ {question_count} domande + dati completi, genero SBAR")
+                        return TriagePhase.SBAR_GENERATION
+                
+                # Continua clinical triage fino a max 7 domande
+                if question_count < 7:
+                    return TriagePhase.CLINICAL_TRIAGE
+                
+                # Forza SBAR dopo 7 domande (anche se dati incompleti)
+                logger.warning(f"⚠️ Max domande raggiunto ({question_count}), forzo SBAR")
+                return TriagePhase.SBAR_GENERATION
+            
+            # Fallback: Se siamo già in SBAR, rimani
+            if current_phase == TriagePhase.SBAR_GENERATION:
+                return TriagePhase.SBAR_GENERATION
+        
+        # Branch A: Emergency (simile logica)
         if branch == TriageBranch.EMERGENCY:
             if current_phase == TriagePhase.INTAKE:
+                if "location" in collected_data or "current_location" in collected_data:
+                    return TriagePhase.FAST_TRIAGE
                 return TriagePhase.LOCALIZATION
-            if current_phase == TriagePhase.LOCALIZATION and "location" in collected_data or "current_location" in collected_data:
+            
+            if current_phase == TriagePhase.LOCALIZATION:
+                if "location" in collected_data or "current_location" in collected_data:
+                    return TriagePhase.FAST_TRIAGE
+                return TriagePhase.LOCALIZATION
+            
+            if current_phase == TriagePhase.FAST_TRIAGE:
+                if question_count >= 3:  # Min 3 domande per emergenza
+                    return TriagePhase.SBAR_GENERATION
                 return TriagePhase.FAST_TRIAGE
-            if current_phase == TriagePhase.FAST_TRIAGE and question_count >= 4:
+            
+            if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
-            return current_phase
         
-        # Branch B: INTAKE → CONSENT → DEMOGRAPHICS → RISK_ASSESSMENT → SBAR
+        # Branch B: Mental Health (simile logica)
         if branch == TriageBranch.MENTAL_HEALTH:
             if current_phase == TriagePhase.INTAKE:
                 return TriagePhase.CONSENT
-            if current_phase == TriagePhase.CONSENT and collected_data.get("consent") == "yes":
+            
+            if current_phase == TriagePhase.CONSENT:
+                if collected_data.get("consent") == "yes":
+                    return TriagePhase.DEMOGRAPHICS
+                return TriagePhase.SBAR_GENERATION  # Se rifiuta consenso, vai a SBAR (con hotline)
+            
+            if current_phase == TriagePhase.DEMOGRAPHICS:
+                if "age" in collected_data:
+                    return TriagePhase.RISK_ASSESSMENT
                 return TriagePhase.DEMOGRAPHICS
-            if current_phase == TriagePhase.DEMOGRAPHICS and "age" in collected_data:
+            
+            if current_phase == TriagePhase.RISK_ASSESSMENT:
+                if question_count >= 4:
+                    return TriagePhase.SBAR_GENERATION
                 return TriagePhase.RISK_ASSESSMENT
-            if current_phase == TriagePhase.RISK_ASSESSMENT and question_count >= 5:
+            
+            if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
-            return current_phase
         
-        # Branch C: INTAKE → LOCALIZATION → PAIN_SCALE → DEMOGRAPHICS → CLINICAL_TRIAGE → SBAR
-        if branch == TriageBranch.STANDARD:
-            if current_phase == TriagePhase.INTAKE:
-                return TriagePhase.LOCALIZATION
-            if current_phase == TriagePhase.LOCALIZATION and ("location" in collected_data or "current_location" in collected_data):
-                return TriagePhase.PAIN_SCALE
-            if current_phase == TriagePhase.PAIN_SCALE and "pain_scale" in collected_data:
-                return TriagePhase.DEMOGRAPHICS
-            if current_phase == TriagePhase.DEMOGRAPHICS and "age" in collected_data:
-                return TriagePhase.CLINICAL_TRIAGE
-            if current_phase == TriagePhase.CLINICAL_TRIAGE and question_count >= 7:
-                return TriagePhase.SBAR_GENERATION
-            return current_phase
-        
-        # Branch INFO: sempre una query diretta
-        return TriagePhase.SBAR_GENERATION
+        # Fallback sicuro
+        logger.warning(f"⚠️ FSM fallback: branch={branch}, phase={current_phase}")
+        return current_phase
     
     def _generate_question_ai(
         self,
@@ -391,56 +555,75 @@ class TriageController:
             TriageBranch.STANDARD: 7
         }
         
+        # Costruisci lista dati mancanti e già raccolti (MEMORIA ESPLICITA)
+        missing_data = []
+        known_data_text = []
+        
+        if phase == TriagePhase.LOCALIZATION and not any(k in collected_data for k in ["location", "current_location"]):
+            missing_data.append("località/comune")
+        elif phase == TriagePhase.PAIN_SCALE and "pain_scale" not in collected_data:
+            missing_data.append("scala dolore 1-10")
+        elif phase == TriagePhase.DEMOGRAPHICS and "age" not in collected_data:
+            missing_data.append("età paziente")
+        
+        for key, value in collected_data.items():
+            if value:
+                known_data_text.append(f"✅ {key}: {value}")
+        
         prompt = f"""
-        SEI UN MEDICO ESPERTO IN TRIAGE TELEFONICO.
-        
-        CONTESTO CONVERSAZIONE:
-        - Branch triage: {branch.value} ({branch.name})
-        - Fase corrente: {phase.value}
-        - Obiettivo fase: {objective}
-        - Domanda numero: {question_count + 1} (max {max_questions.get(branch, 7)})
-        
-        DATI GIÀ RACCOLTI:
-        {json.dumps(collected_data, indent=2, ensure_ascii=False)}
-        
-        PROTOCOLLI CLINICI (da Knowledge Base):
-        {rag_context[:1000] if rag_context else "Nessun protocollo specifico caricato."}
-        
-        TASK:
-        Genera LA PROSSIMA SINGOLA DOMANDA da porre al paziente.
-        
-        REGOLE:
-        1. UNA SOLA DOMANDA (Single Question Policy)
-        2. Domanda chiara, empatica, professionale
-        3. Se dati già noti (es. età già presente) NON richiederli
-        4. Se usi multiple_choice, genera 2-4 opzioni pertinenti
-        5. Se utente ha scritto testo libero generico, MEDICALIZZA (traduci in opzioni cliniche A/B/C)
-        
-        OUTPUT (JSON rigoroso):
-        {{
-            "question": "Testo domanda esatta da mostrare al paziente",
-            "type": "multiple_choice" | "open_text",
-            "options": ["Opzione A", "Opzione B", "Opzione C"] (solo se multiple_choice, altrimenti null)
-        }}
-        
-        ESEMPIO Branch A (emergenza):
-        {{
-            "question": "Il dolore al petto si irradia al braccio sinistro o alla mascella?",
-            "type": "multiple_choice",
-            "options": ["Sì, al braccio", "Sì, alla mascella", "No", "Non sono sicuro/a"]
-        }}
-        
-        ESEMPIO Branch C (triage standard con medicalizzazione):
-        {{
-            "question": "Il dolore addominale che descrivi, quale di queste caratteristiche lo rappresenta meglio?",
-            "type": "multiple_choice",
-            "options": [
-                "A: Dolore acuto e localizzato (tipo crampo in un punto preciso)",
-                "B: Dolore diffuso e costante (sensazione di peso o gonfiore)",
-                "C: Dolore intermittente che va e viene (colico)"
-            ]
-        }}
-        """
+SEI UN MEDICO ESPERTO IN TRIAGE TELEFONICO.
+
+CONTESTO CONVERSAZIONE:
+- Branch triage: {branch.value} ({branch.name})
+- Fase corrente: {phase.value}
+- Obiettivo fase: {objective}
+- Domanda numero: {question_count + 1} (max {max_questions.get(branch, 7)})
+
+📋 DATI GIÀ RACCOLTI (NON RICHIEDERE MAI QUESTI):
+{chr(10).join(known_data_text) if known_data_text else "Nessun dato raccolto ancora."}
+
+🎯 DATI MANCANTI DA RACCOGLIERE:
+{', '.join(missing_data) if missing_data else "Tutti i dati base raccolti, procedi con indagine clinica."}
+
+PROTOCOLLI CLINICI (da Knowledge Base):
+{rag_context[:500] if rag_context else "Nessun protocollo specifico caricato."}
+
+TASK:
+Genera LA PROSSIMA SINGOLA DOMANDA da porre al paziente.
+
+⚠️ REGOLE CRITICHE:
+1. **MEMORIA ASSOLUTA**: Se un dato è in "DATI GIÀ RACCOLTI", NON richiederlo MAI
+2. **UNA SOLA DOMANDA** (Single Question Policy)
+3. **PREFERISCI MULTIPLE CHOICE**: Usa type="multiple_choice" con 2-4 opzioni quando possibile (80% delle domande)
+4. **MEDICALIZZA**: Se fase clinica, traduci sintomi in opzioni mediche A/B/C
+5. **AVANZA**: Non ripetere domande su dati già noti
+
+OUTPUT (JSON RIGOROSO):
+{{
+    "question": "Testo domanda esatta",
+    "type": "multiple_choice",
+    "options": ["Opzione A", "Opzione B", "Opzione C", "Opzione D"]
+}}
+
+ESEMPIO CORRETTO (Branch C, fase clinical_triage):
+{{
+    "question": "Il dolore addominale che descrivi, quale di queste caratteristiche corrisponde meglio?",
+    "type": "multiple_choice",
+    "options": [
+        "Dolore acuto e localizzato (crampo in punto preciso)",
+        "Dolore diffuso e costante (gonfiore, pesantezza)",
+        "Dolore intermittente (va e viene, tipo colico)",
+        "Dolore che peggiora con il movimento"
+    ]
+}}
+
+ESEMPIO CORRETTO (Branch A, fase fast_triage):
+{{
+    "question": "Hai avuto nausea o vomito insieme al dolore?",
+    "type": "multiple_choice",
+    "options": ["Sì, nausea e vomito", "Solo nausea", "Solo vomito", "No, nessuno dei due"]
+}}
+"""
         
         return prompt
     
