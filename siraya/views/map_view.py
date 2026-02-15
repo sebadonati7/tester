@@ -54,6 +54,49 @@ def get_facility_icon(tipologia: str) -> str:
     return FACILITY_ICONS["default"]
 
 
+def format_opening_hours(orari: Any) -> str:
+    """
+    Convert opening hours from dict/JSON to readable string.
+    
+    Args:
+        orari: Can be dict, string, or None
+        
+    Returns:
+        Formatted string like "Lun-Ven: 08:00-18:00"
+    """
+    if not orari or orari == 'N/D':
+        return "Orari non disponibili"
+    
+    # If already a string, return as is
+    if isinstance(orari, str):
+        return orari
+    
+    # If dict, format it
+    if isinstance(orari, dict):
+        parts = []
+        for day, hours in orari.items():
+            if hours:
+                if isinstance(hours, str):
+                    parts.append(f"{day}: {hours}")
+                elif isinstance(hours, dict):
+                    # Handle nested dict like {"apertura": "08:00", "chiusura": "18:00"}
+                    apertura = hours.get('apertura', hours.get('open', ''))
+                    chiusura = hours.get('chiusura', hours.get('close', ''))
+                    if apertura and chiusura:
+                        parts.append(f"{day}: {apertura}-{chiusura}")
+                    elif apertura:
+                        parts.append(f"{day}: {apertura}")
+                else:
+                    parts.append(f"{day}: {hours}")
+        
+        if parts:
+            return " | ".join(parts)
+        else:
+            return "Orari non disponibili"
+    
+    return str(orari)
+
+
 def format_facility_card(facility: Dict[str, Any]) -> str:
     """Format facility info as HTML card."""
     icon = get_facility_icon(facility.get('tipologia', ''))
@@ -63,7 +106,8 @@ def format_facility_card(facility: Dict[str, Any]) -> str:
     comune = facility.get('comune', 'N/D')
     contatti = facility.get('contatti', {})
     telefono = contatti.get('telefono', 'N/D') if isinstance(contatti, dict) else 'N/D'
-    orari = facility.get('orari', 'N/D')
+    orari_raw = facility.get('orari', 'N/D')
+    orari = format_opening_hours(orari_raw)
     distance = facility.get('distance_km')
     
     distance_html = f"<small style='color: #10B981;'>📏 {distance:.1f} km</small>" if distance else ""
@@ -165,11 +209,25 @@ def render_folium_map(
         st_folium(m, width=None, height=500, use_container_width=True)
         
     except ImportError:
-        st.warning("⚠️ Folium o streamlit-folium non installato.")
-        st.info("Installa con: `pip install folium streamlit-folium`")
+        # Fallback: use st.map or Google Maps link
+        st.info("💡 Mappa interattiva non disponibile. Usa i link 'Indicazioni' per aprire Google Maps.")
         
-        # Fallback: use st.map
-        _render_simple_map(facilities)
+        # Try simple map as fallback
+        try:
+            _render_simple_map(facilities)
+        except Exception:
+            # Ultimate fallback: show facilities list with Google Maps links
+            st.markdown("### 📍 Strutture Trovate")
+            for facility in facilities:
+                nome = facility.get('nome', 'N/D')
+                indirizzo = facility.get('indirizzo', '')
+                comune = facility.get('comune', '')
+                
+                if indirizzo and comune:
+                    maps_url = f"https://www.google.com/maps/search/?api=1&query={indirizzo.replace(' ', '+')},+{comune}"
+                    st.markdown(f"**{nome}** - [{indirizzo}, {comune}]({maps_url})")
+                else:
+                    st.markdown(f"**{nome}**")
 
 
 def _render_simple_map(facilities: List[Dict[str, Any]]) -> None:
@@ -281,51 +339,54 @@ def render() -> None:
     if facilities:
         st.success(f"✅ Trovate **{len(facilities)}** strutture")
         
-        # Two columns: Map and List
-        col_map, col_list = st.columns([2, 1])
+        # Single column layout (full width) for better readability
+        st.subheader("📍 Mappa")
         
-        with col_map:
-            st.subheader("📍 Mappa")
-            
-            # Get center from patient location or first facility
-            if location:
-                coords = data_loader.get_comune_coordinates(location)
-                if isinstance(coords, tuple):
-                    center_lat, center_lon = coords
-                elif isinstance(coords, dict):
-                    center_lat = coords.get('lat', DEFAULT_LAT)
-                    center_lon = coords.get('lon', DEFAULT_LON)
-                else:
-                    center_lat, center_lon = DEFAULT_LAT, DEFAULT_LON
-            elif facilities:
-                first = facilities[0]
-                center_lat = first.get('lat') or first.get('latitude') or DEFAULT_LAT
-                center_lon = first.get('lon') or first.get('longitude') or DEFAULT_LON
+        # Get center from patient location or first facility
+        if location:
+            coords = data_loader.get_comune_coordinates(location)
+            if isinstance(coords, tuple):
+                center_lat, center_lon = coords
+            elif isinstance(coords, dict):
+                center_lat = coords.get('lat', DEFAULT_LAT)
+                center_lon = coords.get('lon', DEFAULT_LON)
             else:
                 center_lat, center_lon = DEFAULT_LAT, DEFAULT_LON
-            
-            render_folium_map(facilities, center_lat, center_lon)
+        elif facilities:
+            first = facilities[0]
+            center_lat = first.get('lat') or first.get('latitude') or DEFAULT_LAT
+            center_lon = first.get('lon') or first.get('longitude') or DEFAULT_LON
+        else:
+            center_lat, center_lon = DEFAULT_LAT, DEFAULT_LON
         
-        with col_list:
-            st.subheader("📋 Risultati")
+        render_folium_map(facilities, center_lat, center_lon)
+        
+        st.markdown("---")
+        st.subheader("📋 Dettagli Strutture")
+        
+        # Display facilities in full-width cards
+        for facility in facilities[:10]:
+            st.markdown(format_facility_card(facility), unsafe_allow_html=True)
             
-            for facility in facilities[:10]:
-                st.markdown(format_facility_card(facility), unsafe_allow_html=True)
-                
-                # Action buttons
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    telefono = facility.get('contatti', {}).get('telefono', '') if isinstance(facility.get('contatti'), dict) else ''
-                    if telefono:
-                        st.markdown(f"[📞 Chiama]({telefono})")
-                with col_b:
-                    indirizzo = facility.get('indirizzo', '')
-                    comune = facility.get('comune', '')
-                    if indirizzo:
-                        maps_url = f"https://www.google.com/maps/search/?api=1&query={indirizzo.replace(' ', '+')},+{comune}"
-                        st.markdown(f"[🗺️ Indicazioni]({maps_url})")
-                
-                st.markdown("---")
+            # Action buttons
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
+                telefono = facility.get('contatti', {}).get('telefono', '') if isinstance(facility.get('contatti'), dict) else ''
+                if telefono:
+                    st.link_button("📞 Chiama", f"tel:{telefono}", use_container_width=True)
+            with col_b:
+                indirizzo = facility.get('indirizzo', '')
+                comune = facility.get('comune', '')
+                if indirizzo:
+                    maps_url = f"https://www.google.com/maps/search/?api=1&query={indirizzo.replace(' ', '+')},+{comune}"
+                    st.link_button("🗺️ Indicazioni", maps_url, use_container_width=True)
+            with col_c:
+                # Show full address for copy
+                full_address = f"{indirizzo}, {comune}" if indirizzo and comune else ""
+                if full_address:
+                    st.caption(f"📍 {full_address}")
+            
+            st.markdown("---")
     
     elif search_clicked:
         st.warning("⚠️ Nessuna struttura trovata. Prova a modificare i criteri di ricerca.")

@@ -301,8 +301,8 @@ def render() -> str:
     
     st.divider()
     
-    # Privacy consent
-    _render_privacy_checkbox()
+    # Privacy consent checkbox removed - now handled by central button in main view
+    # _render_privacy_checkbox()  # REMOVED - no longer needed
     
     st.divider()
     

@@ -270,7 +270,7 @@ def render_admin_login() -> bool:
 
 def render_privacy_consent() -> bool:
     """
-    Render privacy consent checkbox/form.
+    Render privacy consent form with central "Accetta e Continua" button.
     
     Returns:
         True if privacy accepted
@@ -280,7 +280,22 @@ def render_privacy_consent() -> bool:
     if auth.is_privacy_accepted():
         return True
     
-    st.markdown("### 📜 Informativa Privacy")
+    # Header
+    st.markdown("""
+    <div style="text-align: center; padding: 20px 0;">
+        <h1 style="color: #4A90E2; font-weight: 300; letter-spacing: 0.1em; margin: 0;">
+            🏥 SIRAYA Health Navigator
+        </h1>
+        <p style="color: #6b7280; font-size: 1.1em; margin-top: 10px;">
+            Assistente Intelligente per la Navigazione Sanitaria
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Privacy Information
+    st.markdown("### 📜 Informativa sulla Privacy")
     
     st.markdown("""
     Prima di continuare, leggi e accetta l'informativa sulla privacy.
@@ -294,12 +309,16 @@ def render_privacy_consent() -> bool:
     nel rispetto del GDPR (Regolamento UE 2016/679).
     """)
     
-    accept = st.checkbox("✅ Accetto l'informativa sulla privacy e i termini di servizio")
+    st.markdown("---")
     
-    if accept:
-        auth.accept_privacy()
-        st.success("Grazie! Ora puoi utilizzare il servizio.")
-        st.rerun()
+    # Central Accept Button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("✅ Accetta e Continua", use_container_width=True, type="primary", key="privacy_accept_central"):
+            auth.accept_privacy()
+            st.session_state[AuthKeys.PRIVACY_ACCEPTED] = True
+            st.success("✅ Grazie! Ora puoi utilizzare il servizio.")
+            st.rerun()
     
     return False
 
