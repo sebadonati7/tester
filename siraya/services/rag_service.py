@@ -122,26 +122,6 @@ class RAGService:
         # except Exception as e:
         #     logger.error(f"❌ RAG error: {type(e).__name__} - {str(e)}")
         #     return []
-            
-            if response.data:
-                chunks = response.data
-                
-                # Filtra per protocollo se specificato
-                if protocol_filter:
-                    chunks = [
-                        c for c in chunks 
-                        if protocol_filter.lower() in c.get('protocol', '').lower()
-                    ]
-                
-                logger.info(f"🔍 Trovati {len(chunks)} chunks per: '{query[:50]}...'")
-                return chunks
-            else:
-                logger.warning("⚠️ Nessun chunk trovato")
-                return []
-                
-        except Exception as e:
-            logger.error(f"❌ Errore ricerca: {e}")
-            return []
     
     def format_context_for_llm(
         self, 
