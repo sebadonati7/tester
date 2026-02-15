@@ -254,6 +254,18 @@ siraya/
             has_supabase_key = "SUPABASE_KEY" in all_keys
             st.sidebar.write(f"**SUPABASE_URL presente:** {has_supabase_url}")
             st.sidebar.write(f"**SUPABASE_KEY presente:** {has_supabase_key}")
+            
+            # Prova a leggere direttamente anche se non è nella lista
+            # (a volte Streamlit non mostra tutte le chiavi in .keys())
+            try:
+                test_url = st.secrets.get("SUPABASE_URL", None)
+                test_key = st.secrets.get("SUPABASE_KEY", None)
+                if test_url:
+                    st.sidebar.success(f"✅ SUPABASE_URL letta con .get(): {str(test_url)[:30]}...")
+                if test_key:
+                    st.sidebar.success(f"✅ SUPABASE_KEY letta con .get(): {str(test_key)[:20]}...")
+            except Exception as test_e:
+                st.sidebar.write(f"**Test lettura:** {test_e}")
         except Exception as e:
             st.sidebar.write(f"**Errore lista chiavi:** {e}")
         
