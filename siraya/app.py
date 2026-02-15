@@ -319,7 +319,7 @@ siraya/
         # #region agent log
         try:
             log_data3 = {
-                "location": "app.py:280",
+                "location": "app.py:310",
                 "message": "Lettura via SupabaseConfig",
                 "data": {
                     "url_config": str(url_config)[:30] if url_config else "VUOTO",
@@ -342,6 +342,39 @@ siraya/
         st.sidebar.write(f"**URL da Config:** {str(url_config)[:30] if url_config else 'VUOTO'}...")
         st.sidebar.write(f"**KEY da Config:** {str(key_config)[:20] if key_config else 'VUOTO'}...")
         st.sidebar.write(f"**is_configured():** {is_conf}")
+        
+        # Test connessione diretta se abbiamo URL e KEY
+        if url_config and key_config:
+            st.sidebar.markdown("---")
+            st.sidebar.markdown("### 🧪 Test Connessione Supabase")
+            try:
+                from supabase import create_client
+                test_client = create_client(url_config, key_config)
+                
+                # Test 1: SELECT su protocol_chunks (RAG)
+                try:
+                    test_result = test_client.table("protocol_chunks").select("id").limit(1).execute()
+                    st.sidebar.success("✅ Test SELECT protocol_chunks: OK")
+                    st.sidebar.write(f"   Righe trovate: {len(test_result.data) if test_result.data else 0}")
+                except Exception as select_err:
+                    st.sidebar.error(f"❌ Test SELECT protocol_chunks: {str(select_err)[:100]}")
+                
+                # Test 2: INSERT su triage_logs
+                try:
+                    test_insert = test_client.table("triage_logs").insert({
+                        "session_id": "test_debug_" + str(int(__import__("time").time())),
+                        "user_input": "test",
+                        "bot_response": "test",
+                        "metadata": {}
+                    }).execute()
+                    st.sidebar.success("✅ Test INSERT triage_logs: OK")
+                except Exception as insert_err:
+                    st.sidebar.error(f"❌ Test INSERT triage_logs: {str(insert_err)[:100]}")
+                    
+            except ImportError:
+                st.sidebar.error("❌ Modulo supabase non installato")
+            except Exception as conn_err:
+                st.sidebar.error(f"❌ Errore connessione: {str(conn_err)[:100]}")
         
     except Exception as e:
         st.sidebar.error(f"❌ Errore: {e}")
