@@ -81,60 +81,47 @@ class RAGService:
         protocol_filter: Optional[str] = None
     ) -> List[Dict]:
         """
-        Ricerca SEMPLIFICATA sui protocolli clinici.
+        RAG TEMPORANEAMENTE DISABILITATO per errore PostgreSQL.
         
-        ✅ FIX V2.1: Usa .select() + .ilike() invece di funzione PostgreSQL custom.
+        ⚠️ TODO: Verificare nome tabella Supabase e riattivare ricerca.
         
-        Args:
-            query: Sintomo/domanda da cercare
-            k: Numero di chunks da recuperare
-            protocol_filter: Filtra per protocollo specifico (es. "salute-mentale")
-            
-        Returns:
-            Lista di chunks rilevanti (o lista vuota se non trovati/errore)
+        Per ora ritorna lista vuota, l'AI userà conoscenza generale.
         """
-        if not self.supabase:
-            logger.warning("⚠️ Supabase non disponibile, RAG disabilitato")
-            return []
+        logger.warning(f"⚠️ RAG disabilitato temporaneamente, AI userà conoscenza generale per: '{query}'")
+        return []
         
-        try:
-            # Nome tabella (verifica nel tuo DB Supabase)
-            table_name = "protocol_chunks"  # Se errore, verifica nome esatto
-            
-            # Query builder
-            query_builder = self.supabase.table(table_name).select("*")
-            
-            # Filtro per protocollo specifico (opzionale)
-            if protocol_filter:
-                query_builder = query_builder.eq("protocol", protocol_filter)
-            
-            # Filtro per keyword (prime 3 parole della query)
-            search_terms = [term.lower() for term in query.split() if len(term) > 3][:3]
-            
-            if not search_terms:
-                logger.warning(f"⚠️ Query troppo corta: '{query}', RAG skip")
-                return []
-            
-            # Cerca nella colonna 'content' (o 'text' se la colonna si chiama così)
-            # Usa .ilike() per ricerca case-insensitive
-            for term in search_terms:
-                query_builder = query_builder.ilike("content", f"%{term}%")
-            
-            # Limita risultati
-            response = query_builder.limit(k).execute()
-            
-            if response.data:
-                chunks = response.data
-                logger.info(f"✅ RAG: Trovati {len(chunks)} chunk per query '{query}' (terms: {search_terms})")
-                return chunks
-            else:
-                logger.warning(f"⚠️ RAG: Nessun risultato per query '{query}'")
-                return []
-        
-        except Exception as e:
-            logger.error(f"❌ Errore ricerca RAG: {type(e).__name__} - {str(e)}")
-            # Ritorna lista vuota, AI userà conoscenza generale
-            return []
+        # ✅ CODICE ORIGINALE (commentato fino a fix database):
+        # if not self.supabase:
+        #     logger.warning("⚠️ Supabase non disponibile, RAG disabilitato")
+        #     return []
+        # 
+        # try:
+        #     # Nome tabella (DA VERIFICARE nel DB Supabase)
+        #     table_name = "protocol_chunks"  # ← Potrebbe essere 'protocols' o altro
+        #     
+        #     query_builder = self.supabase.table(table_name).select("*")
+        #     
+        #     # Filtro per keyword
+        #     search_terms = [term.lower() for term in query.split() if len(term) > 3][:3]
+        #     
+        #     if not search_terms:
+        #         return []
+        #     
+        #     for term in search_terms:
+        #         query_builder = query_builder.ilike("content", f"%{term}%")
+        #     
+        #     response = query_builder.limit(k).execute()
+        #     
+        #     if response.data:
+        #         logger.info(f"✅ RAG: {len(response.data)} chunk trovati")
+        #         return response.data
+        #     else:
+        #         logger.warning(f"⚠️ RAG: Nessun risultato")
+        #         return []
+        # 
+        # except Exception as e:
+        #     logger.error(f"❌ RAG error: {type(e).__name__} - {str(e)}")
+        #     return []
             
             if response.data:
                 chunks = response.data

@@ -444,55 +444,72 @@ Rispondi in JSON:
                 # FORCE ADVANCE: Se età presente, vai a clinical triage
                 if "age" in collected_data:
                     logger.info(f"✅ Età raccolta: {collected_data['age']}, avanzo a CLINICAL_TRIAGE")
+                    # ✅ RESET COUNTER: Quando entriamo in CLINICAL_TRIAGE, resettiamo il contatore
+                    # In questo modo contiamo solo le domande della fase clinica (5-7)
+                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
                     return TriagePhase.CLINICAL_TRIAGE
                 return TriagePhase.DEMOGRAPHICS
             
             # FASE 5: Clinical Triage (5-7 domande basate su protocolli)
             if current_phase == TriagePhase.CLINICAL_TRIAGE:
+                # ✅ FIX: question_count ora conta SOLO domande clinical triage (resettato sopra)
+                # Quindi quando arriviamo qui con question_count=0, è la prima domanda clinical
+                
                 # Verifica dati minimi per SBAR
                 required_data = ["main_symptom", "pain_scale", "age"]
                 has_location = "location" in collected_data or "current_location" in collected_data
                 has_required = all(key in collected_data for key in required_data)
                 
+                # ⚠️ REGOLA IMPORTANTE: Contare solo domande CLINICAL_TRIAGE
+                # question_count dovrebbe essere tra 0-7 in questa fase
+                
                 # Avanza a SBAR se:
-                # - Almeno 5 domande E dati completi
-                # - OPPURE max 7 domande raggiunte
+                # - Almeno 5 domande clinical E dati completi
+                # - OPPURE max 7 domande clinical raggiunte
                 if question_count >= 5 and has_location and has_required:
-                    logger.info(f"✅ {question_count} domande + dati completi, genero SBAR")
+                    logger.info(f"✅ {question_count} domande clinical + dati completi, genero SBAR")
                     return TriagePhase.SBAR_GENERATION
                 
                 if question_count >= 7:
-                    logger.warning(f"⚠️ Max domande raggiunto ({question_count}), forzo SBAR")
+                    logger.warning(f"⚠️ Max domande clinical raggiunto ({question_count}), forzo SBAR")
                     return TriagePhase.SBAR_GENERATION
                 
                 # Continua clinical triage
+                logger.info(f"⏸️ Clinical triage continua (domanda {question_count + 1}/5-7)")
                 return TriagePhase.CLINICAL_TRIAGE
             
             # FASE 6: SBAR (report finale)
             if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
         
-        # Branch A: Emergency (simile logica)
+        # Branch A: Emergency
         if branch == TriageBranch.EMERGENCY:
             if current_phase == TriagePhase.INTAKE:
                 if "location" in collected_data or "current_location" in collected_data:
+                    # ✅ RESET COUNTER: Quando entriamo in FAST_TRIAGE, resettiamo
+                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
                     return TriagePhase.FAST_TRIAGE
                 return TriagePhase.LOCALIZATION
             
             if current_phase == TriagePhase.LOCALIZATION:
                 if "location" in collected_data or "current_location" in collected_data:
+                    # ✅ RESET COUNTER
+                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
                     return TriagePhase.FAST_TRIAGE
                 return TriagePhase.LOCALIZATION
             
             if current_phase == TriagePhase.FAST_TRIAGE:
+                # ✅ FIX: Ora question_count conta solo domande FAST_TRIAGE (3-4)
                 if question_count >= 3:  # Min 3 domande per emergenza
+                    logger.info(f"✅ {question_count} domande fast-triage completate, genero SBAR")
                     return TriagePhase.SBAR_GENERATION
+                logger.info(f"⏸️ Fast triage continua (domanda {question_count + 1}/3-4)")
                 return TriagePhase.FAST_TRIAGE
             
             if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
         
-        # Branch B: Mental Health (simile logica)
+        # Branch B: Mental Health
         if branch == TriageBranch.MENTAL_HEALTH:
             if current_phase == TriagePhase.INTAKE:
                 return TriagePhase.CONSENT
@@ -504,12 +521,17 @@ Rispondi in JSON:
             
             if current_phase == TriagePhase.DEMOGRAPHICS:
                 if "age" in collected_data:
+                    # ✅ RESET COUNTER: Quando entriamo in RISK_ASSESSMENT, resettiamo
+                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
                     return TriagePhase.RISK_ASSESSMENT
                 return TriagePhase.DEMOGRAPHICS
             
             if current_phase == TriagePhase.RISK_ASSESSMENT:
+                # ✅ FIX: Ora question_count conta solo domande RISK_ASSESSMENT (4-5)
                 if question_count >= 4:
+                    logger.info(f"✅ {question_count} domande risk assessment completate, genero SBAR")
                     return TriagePhase.SBAR_GENERATION
+                logger.info(f"⏸️ Risk assessment continua (domanda {question_count + 1}/4-5)")
                 return TriagePhase.RISK_ASSESSMENT
             
             if current_phase == TriagePhase.SBAR_GENERATION:

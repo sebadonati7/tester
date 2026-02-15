@@ -308,6 +308,105 @@ streamlit run siraya/app.py
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
 
+### ⚡ HOTFIX 7: RAG Disabled + Clinical Triage Question Count Fix (15 Feb 2026)
+
+**Problemi Risolti:**
+
+1. **RAG Error persistente** → Disabilitato temporaneamente con fallback graceful
+2. **Clinical Triage troppo veloce** → Solo 1 domanda invece di 5-7
+
+---
+
+#### **FIX 7.1: RAG Temporaneamente Disabilitato**
+
+**Problema:** Errore PostgreSQL continua anche dopo fix:
+```
+ERROR: Could not find function public.search_protocols()
+code: PGRST202
+```
+
+**Causa:** 
+- File modificato potrebbe non essere aggiornato su Streamlit Cloud
+- Tabella `protocol_chunks` potrebbe non esistere o avere nome diverso
+- Colonna `content` potrebbe chiamarsi diversamente
+
+**Soluzione TEMPORANEA: Disabilitare RAG con graceful degradation**
+
+```python
+# siraya/services/rag_service.py - retrieve_context()
+
+def retrieve_context(...) -> List[Dict]:
+    """RAG TEMPORANEAMENTE DISABILITATO."""
+    logger.warning(f"⚠️ RAG disabilitato, AI userà conoscenza generale per: '{query}'")
+    return []
+    
+    # Codice originale commentato fino a verifica database
+```
+
+**Conseguenze:**
+- ✅ Nessun crash/errore
+- ⚠️ AI genera domande clinical senza protocolli specifici (usa conoscenza generale)
+- ✅ Conversazione funziona normalmente
+
+**TODO per riattivare RAG:**
+1. Verificare nome tabella Supabase: `SELECT table_name FROM information_schema.tables WHERE table_name LIKE '%protocol%'`
+2. Verificare nome colonna: `SELECT column_name FROM information_schema.columns WHERE table_name = 'XXX'`
+3. Aggiornare `table_name` e nome colonna in `rag_service.py`
+4. Decommentare codice
+
+---
+
+#### **FIX 7.2: Question Count Reset per Fasi Cliniche**
+
+**Problema:** Clinical Triage termina dopo solo 1 domanda invece di 5-7.
+
+**Causa:** `question_count` contava TUTTE le domande dall'inizio:
+```
+1. CHIEF_COMPLAINT: "Qual è il motivo?" → q_count=1
+2. LOCALIZATION: "Dove ti trovi?" → q_count=2
+3. PAIN_SCALE: "Scala dolore?" → q_count=3
+4. DEMOGRAPHICS: "Età?" → q_count=4
+5. CLINICAL_TRIAGE domanda 1 → q_count=5 ✅ RAGGIUNGE LIMITE!
+   → Va subito a SBAR ❌ (invece di fare 5-7 domande clinical)
+```
+
+**Soluzione: Reset counter all'ingresso delle fasi cliniche**
+
+```python
+# siraya/controllers/triage_controller.py
+
+# Branch C (STANDARD)
+if current_phase == TriagePhase.DEMOGRAPHICS:
+    if "age" in collected_data:
+        # ✅ RESET COUNTER quando entriamo in CLINICAL_TRIAGE
+        self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
+        return TriagePhase.CLINICAL_TRIAGE
+
+if current_phase == TriagePhase.CLINICAL_TRIAGE:
+    # Ora question_count conta SOLO domande clinical (0-7)
+    if question_count >= 5 and has_required:
+        return TriagePhase.SBAR_GENERATION  # Dopo 5 domande clinical
+    
+    if question_count >= 7:
+        return TriagePhase.SBAR_GENERATION  # Max 7 domande clinical
+    
+    # Continua
+    logger.info(f"⏸️ Clinical triage continua (domanda {question_count + 1}/5-7)")
+    return TriagePhase.CLINICAL_TRIAGE
+```
+
+**Stesso fix applicato a:**
+- Branch A: FAST_TRIAGE (3-4 domande)
+- Branch B: RISK_ASSESSMENT (4-5 domande)
+
+**Test validazione:**
+- [x] Branch C: 5-7 domande clinical ✅
+- [x] Branch A: 3-4 domande fast-triage ✅
+- [x] Branch B: 4-5 domande risk assessment ✅
+- [x] Log mostra "domanda X/5-7" correttamente ✅
+
+---
+
 ### ⚡ HOTFIX 6: Conversational Flow + RAG Service (15 Feb 2026)
 
 **Problemi Multipli Risolti:**
