@@ -84,11 +84,15 @@ class TriageController:
         question_count = self.state_manager.get(StateKeys.QUESTION_COUNT, 0)
         session_id = self.state_manager.get(StateKeys.SESSION_ID, "unknown")
         
+        # ✅ DEBUG: Log stato attuale
+        logger.info(f"📍 Stato attuale: branch={current_branch}, phase={current_phase}, q_count={question_count}")
+        
         # 2. Prima interazione: classifica branch
         if not current_branch:
             current_branch = self._classify_branch(user_input)
             self.state_manager.set(StateKeys.TRIAGE_PATH, current_branch.value)  # Legacy key (per compatibilità con vecchio codice)
             self.state_manager.set(StateKeys.TRIAGE_BRANCH, current_branch.value)  # New key (per nuovo codice)
+            logger.info(f"✅ Branch classificato: {current_branch.value}")
         else:
             current_branch = TriageBranch(current_branch)
         
@@ -108,6 +112,13 @@ class TriageController:
             collected_data,
             question_count
         )
+        
+        # ✅ DEBUG: Log transizione fase
+        if next_phase.value != current_phase:
+            logger.info(f"🔄 Transizione fase: {current_phase} → {next_phase.value}")
+        else:
+            logger.info(f"⏸️ Rimango in fase: {current_phase}")
+        
         self.state_manager.set(StateKeys.CURRENT_PHASE, next_phase.value)
         
         # 6. Genera prossima domanda tramite AI
@@ -169,30 +180,42 @@ class TriageController:
         if any(kw in user_lower for kw in self.info_keywords):
             return TriageBranch.INFO
         
-        # Fallback: chiedi all'AI
-        prompt = f"""
-        Classifica questo messaggio in UNA delle 4 categorie:
+        # ✅ FIX: AI fallback con approccio semplificato
+        # Per "ciao" o messaggi generici → STANDARD (default sicuro)
+        generic_greetings = ["ciao", "buongiorno", "buonasera", "salve", "hey", "hello"]
+        if any(greet in user_lower for greet in generic_greetings) or len(user_input.strip()) < 10:
+            logger.info(f"✅ Saluto generico o messaggio breve, classifico come STANDARD")
+            return TriageBranch.STANDARD
         
-        Input utente: "{user_input}"
-        
-        Categorie:
-        - EMERGENCY: Sintomi gravi (dolore toracico, emorragia, trauma, difficoltà respiratorie)
-        - MENTAL_HEALTH: Crisi psichiatrica, rischio autolesionismo, depressione grave
-        - STANDARD: Sintomi non urgenti (mal di testa, dolori addominali, febbre)
-        - INFO: Richieste informative su servizi sanitari
-        
-        Rispondi SOLO con: EMERGENCY, MENTAL_HEALTH, STANDARD o INFO
-        """
-        
+        # Fallback: per messaggi più lunghi/specifici, prova AI classification
         try:
-            # ✅ FIX: Usa generate() invece di generate_with_json_parse() per risposta semplice
-            response = self.llm.generate(prompt, temperature=0.0, max_tokens=20)
-            classification = response.strip().upper()
+            prompt = f"""
+Classifica questo messaggio in UNA delle 4 categorie:
+
+Input utente: "{user_input}"
+
+Categorie:
+- EMERGENCY: Sintomi gravi (dolore toracico, emorragia, trauma, difficoltà respiratorie)
+- MENTAL_HEALTH: Crisi psichiatrica, rischio autolesionismo, depressione grave
+- STANDARD: Sintomi non urgenti (mal di testa, dolori addominali, febbre)
+- INFO: Richieste informative su servizi sanitari
+
+Rispondi in JSON:
+{{
+    "classification": "EMERGENCY" | "MENTAL_HEALTH" | "STANDARD" | "INFO"
+}}
+"""
             
-            if classification in ["EMERGENCY", "MENTAL_HEALTH", "STANDARD", "INFO"]:
-                return TriageBranch[classification]
+            response = self.llm.generate_with_json_parse(prompt, temperature=0.0, max_tokens=20)
             
-            logger.warning(f"⚠️ Classificazione AI non valida: {classification}, uso STANDARD")
+            if isinstance(response, dict) and "classification" in response:
+                classification = response["classification"].strip().upper()
+                
+                if classification in ["EMERGENCY", "MENTAL_HEALTH", "STANDARD", "INFO"]:
+                    logger.info(f"✅ AI classification: {classification}")
+                    return TriageBranch[classification]
+            
+            logger.warning(f"⚠️ Classificazione AI non valida: {response}, uso STANDARD")
             
         except Exception as e:
             logger.error(f"❌ Errore classify_branch AI: {e}")

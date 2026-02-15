@@ -315,6 +315,81 @@ streamlit run siraya/app.py
 1. **Ordine fasi FSM errato** → Bot chiedeva località PRIMA del sintomo
 2. **Opzioni multiple choice sempre presenti** → Anche per domande aperte
 3. **RAG Service falliva** → Errore PostgreSQL function not found
+4. **`LLMService.generate()` non esiste** → Metodo mancante causava crash classification
+5. **Bot salta CHIEF_COMPLAINT** → Debug logging aggiunto per tracciare FSM
+
+---
+
+#### **FIX 4.1: LLMService.generate() Mancante**
+
+**Problema:** `AttributeError: 'LLMService' object has no attribute 'generate'`
+
+**Causa:** Il metodo `_classify_branch()` chiamava `self.llm.generate()` ma LLMService ha solo `generate_with_json_parse()`.
+
+**Soluzione:**
+```python
+# siraya/controllers/triage_controller.py - _classify_branch()
+
+# ❌ PRIMA (ERRATO):
+response = self.llm.generate(prompt, temperature=0.0, max_tokens=20)
+classification = response.strip().upper()
+
+# ✅ DOPO (CORRETTO):
+# 1. Per saluti generici → STANDARD diretto (no AI call)
+generic_greetings = ["ciao", "buongiorno", "buonasera", "salve"]
+if any(greet in user_lower for greet in generic_greetings):
+    return TriageBranch.STANDARD
+
+# 2. Per messaggi specifici → AI con JSON response
+prompt = """... (JSON format) ..."""
+response = self.llm.generate_with_json_parse(prompt, temperature=0.0)
+classification = response.get("classification", "STANDARD").upper()
+```
+
+**Beneficio:** 
+- Nessun crash per saluti come "ciao"
+- Classificazione più veloce per messaggi comuni
+- Fallback sicuro a STANDARD
+
+---
+
+#### **FIX 4.2: Debug Logging per FSM**
+
+**Problema:** Bot salta CHIEF_COMPLAINT e va a LOCALIZATION senza motivo apparente.
+
+**Soluzione: Logging dettagliato per tracciare transizioni**
+
+```python
+# siraya/controllers/triage_controller.py
+
+# Log stato iniziale
+logger.info(f"📍 Stato: branch={current_branch}, phase={current_phase}, q_count={question_count}")
+
+# Log classificazione branch
+if not current_branch:
+    current_branch = self._classify_branch(user_input)
+    logger.info(f"✅ Branch classificato: {current_branch.value}")
+
+# Log transizione fase
+if next_phase.value != current_phase:
+    logger.info(f"🔄 Transizione fase: {current_phase} → {next_phase.value}")
+else:
+    logger.info(f"⏸️ Rimango in fase: {current_phase}")
+```
+
+**Test per debug:**
+```bash
+# Riavvia app e testa conversazione
+streamlit run siraya/app.py
+
+# Scrivi "ciao" e controlla log
+tail -f siraya.log | grep -E "📍|✅|🔄|⏸️"
+
+# Expected output:
+# 📍 Stato: branch=None, phase=intake, q_count=0
+# ✅ Branch classificato: C
+# 🔄 Transizione fase: intake → chief_complaint
+```
 
 ---
 
