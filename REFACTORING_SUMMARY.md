@@ -302,13 +302,37 @@ streamlit run siraya/app.py
 
 **Timestamp:** 2026-02-15  
 **Versione:** SIRAYA V2.1 - AI-Driven Orchestrator + Critical Fixes  
-**Status:** ✅ Refactoring completato + 5 Fix Critici implementati + EMERGENCY_RULES fix
+**Status:** ✅ Refactoring completato + 5 Fix Critici + UI Integration Fix + EMERGENCY_RULES fix
 
 ---
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
 
-### ⚡ HOTFIX: EMERGENCY_RULES AttributeError (15 Feb 2026)
+### ⚡ HOTFIX 3: UI Integration Fix - Controller Bypass (15 Feb 2026)
+
+**Problema Critico:** `AttributeError: 'TriageController' object has no attribute 'get_survey_options'`
+
+**Causa Root:** La UI (`chat_view.py`) **NON usava** il nuovo `TriageController` refactorato! 
+- `_process_user_input()` chiamava direttamente `llm.generate_response()` invece di `controller.process_user_input()`
+- Cercava metodi obsoleti: `get_survey_options()`, `set_survey_options()`, `clear_survey_options()`, `reset_triage()`
+- Il refactoring V2.0 di `triage_controller.py` era completamente bypassato
+
+**File Modificati:**
+1. ✅ `siraya/core/state_manager.py` - Aggiunto `StateKeys.LAST_BOT_RESPONSE` e `TRIAGE_BRANCH`
+2. ✅ `siraya/controllers/triage_controller.py` - Salva risposta nello state
+3. ✅ `siraya/views/chat_view.py` - Riscritto `_process_user_input()` e rendering opzioni
+
+**Test Validazione:**
+- [x] App si avvia senza AttributeError ✅
+- [x] `_process_user_input()` usa `controller.process_user_input()` ✅
+- [x] Multiple choice options visualizzate come bottoni ✅
+- [x] State-based rendering funziona ✅
+- [x] Reset triage usa `state_manager.reset_triage()` ✅
+- [x] Nessun lint error ✅
+
+---
+
+### ⚡ HOTFIX 2: EMERGENCY_RULES AttributeError (15 Feb 2026)
 
 **Problema:** `AttributeError: type object 'EMERGENCY_RULES' has no attribute 'get'`
 
@@ -344,7 +368,7 @@ self.info_keywords = EMERGENCY_RULES.INFO_KEYWORDS  # ✅ Keywords info
 
 ---
 
-### Problemi Risolti Post-Refactoring
+### ⚡ HOTFIX 1: Conversational Memory & FSM Loops (14 Feb 2026)
 
 Dopo il refactoring V2.0, sono stati identificati e risolti **5 problemi critici**:
 

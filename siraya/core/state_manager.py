@@ -47,6 +47,8 @@ class StateKeys:
     CURRENT_PHASE = "current_phase"
     TRIAGE_PATH = "triage_path"
     QUESTION_COUNT = "question_count"
+    TRIAGE_BRANCH = "triage_branch"  # Branch A/B/C/INFO
+    LAST_BOT_RESPONSE = "last_bot_response"  # Ultima risposta bot per UI (include options)
     
     # Patient data
     PATIENT_AGE = "patient_age"
@@ -91,7 +93,9 @@ DEFAULT_STATE: Dict[str, Any] = {
     StateKeys.COLLECTED_DATA: {},
     StateKeys.CURRENT_PHASE: "INTAKE",       # V3: starts as INTAKE (not INTENT_DETECTION)
     StateKeys.TRIAGE_PATH: None,             # V3: None until SmartRouter assigns it
+    StateKeys.TRIAGE_BRANCH: None,           # V2.1: Branch A/B/C/INFO from TriageController
     StateKeys.QUESTION_COUNT: 0,
+    StateKeys.LAST_BOT_RESPONSE: {},         # V2.1: Ultima risposta con type/options
     
     # Patient
     StateKeys.PATIENT_AGE: None,

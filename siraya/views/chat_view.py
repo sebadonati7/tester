@@ -1,22 +1,27 @@
 """
 SIRAYA Health Navigator - Chat View
-V2.0: Visual Parity with legacy frontend.py
+V2.1: Refactored to use TriageController AI-Driven Orchestrator
 
 This view:
 - Renders chat message history with avatars
-- Handles user input via TriageController
-- Shows AI responses with streaming effect
-- Displays survey buttons (A/B/C options)
+- Handles user input via TriageController V2.1
+- Shows AI responses with dynamic multiple choice options
+- Displays survey buttons (A/B/C options) when available
 - Includes TTS (Text-to-Speech) support
+- Integrates with Supabase memory for conversational context
 """
 
 import streamlit as st
 from typing import Optional, List, Dict, Any
 import time
+import logging
 
 from ..core.state_manager import get_state_manager, StateKeys
 from ..core.authentication import check_privacy_accepted, render_privacy_consent
 from ..controllers.triage_controller import get_triage_controller
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -340,32 +345,49 @@ def render() -> None:
     
     # === CHECK IF DISPOSITION COMPLETE ===
     current_phase = state.get(StateKeys.CURRENT_PHASE, "")
-    if current_phase in ("DISPOSITION", "RECOMMENDATION") and messages:
+    if current_phase in ("DISPOSITION", "RECOMMENDATION", "sbar") and messages:
         _render_disposition_summary()
         # Non bloccare l'input, ma mostra l'esito in un container distinto
         st.markdown("---")
     
-    # === RENDER PENDING SURVEY OPTIONS ===
-    pending_options = controller.get_survey_options()
-    if pending_options:
-        selected = render_survey_buttons(
-            pending_options,
-            f"phase_{state.get(StateKeys.CURRENT_PHASE, 'init')}"
-        )
-        
-        if selected:
-            # User clicked a survey button
-            _process_user_input(selected, controller, state)
-            controller.clear_survey_options()
-            st.rerun()
-        
-        # Still show text input as alternative
-        st.caption("💡 Oppure scrivi liberamente:")
+    # === RENDER MULTIPLE CHOICE OPTIONS (NEW V2.1) ===
+    # Recupera ultima risposta dal state
+    last_response = state.get(StateKeys.LAST_BOT_RESPONSE, {})
+    question_type = last_response.get("question_type", "open_text")
+    options = last_response.get("options", None)
+    
+    # Se ci sono opzioni multiple choice E l'ultimo messaggio è del bot, mostra bottoni
+    if question_type == "multiple_choice" and options and messages:
+        if messages[-1]["role"] == "assistant":  # Verifica che sia l'ultimo messaggio del bot
+            st.markdown("#### 💬 Seleziona una risposta:")
+            
+            # Mostra bottoni in una griglia (max 2 colonne)
+            num_cols = min(len(options), 2)
+            cols = st.columns(num_cols)
+            
+            for idx, option in enumerate(options):
+                col_idx = idx % num_cols
+                with cols[col_idx]:
+                    # Usa unique key con timestamp per evitare duplicati
+                    btn_key = f"option_{idx}_{len(messages)}"
+                    if st.button(
+                        option, 
+                        key=btn_key, 
+                        use_container_width=True,
+                        type="secondary"
+                    ):
+                        # User clicked an option
+                        _process_user_input(option, controller, state)
+                        st.rerun()
+            
+            # Alternative: testo libero
+            st.caption("💡 Oppure scrivi liberamente:")
     
     # === CHAT INPUT ===
     if prompt := st.chat_input("Ciao, come posso aiutarti oggi?"):
         _process_user_input(prompt, controller, state)
         st.rerun()
+
 
 
 def _process_user_input(
@@ -374,38 +396,48 @@ def _process_user_input(
     state
 ) -> None:
     """
-    Process user input through the LLM state-machine.
-
-    V3: delega tutta la logica a LLMService.generate_response().
-    Il controller NON è più il decision-maker; è mantenuto solo per
-    backward-compat (reset, survey options).
+    Process user input through TriageController V2.1 (AI-Driven Orchestrator).
+    
+    Uses the NEW refactored controller that:
+    - Classifies branch (A/B/C/INFO)
+    - Extracts data with memory
+    - Generates questions via AI (including multiple choice options)
+    - Saves state and returns response with options included
     """
     # Add user message to history
     state.add_message("user", user_input)
 
-    # ── Call the state machine ──
-    from ..services.llm_service import get_llm_service
-    llm = get_llm_service()
+    # ✅ NUOVO: Usa TriageController refactorato
+    with st.spinner("🔍 Analisi in corso..."):
+        try:
+            response = controller.process_user_input(user_input)
+        except Exception as e:
+            logger.error(f"❌ Errore in process_user_input: {e}")
+            st.error(f"❌ Si è verificato un errore: {e}")
+            return
 
-    with st.spinner("Analisi in corso..."):
-        response = llm.generate_response(user_input, st.session_state)
-
+    # Extract response components
+    assistant_text = response.get("assistant_response", "")
+    question_type = response.get("question_type", "open_text")
+    options = response.get("options", None)
+    metadata = response.get("metadata", {})
+    
     # Add assistant response to history
-    state.add_message("assistant", response)
+    state.add_message("assistant", assistant_text)
+    
+    # ✅ Salva risposta nello state per rendering (con options)
+    state.set(StateKeys.LAST_BOT_RESPONSE, response)
 
-    # ── Survey options (parsed inside generate_response) ──
-    pending = st.session_state.get("pending_survey_options")
-    if pending:
-        controller.set_survey_options(pending)
-
-    # ── Emergency alert ──
-    urgency = st.session_state.get("urgency_level", 3)
-    if urgency >= 5:
+    # ── Emergency alert (basato su metadata o branch) ──
+    branch = state.get(StateKeys.TRIAGE_BRANCH, "")
+    if branch == "A":  # Branch EMERGENCY
         st.error("🚨 **EMERGENZA RILEVATA** - Chiama immediatamente il **118**")
-    elif urgency >= 4:
-        phase = st.session_state.get("current_phase", "")
-        if st.session_state.get("triage_path") == "B":
-            st.warning("⚫ **Supporto Urgente** - Contatta il numero verde **800.274.274**")
+    elif branch == "B":  # Branch MENTAL_HEALTH
+        st.warning("⚫ **Supporto Urgente** - Contatta il numero verde **800.274.274**")
+    
+    # Log success
+    logger.info(f"✅ Processato input, type={question_type}, branch={branch}")
+
 
 
 def _render_disposition_summary() -> None:
@@ -467,8 +499,8 @@ def _render_disposition_summary() -> None:
     
     with col3:
         if st.button("🔄 Nuovo Triage", use_container_width=True):
-            controller = get_triage_controller()
-            controller.reset_triage()
+            state = get_state_manager()
+            state.reset_triage()
             st.rerun()
 
 
@@ -484,8 +516,8 @@ def render_quick_actions() -> None:
     
     with col1:
         if st.button("🔄 Nuovo Triage", use_container_width=True, key="qa_reset"):
-            controller = get_triage_controller()
-            controller.reset_triage()
+            state = get_state_manager()
+            state.reset_triage()
             st.rerun()
     
     with col2:

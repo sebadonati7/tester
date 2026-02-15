@@ -86,7 +86,8 @@ class TriageController:
         # 2. Prima interazione: classifica branch
         if not current_branch:
             current_branch = self._classify_branch(user_input)
-            self.state_manager.set(StateKeys.TRIAGE_PATH, current_branch.value)
+            self.state_manager.set(StateKeys.TRIAGE_PATH, current_branch.value)  # Legacy key (per compatibilità con vecchio codice)
+            self.state_manager.set(StateKeys.TRIAGE_BRANCH, current_branch.value)  # New key (per nuovo codice)
         else:
             current_branch = TriageBranch(current_branch)
         
@@ -138,13 +139,19 @@ class TriageController:
             metadata=next_question.get("metadata", {})
         )
         
-        return {
+        # 9. Prepara e salva risposta nello state per UI
+        result = {
             "assistant_response": next_question["text"],
             "question_type": next_question["type"],
             "options": next_question.get("options"),
             "metadata": next_question.get("metadata", {}),
             "processing_time_ms": processing_time
         }
+        
+        # Salva risposta nello state per chat_view.py
+        self.state_manager.set(StateKeys.LAST_BOT_RESPONSE, result)
+        
+        return result
     
     def _classify_branch(self, user_input: str) -> TriageBranch:
         """Classifica intent in Branch A/B/C/INFO tramite keyword + AI fallback."""
