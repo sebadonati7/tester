@@ -97,8 +97,8 @@ def format_opening_hours(orari: Any) -> str:
     return str(orari)
 
 
-def format_facility_card(facility: Dict[str, Any]) -> str:
-    """Format facility info as HTML card."""
+def render_facility_card(facility: Dict[str, Any]) -> None:
+    """Render facility info using native Streamlit components."""
     icon = get_facility_icon(facility.get('tipologia', ''))
     nome = facility.get('nome', 'N/D')
     tipologia = facility.get('tipologia', 'N/D')
@@ -110,30 +110,23 @@ def format_facility_card(facility: Dict[str, Any]) -> str:
     orari = format_opening_hours(orari_raw)
     distance = facility.get('distance_km')
     
-    distance_html = f"<small style='color: #10B981;'>📏 {distance:.1f} km</small>" if distance else ""
-    
-    return f"""
-    <div style="background: white; border-radius: 12px; padding: 16px; 
-                margin-bottom: 12px; border-left: 4px solid #4A90E2;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div>
-                <h4 style="margin: 0 0 8px 0; color: #1f2937;">
-                    {icon} {nome}
-                </h4>
-                <p style="margin: 0 0 4px 0; color: #4A90E2; font-size: 0.9em;">
-                    {tipologia}
-                </p>
-            </div>
-            {distance_html}
-        </div>
-        <div style="margin-top: 12px; font-size: 0.85em; color: #6b7280;">
-            <p style="margin: 4px 0;">📍 {indirizzo}, {comune}</p>
-            <p style="margin: 4px 0;">📞 {telefono}</p>
-            <p style="margin: 4px 0;">🕐 {orari}</p>
-        </div>
-    </div>
-    """
+    # Use Streamlit container with border
+    with st.container(border=True):
+        # Header row
+        header_col1, header_col2 = st.columns([4, 1])
+        with header_col1:
+            st.markdown(f"### {icon} {nome}")
+            st.caption(f"**{tipologia}**")
+        with header_col2:
+            if distance:
+                st.metric("Distanza", f"{distance:.1f} km", label_visibility="collapsed")
+        
+        st.divider()
+        
+        # Details
+        st.markdown(f"📍 **Indirizzo:** {indirizzo}, {comune}")
+        st.markdown(f"📞 **Telefono:** {telefono}")
+        st.markdown(f"🕐 **Orari:** {orari}")
 
 
 # ============================================================================
@@ -268,16 +261,8 @@ def render() -> None:
         st.session_state["map_service"] = st.session_state.pop("_map_quick_service")
     
     # === HEADER ===
-    st.markdown("""
-    <div style="text-align: center; padding: 10px 0;">
-        <h1 style="color: #4A90E2; font-weight: 300; margin: 0;">
-            🗺️ Trova Struttura Sanitaria
-        </h1>
-        <p style="color: #6b7280; font-size: 0.9em;">
-            Cerca la struttura più vicina per le tue esigenze
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### 🗺️ Trova Struttura Sanitaria")
+    st.caption("Cerca la struttura più vicina per le tue esigenze")
     
     st.markdown("---")
     
@@ -364,9 +349,9 @@ def render() -> None:
         st.markdown("---")
         st.subheader("📋 Dettagli Strutture")
         
-        # Display facilities in full-width cards
+        # Display facilities in full-width cards using native Streamlit
         for facility in facilities[:10]:
-            st.markdown(format_facility_card(facility), unsafe_allow_html=True)
+            render_facility_card(facility)
             
             # Action buttons
             col_a, col_b, col_c = st.columns(3)

@@ -88,7 +88,7 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
 # ============================================================================
 
 def render_step_tracker() -> None:
-    """Render dynamic step tracker showing triage progress (V3 phases)."""
+    """Render dynamic step tracker using native Streamlit components."""
     state = get_state_manager()
 
     current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
@@ -108,50 +108,36 @@ def render_step_tracker() -> None:
     if current_phase == "INFO":
         current_idx = 1
 
-    # Build HTML
-    step_html = """
-    <div style="display: flex; justify-content: space-around;
-                padding: 10px 0; margin-bottom: 15px;
-                background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
-                border-radius: 10px;">
-    """
-
-    for idx, (phase, icon, label) in enumerate(steps):
-        if idx < current_idx:
-            bg_color = "#10B981"; text_color = "white"; opacity = "1"
-        elif idx == current_idx:
-            bg_color = "#4A90E2"; text_color = "white"; opacity = "1"
-        else:
-            bg_color = "#e5e7eb"; text_color = "#9ca3af"; opacity = "0.6"
-
-        # Show path badge on triage step
-        extra = ""
-        if idx == 1 and triage_path:
-            path_colors = {"A": "#dc2626", "B": "#7c3aed", "C": "#16a34a", "INFO": "#2563eb"}
-            badge_bg = path_colors.get(triage_path, "#6b7280")
-            extra = (
-                f'<div style="font-size:0.55em;margin-top:2px;'
-                f'background:{badge_bg};color:white;border-radius:6px;'
-                f'padding:1px 5px;display:inline-block;">{triage_path}</div>'
-            )
-
-        step_html += f"""
-        <div style="text-align: center; opacity: {opacity};">
-            <div style="width: 36px; height: 36px; border-radius: 50%;
-                        background-color: {bg_color}; color: {text_color};
-                        display: flex; align-items: center; justify-content: center;
-                        margin: 0 auto 4px auto; font-size: 1.1em;">
-                {icon}
-            </div>
-            <div style="font-size: 0.7em; color: {text_color};">{label}</div>
-            {extra}
-        </div>
-        """
-
-    step_html += "</div>"
-    
-    # ✅ CRITICAL: Always use unsafe_allow_html=True for HTML rendering
-    st.markdown(step_html, unsafe_allow_html=True)
+    # Use Streamlit native components instead of HTML
+    with st.container():
+        # Create columns for each step
+        cols = st.columns(len(steps))
+        
+        for idx, (phase, icon, label) in enumerate(steps):
+            with cols[idx]:
+                # Determine status
+                if idx < current_idx:
+                    # Completed step
+                    status_emoji = "✅"
+                    status_color = "green"
+                elif idx == current_idx:
+                    # Current step
+                    status_emoji = "🔄"
+                    status_color = "blue"
+                else:
+                    # Future step
+                    status_emoji = "⏳"
+                    status_color = "gray"
+                
+                # Display step
+                st.markdown(f"**{status_emoji} {icon}**")
+                st.caption(label)
+                
+                # Show path badge on triage step
+                if idx == 1 and triage_path:
+                    path_labels = {"A": "🔴 Emergenza", "B": "🟣 Salute Mentale", "C": "🟢 Standard", "INFO": "🔵 Info"}
+                    path_label = path_labels.get(triage_path, triage_path)
+                    st.caption(f"**{path_label}**")
 
 
 # ============================================================================
@@ -193,17 +179,8 @@ def render_survey_buttons(options: List[str], question_key: str) -> Optional[str
 # ============================================================================
 
 def render_disclaimer() -> None:
-    """Render medical disclaimer notice."""
-    st.markdown("""
-    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; 
-                padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
-        <strong>⚠️ Nota Importante</strong><br>
-        <small>
-        SIRAYA è un assistente di supporto al triage, <strong>non sostituisce</strong> 
-        il parere medico. In caso di emergenza, chiama immediatamente il <strong>118</strong>.
-        </small>
-    </div>
-    """, unsafe_allow_html=True)
+    """Render medical disclaimer notice using native Streamlit."""
+    st.warning("⚠️ **Nota Importante:** SIRAYA è un assistente di supporto al triage, **non sostituisce** il parere medico. In caso di emergenza, chiama immediatamente il **118**.")
 
 
 # ============================================================================
@@ -227,16 +204,8 @@ def render() -> None:
         return
     
     # === HEADER ===
-    st.markdown("""
-    <div style="text-align: center; padding: 10px 0;">
-        <h1 style="color: #4A90E2; font-weight: 300; letter-spacing: 0.1em; margin: 0;">
-            🏥 SIRAYA Health Navigator
-        </h1>
-        <p style="color: #6b7280; font-size: 0.9em; margin-top: 5px;">
-            Assistente Intelligente per la Navigazione Sanitaria
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### 🏥 SIRAYA Health Navigator")
+    st.caption("Assistente Intelligente per la Navigazione Sanitaria")
     
     # === DISCLAIMER ===
     render_disclaimer()
@@ -362,21 +331,8 @@ def _render_disposition_summary() -> None:
     collected = state.get(StateKeys.COLLECTED_DATA, {})
     urgency = state.get(StateKeys.URGENCY_LEVEL, 3)
     
-    # SBAR Container distinto (con bordo e stile)
-    with st.container():
-        st.markdown("""
-        <style>
-        .sbar-container {
-            border: 2px solid #4A90E2;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('<div class="sbar-container">', unsafe_allow_html=True)
+    # SBAR Container distinto usando container nativo di Streamlit
+    with st.container(border=True):
         st.markdown("### 📋 Report SBAR")
         
         col1, col2 = st.columns(2)
@@ -403,8 +359,6 @@ def _render_disposition_summary() -> None:
             triage_path = state.get(StateKeys.TRIAGE_PATH, 'C')
             path_labels = {"A": "Emergenza", "B": "Salute Mentale", "C": "Standard", "INFO": "Informazioni"}
             st.write(f"Percorso: {path_labels.get(triage_path, triage_path)}")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # Action buttons
     st.markdown("---")
