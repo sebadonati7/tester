@@ -404,6 +404,8 @@ def _process_user_input(
     - Generates questions via AI (including multiple choice options)
     - Saves state and returns response with options included
     """
+    from ..core.state_manager import StateKeys  # ✅ Import esplicito per evitare scope issues
+    
     # Add user message to history
     state.add_message("user", user_input)
 
