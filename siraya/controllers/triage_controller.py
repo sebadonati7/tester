@@ -48,12 +48,16 @@ class TriageController:
         self.db = get_db_service()
         self.rag = get_rag_service()
         
-        # Emergency keywords
+        # Emergency keywords - Accesso corretto agli attributi di classe
         self.emergency_keywords = (
-            EMERGENCY_RULES.get("critical", []) + 
-            EMERGENCY_RULES.get("high", [])
+            EMERGENCY_RULES.CRITICAL_RED_FLAGS +   # Lista keyword emergenze critiche (118 immediato)
+            EMERGENCY_RULES.HIGH_RED_FLAGS         # Lista keyword emergenze urgenti (Path A fast-track)
         )
-        self.mental_health_keywords = EMERGENCY_RULES.get("mental", [])
+        self.mental_health_keywords = (
+            EMERGENCY_RULES.MENTAL_HEALTH_CRISIS +     # Crisi psichiatriche gravi (suicidio, autolesionismo)
+            EMERGENCY_RULES.MENTAL_HEALTH_KEYWORDS     # Sintomi salute mentale (ansia, depressione)
+        )
+        self.info_keywords = EMERGENCY_RULES.INFO_KEYWORDS  # Keywords richieste informative (orari, dove, telefono)
     
     def process_user_input(self, user_input: str) -> dict:
         """
@@ -153,7 +157,8 @@ class TriageController:
         if any(kw in user_lower for kw in self.mental_health_keywords):
             return TriageBranch.MENTAL_HEALTH
         
-        if any(word in user_lower for word in ["orari", "dove", "telefono", "prenotare", "informazioni"]):
+        # Check richieste informative
+        if any(kw in user_lower for kw in self.info_keywords):
             return TriageBranch.INFO
         
         # Fallback: chiedi all'AI

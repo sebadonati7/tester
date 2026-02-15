@@ -302,11 +302,47 @@ streamlit run siraya/app.py
 
 **Timestamp:** 2026-02-15  
 **Versione:** SIRAYA V2.1 - AI-Driven Orchestrator + Critical Fixes  
-**Status:** ✅ Refactoring completato + 5 Fix Critici implementati
+**Status:** ✅ Refactoring completato + 5 Fix Critici implementati + EMERGENCY_RULES fix
 
 ---
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
+
+### ⚡ HOTFIX: EMERGENCY_RULES AttributeError (15 Feb 2026)
+
+**Problema:** `AttributeError: type object 'EMERGENCY_RULES' has no attribute 'get'`
+
+**Causa:** Il codice usava `EMERGENCY_RULES.get("key")` come se fosse un dizionario, ma `EMERGENCY_RULES` è una **classe con attributi statici**.
+
+**Fix applicato in** `triage_controller.py`:
+
+```python
+# PRIMA (ERRATO):
+self.emergency_keywords = (
+    EMERGENCY_RULES.get("critical", []) +  # ❌ AttributeError
+    EMERGENCY_RULES.get("high", [])
+)
+self.mental_health_keywords = EMERGENCY_RULES.get("mental", [])
+
+# DOPO (CORRETTO):
+self.emergency_keywords = (
+    EMERGENCY_RULES.CRITICAL_RED_FLAGS +   # ✅ Attributo classe
+    EMERGENCY_RULES.HIGH_RED_FLAGS         # ✅ Attributo classe
+)
+self.mental_health_keywords = (
+    EMERGENCY_RULES.MENTAL_HEALTH_CRISIS +     # ✅ Crisi gravi
+    EMERGENCY_RULES.MENTAL_HEALTH_KEYWORDS     # ✅ Sintomi generali
+)
+self.info_keywords = EMERGENCY_RULES.INFO_KEYWORDS  # ✅ Keywords info
+```
+
+**Test validazione:**
+- [x] App si avvia senza AttributeError
+- [x] "dolore toracico" → Branch EMERGENCY (A) ✅
+- [x] "mi sento depresso" → Branch MENTAL_HEALTH (B) ✅
+- [x] "quali sono gli orari" → Branch INFO ✅
+
+---
 
 ### Problemi Risolti Post-Refactoring
 
