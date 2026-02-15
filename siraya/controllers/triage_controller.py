@@ -21,6 +21,7 @@ class TriageBranch(Enum):
 
 class TriagePhase(Enum):
     INTAKE = "intake"
+    CHIEF_COMPLAINT = "chief_complaint"  # Raccolta sintomo principale (open text)
     LOCALIZATION = "localization"
     CONSENT = "consent"              # Solo Branch B
     FAST_TRIAGE = "fast_triage"      # Branch A: 3-4 domande emergenza
@@ -370,30 +371,52 @@ class TriageController:
         """
         
         # Branch C: Triage Standard
+        # Sequenza corretta: INTAKE → CHIEF_COMPLAINT → LOCALIZATION → PAIN_SCALE → DEMOGRAPHICS → CLINICAL_TRIAGE → SBAR
         if branch == TriageBranch.STANDARD:
-            # FASE 1: Localizzazione
-            if current_phase == TriagePhase.INTAKE:
-                # Se località già nota (da memoria Supabase), salta direttamente a pain_scale
-                if "location" in collected_data or "current_location" in collected_data:
-                    logger.info("✅ Località già nota, salto LOCALIZATION")
-                    return TriagePhase.PAIN_SCALE
-                return TriagePhase.LOCALIZATION
             
-            # FASE 2: Pain Scale
+            # FASE 0: INTAKE (punto di partenza)
+            if current_phase == TriagePhase.INTAKE:
+                # Se sintomo già presente, salta a localizzazione
+                if "main_symptom" in collected_data:
+                    logger.info("✅ Sintomo già raccolto, salto a LOCALIZATION")
+                    # Se anche località presente, vai a pain_scale
+                    if "location" in collected_data or "current_location" in collected_data:
+                        logger.info("✅ Località già nota, salto a PAIN_SCALE")
+                        return TriagePhase.PAIN_SCALE
+                    return TriagePhase.LOCALIZATION
+                # Altrimenti vai a raccolta sintomo
+                return TriagePhase.CHIEF_COMPLAINT
+            
+            # FASE 1: Raccolta Sintomo Principale (CHIEF_COMPLAINT)
+            if current_phase == TriagePhase.CHIEF_COMPLAINT:
+                # FORCE ADVANCE: Se sintomo raccolto, vai a località
+                if "main_symptom" in collected_data:
+                    # Se anche località già nota, salta direttamente a pain_scale
+                    if "location" in collected_data or "current_location" in collected_data:
+                        logger.info("✅ Sintomo + Località già noti, salto a PAIN_SCALE")
+                        return TriagePhase.PAIN_SCALE
+                    logger.info("✅ Sintomo raccolto, avanzo a LOCALIZATION")
+                    return TriagePhase.LOCALIZATION
+                # Se sintomo manca, rimani qui
+                return TriagePhase.CHIEF_COMPLAINT
+            
+            # FASE 2: Localizzazione
             if current_phase == TriagePhase.LOCALIZATION:
-                # FORCE ADVANCE: Se location presente, vai avanti
+                # FORCE ADVANCE: Se location presente, vai a pain_scale
                 if "location" in collected_data or "current_location" in collected_data:
+                    logger.info("✅ Località raccolta, avanzo a PAIN_SCALE")
                     return TriagePhase.PAIN_SCALE
                 return TriagePhase.LOCALIZATION  # Rimani solo se manca
             
+            # FASE 3: Pain Scale
             if current_phase == TriagePhase.PAIN_SCALE:
-                # FORCE ADVANCE: Se pain_scale presente, vai avanti
+                # FORCE ADVANCE: Se pain_scale presente, vai a demographics
                 if "pain_scale" in collected_data:
                     logger.info(f"✅ Scala dolore raccolta: {collected_data['pain_scale']}, avanzo a DEMOGRAPHICS")
                     return TriagePhase.DEMOGRAPHICS
                 return TriagePhase.PAIN_SCALE  # Rimani solo se manca
             
-            # FASE 3: Demographics
+            # FASE 4: Demographics (età)
             if current_phase == TriagePhase.DEMOGRAPHICS:
                 # FORCE ADVANCE: Se età presente, vai a clinical triage
                 if "age" in collected_data:
@@ -401,28 +424,28 @@ class TriageController:
                     return TriagePhase.CLINICAL_TRIAGE
                 return TriagePhase.DEMOGRAPHICS
             
-            # FASE 4: Clinical Triage (5-7 domande)
+            # FASE 5: Clinical Triage (5-7 domande basate su protocolli)
             if current_phase == TriagePhase.CLINICAL_TRIAGE:
-                # Avanza a SBAR dopo 5-7 domande O se dati sufficienti
-                if question_count >= 5:
-                    # Verifica dati minimi per SBAR
-                    required_data = ["main_symptom", "pain_scale", "age"]
-                    has_location = "location" in collected_data or "current_location" in collected_data
-                    has_required = all(key in collected_data for key in required_data)
-                    
-                    if has_location and has_required:
-                        logger.info(f"✅ {question_count} domande + dati completi, genero SBAR")
-                        return TriagePhase.SBAR_GENERATION
+                # Verifica dati minimi per SBAR
+                required_data = ["main_symptom", "pain_scale", "age"]
+                has_location = "location" in collected_data or "current_location" in collected_data
+                has_required = all(key in collected_data for key in required_data)
                 
-                # Continua clinical triage fino a max 7 domande
-                if question_count < 7:
-                    return TriagePhase.CLINICAL_TRIAGE
+                # Avanza a SBAR se:
+                # - Almeno 5 domande E dati completi
+                # - OPPURE max 7 domande raggiunte
+                if question_count >= 5 and has_location and has_required:
+                    logger.info(f"✅ {question_count} domande + dati completi, genero SBAR")
+                    return TriagePhase.SBAR_GENERATION
                 
-                # Forza SBAR dopo 7 domande (anche se dati incompleti)
-                logger.warning(f"⚠️ Max domande raggiunto ({question_count}), forzo SBAR")
-                return TriagePhase.SBAR_GENERATION
+                if question_count >= 7:
+                    logger.warning(f"⚠️ Max domande raggiunto ({question_count}), forzo SBAR")
+                    return TriagePhase.SBAR_GENERATION
+                
+                # Continua clinical triage
+                return TriagePhase.CLINICAL_TRIAGE
             
-            # Fallback: Se siamo già in SBAR, rimani
+            # FASE 6: SBAR (report finale)
             if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
         
@@ -521,19 +544,57 @@ class TriageController:
         try:
             response = self.llm.generate_with_json_parse(prompt, temperature=0.2, max_tokens=300)
             
+            # ✅ VALIDAZIONE TIPO DOMANDA
+            # Recupera tipo atteso dalla configurazione fase
+            phase_config = {
+                TriagePhase.CHIEF_COMPLAINT: {"type": "open_text"},
+                TriagePhase.LOCALIZATION: {"type": "open_text"},
+                TriagePhase.CONSENT: {"type": "multiple_choice"},
+                TriagePhase.FAST_TRIAGE: {"type": "multiple_choice"},
+                TriagePhase.PAIN_SCALE: {"type": "multiple_choice"},
+                TriagePhase.DEMOGRAPHICS: {"type": "open_text"},
+                TriagePhase.CLINICAL_TRIAGE: {"type": "multiple_choice"},
+                TriagePhase.RISK_ASSESSMENT: {"type": "multiple_choice"}
+            }
+            
+            expected_type = phase_config.get(phase, {}).get("type", "open_text")
+            actual_type = response.get("type", "open_text")
+            
+            # Se AI ha restituito tipo sbagliato, CORREGGI
+            if actual_type != expected_type:
+                logger.warning(f"⚠️ AI ha restituito type='{actual_type}' ma ci aspettavamo '{expected_type}', correggo")
+                response["type"] = expected_type
+                
+                # Se doveva essere open_text ma ha generato options, rimuovile
+                if expected_type == "open_text":
+                    response["options"] = None
+                    logger.info("✅ Rimosso options per open_text")
+                
+                # Se doveva essere multiple_choice ma mancano options, genera fallback
+                if expected_type == "multiple_choice" and not response.get("options"):
+                    logger.error(f"❌ AI non ha generato options per multiple_choice, uso fallback")
+                    response["options"] = ["Sì", "No", "Non so"]
+            
+            # Validazione aggiuntiva: se multiple_choice, assicurati che options sia lista
+            if response.get("type") == "multiple_choice":
+                if not isinstance(response.get("options"), list) or len(response.get("options", [])) == 0:
+                    logger.error(f"❌ Options non valide per multiple_choice: {response.get('options')}")
+                    response["options"] = ["Sì", "No", "Non so"]
+            
             return {
                 "text": response.get("question", "Puoi dirmi di più sui tuoi sintomi?"),
-                "type": response.get("type", "open_text"),
+                "type": response.get("type", expected_type),
                 "options": response.get("options"),
-                "metadata": {"ai_generated": True, "phase": phase.value}
+                "metadata": {"ai_generated": True, "phase": phase.value, "type_corrected": actual_type != expected_type}
             }
         except Exception as e:
             logger.error(f"❌ Errore generate_question_ai: {e}")
-            # Fallback sicuro
+            # Fallback sicuro: usa tipo corretto per la fase
+            fallback_type = phase_config.get(phase, {}).get("type", "open_text")
             return {
                 "text": "Puoi dirmi di più sui tuoi sintomi?",
-                "type": "open_text",
-                "options": None,
+                "type": fallback_type,
+                "options": None if fallback_type == "open_text" else ["Sì", "No"],
                 "metadata": {"ai_generated": False, "fallback": True}
             }
     
@@ -545,20 +606,66 @@ class TriageController:
         question_count: int,
         rag_context: str
     ) -> str:
-        """Costruisce prompt per AI che genera la domanda."""
+        """Costruisce prompt per AI che genera la domanda CON TIPO VINCOLATO."""
         
-        # Definisci obiettivo fase
-        phase_objectives = {
-            TriagePhase.LOCALIZATION: "Scoprire in quale comune dell'Emilia-Romagna si trova il paziente (per consigliare struttura sanitaria appropriata).",
-            TriagePhase.CONSENT: "Chiedere consenso esplicito per domande personali su salute mentale. OPZIONI: 'Sì, accetto' / 'Preferisco parlare con qualcuno direttamente'",
-            TriagePhase.FAST_TRIAGE: f"Porre domanda {question_count+1} di 4 per valutare gravità emergenza. Focus: red flags, irradiazione dolore, difficoltà respiratorie, perdita coscienza.",
-            TriagePhase.PAIN_SCALE: "Chiedere scala dolore 1-10 con descrizione (1=fastidio lieve, 10=peggiore dolore immaginabile).",
-            TriagePhase.DEMOGRAPHICS: "Chiedere età (necessaria per raccomandazione struttura appropriata: pediatria, adulti, geriatria).",
-            TriagePhase.CLINICAL_TRIAGE: f"Porre domanda {question_count+1} di 5-7 per indagine clinica approfondita. Basati sui protocolli forniti.",
-            TriagePhase.RISK_ASSESSMENT: f"Porre domanda {question_count+1} per valutare rischio autolesionismo/suicidio. Usa protocolli Columbia-Suicide o equivalenti."
+        # ✅ Definisci obiettivo fase + TIPO OBBLIGATORIO per ogni fase
+        phase_config = {
+            TriagePhase.CHIEF_COMPLAINT: {
+                "objective": "Raccogliere sintomo principale o motivo del contatto. Domanda aperta ed empatica.",
+                "type": "open_text",  # ← TIPO FORZATO
+                "example": "Qual è il motivo del tuo contatto oggi? Posso aiutarti con un sintomo o hai bisogno di informazioni?"
+            },
+            TriagePhase.LOCALIZATION: {
+                "objective": "Scoprire in quale comune dell'Emilia-Romagna si trova il paziente.",
+                "type": "open_text",  # ← TIPO FORZATO
+                "example": "In quale comune ti trovi attualmente? (es: Bologna, Ravenna, Forlì)"
+            },
+            TriagePhase.CONSENT: {
+                "objective": "Chiedere consenso esplicito per domande personali su salute mentale.",
+                "type": "multiple_choice",  # ← TIPO FORZATO
+                "example": "Se sei d'accordo, vorrei farti alcune domande personali per capire meglio come aiutarti.",
+                "options_example": ["Sì, accetto", "Preferisco parlare con qualcuno direttamente"]
+            },
+            TriagePhase.FAST_TRIAGE: {
+                "objective": f"Porre domanda {question_count+1} di 4 per valutare gravità emergenza. Focus: red flags, irradiazione dolore.",
+                "type": "multiple_choice",  # ← TIPO FORZATO
+                "example": "Il dolore al petto si irradia al braccio sinistro o alla mascella?",
+                "options_example": ["Sì, al braccio sinistro", "Sì, alla mascella", "No", "Non sono sicuro/a"]
+            },
+            TriagePhase.PAIN_SCALE: {
+                "objective": "Chiedere scala dolore 1-10 con descrizione chiara per ogni range.",
+                "type": "multiple_choice",  # ← TIPO FORZATO
+                "example": "Su una scala da 1 a 10, quanto è intenso il dolore che provi?",
+                "options_example": ["1-3: Lieve (fastidio)", "4-6: Moderato (sopportabile)", "7-8: Forte (molto fastidioso)", "9-10: Insopportabile (peggiore immaginabile)"]
+            },
+            TriagePhase.DEMOGRAPHICS: {
+                "objective": "Chiedere età del paziente (necessaria per raccomandazione struttura appropriata).",
+                "type": "open_text",  # ← TIPO FORZATO (input numerico libero)
+                "example": "Quanti anni hai?"
+            },
+            TriagePhase.CLINICAL_TRIAGE: {
+                "objective": f"Porre domanda {question_count+1} di 5-7 per indagine clinica approfondita. Basati sui protocolli forniti.",
+                "type": "multiple_choice",  # ← TIPO FORZATO (preferito per triage)
+                "example": "Il dolore addominale che descrivi, quale di queste caratteristiche corrisponde meglio?",
+                "options_example": ["Dolore acuto localizzato (crampo in un punto)", "Dolore diffuso costante (peso o gonfiore)", "Dolore intermittente (va e viene)"]
+            },
+            TriagePhase.RISK_ASSESSMENT: {
+                "objective": f"Porre domanda {question_count+1} per valutare rischio autolesionismo/suicidio.",
+                "type": "multiple_choice",  # ← TIPO FORZATO
+                "example": "Negli ultimi giorni, hai avuto pensieri di farti del male?",
+                "options_example": ["Mai", "Qualche volta", "Spesso", "Preferisco non rispondere"]
+            }
         }
         
-        objective = phase_objectives.get(phase, "Raccogliere informazioni cliniche.")
+        config = phase_config.get(phase, {
+            "objective": "Raccogliere informazioni cliniche.",
+            "type": "open_text"
+        })
+        
+        objective = config["objective"]
+        required_type = config["type"]
+        example_question = config.get("example", "")
+        example_options = config.get("options_example", [])
         
         # Limiti domande per branch
         max_questions = {
@@ -571,7 +678,9 @@ class TriageController:
         missing_data = []
         known_data_text = []
         
-        if phase == TriagePhase.LOCALIZATION and not any(k in collected_data for k in ["location", "current_location"]):
+        if phase == TriagePhase.CHIEF_COMPLAINT and "main_symptom" not in collected_data:
+            missing_data.append("sintomo principale/motivo contatto")
+        elif phase == TriagePhase.LOCALIZATION and not any(k in collected_data for k in ["location", "current_location"]):
             missing_data.append("località/comune")
         elif phase == TriagePhase.PAIN_SCALE and "pain_scale" not in collected_data:
             missing_data.append("scala dolore 1-10")
@@ -590,6 +699,7 @@ CONTESTO CONVERSAZIONE:
 - Fase corrente: {phase.value}
 - Obiettivo fase: {objective}
 - Domanda numero: {question_count + 1} (max {max_questions.get(branch, 7)})
+- ⚠️ **TIPO DOMANDA OBBLIGATORIO**: {required_type.upper()}
 
 📋 DATI GIÀ RACCOLTI (NON RICHIEDERE MAI QUESTI):
 {chr(10).join(known_data_text) if known_data_text else "Nessun dato raccolto ancora."}
@@ -604,16 +714,29 @@ TASK:
 Genera LA PROSSIMA SINGOLA DOMANDA da porre al paziente.
 
 ⚠️ REGOLE CRITICHE:
-1. **MEMORIA ASSOLUTA**: Se un dato è in "DATI GIÀ RACCOLTI", NON richiederlo MAI
-2. **UNA SOLA DOMANDA** (Single Question Policy)
-3. **PREFERISCI MULTIPLE CHOICE**: Usa type="multiple_choice" con 2-4 opzioni quando possibile (80% delle domande)
-4. **MEDICALIZZA**: Se fase clinica, traduci sintomi in opzioni mediche A/B/C
-5. **AVANZA**: Non ripetere domande su dati già noti
+1. **TIPO DOMANDA VINCOLATO**: DEVI usare type="{required_type}"
+2. **MEMORIA ASSOLUTA**: Se un dato è in "DATI GIÀ RACCOLTI", NON richiederlo MAI
+3. **UNA SOLA DOMANDA** (Single Question Policy)
+4. **Se type="open_text"**: NON generare opzioni (options: null)
+5. **Se type="multiple_choice"**: DEVI generare 2-4 opzioni pertinenti
+6. **MEDICALIZZA**: Se fase clinica, traduci sintomi in opzioni mediche
 
 OUTPUT (JSON RIGOROSO):
 {{
-    "question": "Testo domanda esatta",
-    "type": "multiple_choice",
+    "question": "Testo domanda esatta da porre al paziente",
+    "type": "{required_type}",  ← DEVE CORRISPONDERE ESATTAMENTE
+    "options": {{"null" if required_type == "open_text" else example_options}}
+}}
+
+ESEMPIO PER QUESTA FASE ({phase.value}):
+{{
+    "question": "{example_question}",
+    "type": "{required_type}",
+    "options": {{"null" if required_type == "open_text" else example_options}}
+}}
+"""
+        
+        return prompt
     "options": ["Opzione A", "Opzione B", "Opzione C", "Opzione D"]
 }}
 

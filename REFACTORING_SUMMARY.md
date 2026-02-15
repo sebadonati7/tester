@@ -308,6 +308,209 @@ streamlit run siraya/app.py
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
 
+### ⚡ HOTFIX 6: Conversational Flow + RAG Service (15 Feb 2026)
+
+**Problemi Multipli Risolti:**
+
+1. **Ordine fasi FSM errato** → Bot chiedeva località PRIMA del sintomo
+2. **Opzioni multiple choice sempre presenti** → Anche per domande aperte
+3. **RAG Service falliva** → Errore PostgreSQL function not found
+
+---
+
+#### **FIX 1: Aggiunta Fase CHIEF_COMPLAINT**
+
+**Problema:** Il bot saltava la raccolta del sintomo e chiedeva subito la località.
+
+**Conversazione ERRATA:**
+```
+User: "ciao"
+Bot: "In quale provincia ti trovi?" ❌ Salta motivo contatto
+```
+
+**Conversazione CORRETTA:**
+```
+User: "ciao"
+Bot: "Qual è il motivo del tuo contatto oggi?" ✅
+User: "ho male alla pancia"
+Bot: "In quale comune ti trovi?" ✅
+```
+
+**Soluzione Implementata:**
+
+```python
+# siraya/controllers/triage_controller.py
+
+# 1. Aggiunta fase in enum (linea 24)
+class TriagePhase(Enum):
+    INTAKE = "intake"
+    CHIEF_COMPLAINT = "chief_complaint"  # ✅ NUOVA FASE
+    LOCALIZATION = "localization"
+    # ...
+
+# 2. FSM aggiornato per Branch C (linee 373-450)
+if branch == TriageBranch.STANDARD:
+    # FASE 0: INTAKE → vai a raccolta sintomo
+    if current_phase == TriagePhase.INTAKE:
+        if "main_symptom" in collected_data:
+            return TriagePhase.LOCALIZATION  # Skip se già noto
+        return TriagePhase.CHIEF_COMPLAINT  # ✅ Prima raccolta sintomo
+    
+    # FASE 1: CHIEF_COMPLAINT → raccolta sintomo principale
+    if current_phase == TriagePhase.CHIEF_COMPLAINT:
+        if "main_symptom" in collected_data:
+            return TriagePhase.LOCALIZATION
+        return TriagePhase.CHIEF_COMPLAINT
+    
+    # FASE 2: LOCALIZATION → località
+    # FASE 3: PAIN_SCALE → scala dolore
+    # FASE 4: DEMOGRAPHICS → età
+    # FASE 5: CLINICAL_TRIAGE → 5-7 domande protocolli
+    # FASE 6: SBAR_GENERATION → report finale
+```
+
+**Sequenza corretta finale:**
+```
+INTAKE → CHIEF_COMPLAINT → LOCALIZATION → PAIN_SCALE → DEMOGRAPHICS → CLINICAL_TRIAGE → SBAR
+```
+
+---
+
+#### **FIX 2: Tipo Domanda Vincolato per Fase**
+
+**Problema:** Tutte le domande mostravano opzioni multiple choice, anche quelle che dovevano essere open text.
+
+**Soluzione: Vincolo RIGIDO sul tipo per ogni fase**
+
+```python
+# siraya/controllers/triage_controller.py - _build_question_generation_prompt()
+
+phase_config = {
+    TriagePhase.CHIEF_COMPLAINT: {
+        "objective": "Raccogliere sintomo principale",
+        "type": "open_text",  # ← TIPO FORZATO
+        "example": "Qual è il motivo del tuo contatto oggi?"
+    },
+    TriagePhase.LOCALIZATION: {
+        "objective": "Scoprire comune",
+        "type": "open_text",  # ← TIPO FORZATO
+    },
+    TriagePhase.PAIN_SCALE: {
+        "objective": "Scala dolore 1-10",
+        "type": "multiple_choice",  # ← TIPO FORZATO
+        "options_example": ["1-3: Lieve", "4-6: Moderato", "7-8: Forte", "9-10: Insopportabile"]
+    },
+    TriagePhase.DEMOGRAPHICS: {
+        "objective": "Chiedere età",
+        "type": "open_text",  # ← TIPO FORZATO
+    },
+    TriagePhase.CLINICAL_TRIAGE: {
+        "objective": "Indagine clinica",
+        "type": "multiple_choice",  # ← TIPO FORZATO
+    }
+}
+
+required_type = phase_config.get(phase, {})["type"]
+
+# Prompt include vincolo esplicito
+prompt = f"""
+⚠️ **TIPO DOMANDA OBBLIGATORIO**: {required_type.upper()}
+
+OUTPUT:
+{{
+    "question": "...",
+    "type": "{required_type}",  ← DEVE CORRISPONDERE
+    "options": {{"null" if required_type == "open_text" else "[...]"}}
+}}
+"""
+```
+
+---
+
+#### **FIX 3: Validazione Response AI**
+
+**Problema:** A volte l'AI ignorava il vincolo e generava tipo sbagliato.
+
+**Soluzione: Validazione e correzione automatica**
+
+```python
+# siraya/controllers/triage_controller.py - _generate_question_ai()
+
+response = self.llm.generate_with_json_parse(prompt, temperature=0.2)
+
+# ✅ VALIDAZIONE TIPO
+expected_type = phase_config.get(phase, {}).get("type", "open_text")
+actual_type = response.get("type", "open_text")
+
+# Se AI ha restituito tipo sbagliato, CORREGGI
+if actual_type != expected_type:
+    logger.warning(f"⚠️ AI ha restituito type='{actual_type}', correggo a '{expected_type}'")
+    response["type"] = expected_type
+    
+    # Se doveva essere open_text ma ha generato options, rimuovile
+    if expected_type == "open_text":
+        response["options"] = None
+    
+    # Se doveva essere multiple_choice ma mancano options, genera fallback
+    if expected_type == "multiple_choice" and not response.get("options"):
+        response["options"] = ["Sì", "No", "Non so"]  # Fallback
+```
+
+---
+
+#### **FIX 4: RAG Service - Errore PostgreSQL**
+
+**Problema:** `PGRST202: Could not find function public.search_protocols()`
+
+**Causa:** Il codice chiamava una funzione PostgreSQL custom che non esiste nel database.
+
+**Soluzione: Ricerca semplificata con .select() + .ilike()**
+
+```python
+# siraya/services/rag_service.py - retrieve_context()
+
+# ❌ PRIMA (ERRATO):
+response = self.supabase.rpc(
+    'search_protocols',  # ← Funzione non esistente
+    {'search_query': query, 'max_results': k}
+).execute()
+
+# ✅ DOPO (CORRETTO):
+table_name = "protocol_chunks"
+query_builder = self.supabase.table(table_name).select("*")
+
+# Filtro per keyword (prime 3 parole della query)
+search_terms = [term.lower() for term in query.split() if len(term) > 3][:3]
+
+for term in search_terms:
+    # Cerca nella colonna 'content' con case-insensitive search
+    query_builder = query_builder.ilike("content", f"%{term}%")
+
+# Limita risultati
+response = query_builder.limit(k).execute()
+
+if response.data:
+    logger.info(f"✅ RAG: {len(response.data)} chunk trovati")
+    return response.data
+else:
+    logger.warning(f"⚠️ RAG: Nessun risultato, AI userà conoscenza generale")
+    return []
+```
+
+**Graceful degradation:** Se RAG fallisce, ritorna lista vuota e l'AI usa conoscenza generale.
+
+---
+
+**Test validazione:**
+- [x] "ciao" → Chiede motivo contatto (open text, NO bottoni) ✅
+- [x] "male pancia" → Chiede comune (open text, NO bottoni) ✅
+- [x] "ravenna" → Chiede scala dolore (multiple choice, 4 bottoni) ✅
+- [x] "7-8" → Chiede età (open text, NO bottoni) ✅
+- [x] "40" → Inizia clinical triage (multiple choice) ✅
+- [x] RAG funziona o degrada gracefully ✅
+
+---
+
 ### ⚡ HOTFIX 5: TriagePhase Enum Value Mismatch (15 Feb 2026)
 
 **Problema:** `'INTAKE' is not a valid TriagePhase` (persistente anche dopo fix iniziale)

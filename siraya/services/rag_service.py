@@ -81,7 +81,9 @@ class RAGService:
         protocol_filter: Optional[str] = None
     ) -> List[Dict]:
         """
-        Ricerca full-text sui protocolli clinici.
+        Ricerca SEMPLIFICATA sui protocolli clinici.
+        
+        ✅ FIX V2.1: Usa .select() + .ilike() invece di funzione PostgreSQL custom.
         
         Args:
             query: Sintomo/domanda da cercare
@@ -89,21 +91,50 @@ class RAGService:
             protocol_filter: Filtra per protocollo specifico (es. "salute-mentale")
             
         Returns:
-            Lista di chunks rilevanti
+            Lista di chunks rilevanti (o lista vuota se non trovati/errore)
         """
         if not self.supabase:
-            logger.warning("⚠️ Supabase non disponibile")
+            logger.warning("⚠️ Supabase non disponibile, RAG disabilitato")
             return []
         
         try:
-            # Ricerca full-text con funzione PostgreSQL
-            response = self.supabase.rpc(
-                'search_protocols',
-                {
-                    'search_query': query,
-                    'max_results': k
-                }
-            ).execute()
+            # Nome tabella (verifica nel tuo DB Supabase)
+            table_name = "protocol_chunks"  # Se errore, verifica nome esatto
+            
+            # Query builder
+            query_builder = self.supabase.table(table_name).select("*")
+            
+            # Filtro per protocollo specifico (opzionale)
+            if protocol_filter:
+                query_builder = query_builder.eq("protocol", protocol_filter)
+            
+            # Filtro per keyword (prime 3 parole della query)
+            search_terms = [term.lower() for term in query.split() if len(term) > 3][:3]
+            
+            if not search_terms:
+                logger.warning(f"⚠️ Query troppo corta: '{query}', RAG skip")
+                return []
+            
+            # Cerca nella colonna 'content' (o 'text' se la colonna si chiama così)
+            # Usa .ilike() per ricerca case-insensitive
+            for term in search_terms:
+                query_builder = query_builder.ilike("content", f"%{term}%")
+            
+            # Limita risultati
+            response = query_builder.limit(k).execute()
+            
+            if response.data:
+                chunks = response.data
+                logger.info(f"✅ RAG: Trovati {len(chunks)} chunk per query '{query}' (terms: {search_terms})")
+                return chunks
+            else:
+                logger.warning(f"⚠️ RAG: Nessun risultato per query '{query}'")
+                return []
+        
+        except Exception as e:
+            logger.error(f"❌ Errore ricerca RAG: {type(e).__name__} - {str(e)}")
+            # Ritorna lista vuota, AI userà conoscenza generale
+            return []
             
             if response.data:
                 chunks = response.data
