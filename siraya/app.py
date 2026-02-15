@@ -199,6 +199,34 @@ siraya/
     # Step 1: Load CSS
     load_css()
     
+    # ============================================================================
+    # DEBUG TEMPORANEO - Verifica Secrets Supabase
+    # ============================================================================
+    st.sidebar.markdown("### 🔍 DEBUG Supabase")
+    try:
+        # Prova lettura diretta
+        url_direct = st.secrets.get("SUPABASE_URL", "NON TROVATO")
+        key_direct = st.secrets.get("SUPABASE_KEY", "NON TROVATO")
+        
+        st.sidebar.write(f"**URL diretto:** {str(url_direct)[:30]}...")
+        st.sidebar.write(f"**KEY diretto:** {str(key_direct)[:20]}...")
+        
+        # Prova con SupabaseConfig
+        from siraya.config.settings import SupabaseConfig
+        url_config = SupabaseConfig.get_url()
+        key_config = SupabaseConfig.get_key()
+        is_conf = SupabaseConfig.is_configured()
+        
+        st.sidebar.write(f"**URL da Config:** {str(url_config)[:30] if url_config else 'VUOTO'}...")
+        st.sidebar.write(f"**KEY da Config:** {str(key_config)[:20] if key_config else 'VUOTO'}...")
+        st.sidebar.write(f"**is_configured():** {is_conf}")
+        
+    except Exception as e:
+        st.sidebar.error(f"❌ Errore: {e}")
+        import traceback
+        st.sidebar.code(traceback.format_exc())
+    # ============================================================================
+    
     # Step 2: Initialize session state
     init_session_state()
     
