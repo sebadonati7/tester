@@ -246,7 +246,14 @@ siraya/
         # Lista tutte le chiavi disponibili
         try:
             all_keys = list(st.secrets.keys()) if hasattr(st.secrets, "keys") else []
-            st.sidebar.write(f"**Chiavi disponibili:** {', '.join(all_keys[:10])}")
+            st.sidebar.write(f"**Chiavi disponibili:** {', '.join(all_keys)}")
+            st.sidebar.write(f"**Numero chiavi:** {len(all_keys)}")
+            
+            # Verifica specifica per SUPABASE
+            has_supabase_url = "SUPABASE_URL" in all_keys
+            has_supabase_key = "SUPABASE_KEY" in all_keys
+            st.sidebar.write(f"**SUPABASE_URL presente:** {has_supabase_url}")
+            st.sidebar.write(f"**SUPABASE_KEY presente:** {has_supabase_key}")
         except Exception as e:
             st.sidebar.write(f"**Errore lista chiavi:** {e}")
         
