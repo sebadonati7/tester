@@ -226,8 +226,53 @@ class DataLoader:
         ]
     
     # ========================================================================
-    # SMART FACILITY SEARCH (from frontend.py)
+    # UNIFIED FACILITY SEARCH (Replaces all duplicate find_xxx functions)
     # ========================================================================
+    
+    def find_healthcare_facility(
+        self,
+        location: str,
+        facility_type: str,
+        **filters
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Funzione UNIFICATA per cercare strutture sanitarie.
+        
+        Sostituisce: find_emergency_room, find_cau, find_csm, find_pharmacy
+        
+        Args:
+            location: Comune Emilia-Romagna (es: "Bologna")
+            facility_type: Tipologia (es: "Pronto Soccorso", "CAU", "CSM", "Farmacia")
+            **filters: Filtri aggiuntivi (es: specialty="Cardiologia")
+        
+        Returns:
+            Prima struttura che match, None se non trovata
+        
+        Esempi:
+            find_healthcare_facility("Ravenna", "Pronto Soccorso")
+            find_healthcare_facility("Forlì", "CAU")
+            find_healthcare_facility("Bologna", "Specialista", specialty="Ortopedia")
+        """
+        facilities = self.get_all_facilities()
+        
+        # Filtro per tipologia
+        type_lower = facility_type.lower()
+        results = [f for f in facilities if type_lower in f.get("tipologia", "").lower()]
+        
+        # Filtro per località
+        if location:
+            location_lower = location.lower().strip()
+            results = [f for f in results if f.get("comune", "").lower() == location_lower]
+        
+        # Filtri aggiuntivi (es. specialty, servizi_disponibili)
+        for key, value in filters.items():
+            if key == "services":  # Cerca nei servizi disponibili
+                results = [f for f in results if value in f.get("servizi_disponibili", [])]
+            else:
+                results = [f for f in results if f.get(key) == value]
+        
+        # Ritorna prima struttura o None
+        return results[0] if results else None
     
     def find_facilities_smart(
         self,

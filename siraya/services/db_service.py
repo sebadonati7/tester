@@ -256,6 +256,42 @@ class DatabaseService:
             return "💾 Modalità Offline (salvataggio locale)"
         else:
             return "⚠️ Database Non Configurato"
+    
+    def fetch_user_history(self, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Recupera cronologia conversazioni utente da Supabase.
+        Previene domande duplicate (età, località già note).
+        
+        Args:
+            user_id: Identificativo utente (session_id o user_id)
+            limit: Numero massimo di interazioni da recuperare
+        
+        Returns:
+            Lista interazioni [{session_state, user_input, created_at, ...}]
+        """
+        if not self.is_connected():
+            logger.warning("⚠️ fetch_user_history chiamato ma DB offline")
+            return []
+        
+        try:
+            from ..config.settings import SupabaseConfig
+            
+            result = self.supabase.table(SupabaseConfig.TABLE_LOGS)\
+                .select("session_id, user_input, bot_response, metadata, created_at")\
+                .eq("session_id", user_id)\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            if result and result.data:
+                logger.info(f"✅ Recuperate {len(result.data)} interazioni storiche per {user_id[:8]}")
+                return result.data
+            else:
+                return []
+                
+        except Exception as e:
+            logger.error(f"❌ Errore fetch history: {type(e).__name__} - {e}")
+            return []
 
 
 # Singleton instance

@@ -228,24 +228,60 @@ def _render_system_status() -> None:
 # ============================================================================
 
 def _render_collected_data_preview() -> None:
-    """Show preview of collected triage data."""
+    """
+    Visualizza 5 categorie obbligatorie:
+    1. Località  2. Sintomo  3. Dolore  4. Anamnesi  5. Esito
+    
+    Update SOLO quando categoria cambia (non ogni messaggio).
+    """
+    from ..core.state_manager import get_state_manager, StateKeys
+    
     state = get_state_manager()
     collected = state.get(StateKeys.COLLECTED_DATA, {})
+    current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
     
-    if collected:
-        with st.expander("📋 Dati Raccolti", expanded=False):
-            for key, value in collected.items():
-                if value:
-                    # Format key
-                    display_key = key.replace("_", " ").title()
-                    
-                    # Format value
-                    if isinstance(value, list):
-                        display_value = ", ".join(str(v) for v in value)
-                    else:
-                        display_value = str(value)
-                    
-                    st.caption(f"**{display_key}:** {display_value[:50]}")
+    st.markdown("### 📋 Dati Raccolti")
+    
+    # 1. Località
+    location = collected.get('current_location') or collected.get('location') or collected.get('patient_location')
+    st.success(f"📍 **Località:** {location if location else '⏳ In raccolta...'}")
+    
+    # 2. Sintomo Principale
+    symptom = collected.get('chief_complaint') or collected.get('CHIEF_COMPLAINT') or collected.get('main_symptom')
+    st.info(f"🩺 **Sintomo:** {symptom[:50] if symptom else '⏳ In raccolta...'}")
+    
+    # 3. Valutazione Dolore
+    pain = collected.get('pain_scale') or collected.get('PAIN_SCALE')
+    if pain:
+        try:
+            pain_val = int(pain)
+            st.progress(pain_val / 10)
+            st.caption(f"📊 Intensità: {pain_val}/10")
+        except:
+            st.warning(f"📊 **Dolore:** {pain}")
+    else:
+        st.warning("📊 **Dolore:** Non valutato")
+    
+    # 4. Anamnesi (età + genere)
+    age = collected.get('age') or collected.get('patient_age')
+    gender = collected.get('gender') or collected.get('sex') or collected.get('patient_sex')
+    
+    if age:
+        anamnesi_text = f"{age} anni"
+        if gender:
+            anamnesi_text += f", {gender}"
+        st.success(f"👤 **Anamnesi:** {anamnesi_text}")
+    else:
+        st.warning("👤 **Anamnesi:** Incompleta")
+    
+    # 5. Esito
+    if current_phase in ["RECOMMENDATION", "DISPOSITION", "sbar"]:
+        st.success("✅ **Esito:** Report SBAR disponibile")
+    elif current_phase in ["CLINICAL_TRIAGE", "DEMOGRAPHICS"]:
+        question_count = state.get(StateKeys.QUESTION_COUNT, 0)
+        st.info(f"⏳ **Esito:** Triage in corso ({question_count} domande)")
+    else:
+        st.info(f"⏳ **Esito:** Fase iniziale ({current_phase})")
 
 
 # ============================================================================

@@ -127,6 +127,56 @@ class LLMService:
     def is_available(self) -> bool:
         """Almeno un LLM disponibile?"""
         return self._groq_client is not None or self._gemini_model is not None
+    
+    def generate_with_json_parse(
+        self,
+        prompt: str,
+        temperature: float = 0.1,
+        max_tokens: int = 500
+    ) -> Dict[str, Any]:
+        """
+        Genera risposta da LLM con parsing JSON robusto.
+        
+        Args:
+            prompt: Prompt completo che chiede JSON
+            temperature: 0.0-1.0 (creatività)
+            max_tokens: Lunghezza max risposta
+        
+        Returns:
+            Dizionario parsed o {} in caso di errore
+        """
+        try:
+            # Chiamata LLM standard
+            if self._groq_client:
+                response = self._groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                response_text = response.choices[0].message.content
+            elif self._gemini_model:
+                response = self._gemini_model.generate_content(prompt)
+                response_text = response.text
+            else:
+                logger.error("❌ Nessun LLM disponibile per generate_with_json_parse")
+                return {}
+            
+            # Estrai JSON da markdown code blocks se presente
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+            if json_match:
+                response_text = json_match.group(1)
+            
+            # Parse JSON
+            parsed = json.loads(response_text)
+            return parsed
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ JSON parsing error: {e}\nResponse: {response_text[:200]}")
+            return {}
+        except Exception as e:
+            logger.error(f"❌ LLM generate_with_json_parse error: {type(e).__name__} - {e}")
+            return {}
 
     def test_api_connections(self) -> Dict[str, bool]:
         """
