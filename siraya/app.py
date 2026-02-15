@@ -204,18 +204,103 @@ siraya/
     # ============================================================================
     st.sidebar.markdown("### 🔍 DEBUG Supabase")
     try:
+        # #region agent log
+        import json
+        import os
+        log_data = {
+            "location": "app.py:207",
+            "message": "Verifica secrets Supabase",
+            "data": {
+                "has_secrets": hasattr(st, "secrets"),
+                "secrets_type": str(type(st.secrets)) if hasattr(st, "secrets") else "N/A",
+                "cwd": os.getcwd(),
+                "project_root": str(_project_root),
+                "secrets_file_exists": os.path.exists(_project_root / ".streamlit" / "secrets.toml")
+            },
+            "timestamp": int(__import__("time").time() * 1000),
+            "runId": "debug_secrets",
+            "hypothesisId": "A"
+        }
+        log_path = _project_root / ".cursor" / "debug.log"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
+        # #endregion
+        
+        # Verifica percorso secrets.toml
+        secrets_path = _project_root / ".streamlit" / "secrets.toml"
+        st.sidebar.write(f"**Percorso secrets.toml:** `{secrets_path}`")
+        st.sidebar.write(f"**File esiste:** {secrets_path.exists()}")
+        st.sidebar.write(f"**CWD:** `{os.getcwd()}`")
+        
+        # Verifica se st.secrets esiste
+        if not hasattr(st, "secrets"):
+            st.sidebar.error("❌ st.secrets non esiste!")
+            return
+        
+        # Lista tutte le chiavi disponibili
+        try:
+            all_keys = list(st.secrets.keys()) if hasattr(st.secrets, "keys") else []
+            st.sidebar.write(f"**Chiavi disponibili:** {', '.join(all_keys[:10])}")
+        except Exception as e:
+            st.sidebar.write(f"**Errore lista chiavi:** {e}")
+        
         # Prova lettura diretta
         url_direct = st.secrets.get("SUPABASE_URL", "NON TROVATO")
         key_direct = st.secrets.get("SUPABASE_KEY", "NON TROVATO")
         
+        # #region agent log
+        log_data2 = {
+            "location": "app.py:230",
+            "message": "Lettura diretta secrets",
+            "data": {
+                "url_direct": str(url_direct)[:30] if url_direct != "NON TROVATO" else "NON TROVATO",
+                "key_direct": str(key_direct)[:20] if key_direct != "NON TROVATO" else "NON TROVATO"
+            },
+            "timestamp": int(__import__("time").time() * 1000),
+            "runId": "debug_secrets",
+            "hypothesisId": "B"
+        }
+        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_data2, ensure_ascii=False) + "\n")
+        # #endregion
+        
         st.sidebar.write(f"**URL diretto:** {str(url_direct)[:30]}...")
         st.sidebar.write(f"**KEY diretto:** {str(key_direct)[:20]}...")
+        
+        # Prova accesso diretto (non .get())
+        try:
+            url_direct2 = st.secrets["SUPABASE_URL"]
+            key_direct2 = st.secrets["SUPABASE_KEY"]
+            st.sidebar.success(f"✅ Accesso diretto OK!")
+            st.sidebar.write(f"**URL [ ]:** {str(url_direct2)[:30]}...")
+            st.sidebar.write(f"**KEY [ ]:** {str(key_direct2)[:20]}...")
+        except KeyError as ke:
+            st.sidebar.warning(f"⚠️ KeyError: {ke}")
+        except Exception as e2:
+            st.sidebar.warning(f"⚠️ Errore accesso diretto: {e2}")
         
         # Prova con SupabaseConfig
         from siraya.config.settings import SupabaseConfig
         url_config = SupabaseConfig.get_url()
         key_config = SupabaseConfig.get_key()
         is_conf = SupabaseConfig.is_configured()
+        
+        # #region agent log
+        log_data3 = {
+            "location": "app.py:250",
+            "message": "Lettura via SupabaseConfig",
+            "data": {
+                "url_config": str(url_config)[:30] if url_config else "VUOTO",
+                "key_config": str(key_config)[:20] if key_config else "VUOTO",
+                "is_configured": is_conf
+            },
+            "timestamp": int(__import__("time").time() * 1000),
+            "runId": "debug_secrets",
+            "hypothesisId": "C"
+        }
+        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_data3, ensure_ascii=False) + "\n")
+        # #endregion
         
         st.sidebar.write(f"**URL da Config:** {str(url_config)[:30] if url_config else 'VUOTO'}...")
         st.sidebar.write(f"**KEY da Config:** {str(key_config)[:20] if key_config else 'VUOTO'}...")
@@ -225,6 +310,22 @@ siraya/
         st.sidebar.error(f"❌ Errore: {e}")
         import traceback
         st.sidebar.code(traceback.format_exc())
+        
+        # #region agent log
+        log_data4 = {
+            "location": "app.py:265",
+            "message": "Errore durante debug secrets",
+            "data": {
+                "error": str(e),
+                "error_type": type(e).__name__
+            },
+            "timestamp": int(__import__("time").time() * 1000),
+            "runId": "debug_secrets",
+            "hypothesisId": "D"
+        }
+        with open(r"c:\Users\Seba\Desktop\tester\.cursor\debug.log", "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_data4, ensure_ascii=False) + "\n")
+        # #endregion
     # ============================================================================
     
     # Step 2: Initialize session state
