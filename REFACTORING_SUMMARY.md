@@ -308,6 +308,48 @@ streamlit run siraya/app.py
 
 ## 🚨 FIX CRITICI V2.1 (15 Feb 2026)
 
+### ⚡ HOTFIX 5: TriagePhase Enum Value Mismatch (15 Feb 2026)
+
+**Problema:** `'INTAKE' is not a valid TriagePhase`
+
+**Causa:** Mismatch tra valori enum e default state:
+- `TriagePhase.INTAKE = "intake"` (enum value in **lowercase**)
+- `DEFAULT_STATE[CURRENT_PHASE] = "INTAKE"` (default in **UPPERCASE**)
+- Quando `TriagePhase(current_phase)` prova a convertire "INTAKE" → fallisce
+
+**Fix:**
+```python
+# siraya/core/state_manager.py
+
+# ❌ PRIMA (ERRATO):
+StateKeys.CURRENT_PHASE: "INTAKE",  # Maiuscolo
+
+# ✅ DOPO (CORRETTO):
+StateKeys.CURRENT_PHASE: "intake",  # Minuscolo (match con enum value)
+```
+
+**Fix aggiuntivo - Reset triage keys:**
+```python
+triage_keys = [
+    StateKeys.MESSAGES,
+    StateKeys.COLLECTED_DATA,
+    StateKeys.CURRENT_PHASE,
+    StateKeys.TRIAGE_PATH,
+    StateKeys.TRIAGE_BRANCH,        # ✅ AGGIUNTO
+    StateKeys.QUESTION_COUNT,
+    StateKeys.LAST_BOT_RESPONSE,    # ✅ AGGIUNTO
+    # ... altri keys
+]
+```
+
+**Test validazione:**
+- [x] App si avvia senza ValueError ✅
+- [x] `TriagePhase("intake")` funziona ✅
+- [x] Reset triage ripristina CURRENT_PHASE a "intake" ✅
+- [x] Reset triage pulisce anche TRIAGE_BRANCH e LAST_BOT_RESPONSE ✅
+
+---
+
 ### ⚡ HOTFIX 4: StateKeys.USER_ID & JSON Parsing (15 Feb 2026)
 
 **Problema 1:** `AttributeError: type object 'StateKeys' has no attribute 'USER_ID'`

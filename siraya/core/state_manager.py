@@ -93,7 +93,7 @@ DEFAULT_STATE: Dict[str, Any] = {
     # Chat
     StateKeys.MESSAGES: [],
     StateKeys.COLLECTED_DATA: {},
-    StateKeys.CURRENT_PHASE: "INTAKE",       # V3: starts as INTAKE (not INTENT_DETECTION)
+    StateKeys.CURRENT_PHASE: "intake",           # V2.1: lowercase per match con TriagePhase enum
     StateKeys.TRIAGE_PATH: None,             # V3: None until SmartRouter assigns it
     StateKeys.TRIAGE_BRANCH: None,           # V2.1: Branch A/B/C/INFO from TriageController
     StateKeys.QUESTION_COUNT: 0,
@@ -220,7 +220,9 @@ class StateManager:
             StateKeys.COLLECTED_DATA,
             StateKeys.CURRENT_PHASE,
             StateKeys.TRIAGE_PATH,
+            StateKeys.TRIAGE_BRANCH,        # V2.1
             StateKeys.QUESTION_COUNT,
+            StateKeys.LAST_BOT_RESPONSE,    # V2.1
             StateKeys.PATIENT_AGE,
             StateKeys.PATIENT_SEX,
             StateKeys.PATIENT_LOCATION,
