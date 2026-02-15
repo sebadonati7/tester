@@ -82,28 +82,96 @@ class DatabaseService:
         session_id: str,
         user_input: str,
         assistant_response: str,
+        processing_time_ms: Optional[int] = None,
+        session_state: Optional[Dict[str, Any]] = None,
         metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
-        Salva interazione su Supabase o in modalità offline.
+        Salva interazione su Supabase con tutti i KPI clinici e tecnici.
         
         Args:
             session_id: ID sessione
             user_input: Input utente
             assistant_response: Risposta assistente
+            processing_time_ms: Tempo di elaborazione in millisecondi
+            session_state: Stato della sessione (per estrarre KPI clinici)
             metadata: Metadati aggiuntivi
             
         Returns:
             True se salvato con successo
         """
-        timestamp = datetime.now().isoformat()
+        # Estrai dati clinici da session_state
+        collected = session_state.get("collected_data", {}) if session_state else {}
         
+        # Mappa triage_path a triage_code
+        triage_path = session_state.get("triage_path", "C") if session_state else "C"
+        urgency_level = session_state.get("urgency_level", 3) if session_state else 3
+        
+        # Mappa urgency_level + triage_path a triage_code
+        triage_code_map = {
+            (5, "A"): "ROSSO",
+            (4, "A"): "ARANCIONE",
+            (3, "A"): "ARANCIONE",
+            (5, "B"): "NERO",
+            (4, "B"): "NERO",
+            (3, "B"): "NERO",
+            (4, "C"): "GIALLO",
+            (3, "C"): "GIALLO",
+            (2, "C"): "VERDE",
+            (1, "C"): "VERDE",
+        }
+        triage_code = triage_code_map.get((urgency_level, triage_path), "GIALLO")
+        if triage_path == "INFO":
+            triage_code = "BIANCO"
+        
+        # Estrai specializzazione
+        medical_specialty = session_state.get("specialization", "Generale") if session_state else "Generale"
+        
+        # Estrai detected_intent (chief_complaint)
+        detected_intent = collected.get("chief_complaint") or session_state.get("chief_complaint") if session_state else None
+        
+        # Determina suggested_facility_type
+        if triage_path == "A" or urgency_level >= 4:
+            suggested_facility_type = "Pronto Soccorso"
+        elif triage_path == "B":
+            suggested_facility_type = "CSM"  # Centro di Salute Mentale
+        else:
+            suggested_facility_type = "CAU"  # Centro Assistenza Urgenze
+        
+        # Estrai reasoning (primi 500 caratteri della risposta o metadata)
+        reasoning = None
+        if metadata and isinstance(metadata, dict):
+            reasoning = metadata.get("reasoning")
+        if not reasoning and assistant_response:
+            reasoning = assistant_response[:500]  # Primi 500 caratteri come fallback
+        
+        # Estrai estimated_wait_time basato su triage_code
+        wait_time_map = {
+            "ROSSO": "Immediato (< 15 min)",
+            "ARANCIONE": "Urgente (15-60 min)",
+            "GIALLO": "Differibile (1-2 ore)",
+            "VERDE": "Non urgente (2-4 ore)",
+            "NERO": "Supporto specializzato",
+            "BIANCO": "N/A"
+        }
+        estimated_wait_time = wait_time_map.get(triage_code, "N/D")
+        
+        # Prepara record completo
         record = {
             "session_id": session_id,
-            "user_message": user_input,
-            "assistant_message": assistant_response,
-            "timestamp": timestamp,
-            "metadata": metadata or {},
+            "user_input": user_input[:1000] if user_input else None,  # Limita lunghezza
+            "bot_response": assistant_response[:2000] if assistant_response else None,  # Limita lunghezza
+            "detected_intent": detected_intent[:200] if detected_intent else None,
+            "triage_code": triage_code,
+            "medical_specialty": medical_specialty,
+            "suggested_facility_type": suggested_facility_type,
+            "reasoning": reasoning[:1000] if reasoning else None,  # Limita lunghezza
+            "estimated_wait_time": estimated_wait_time,
+            "processing_time_ms": processing_time_ms,
+            "model_version": "v4.0-llama-3.3-70b",  # Versione modello corrente
+            "tokens_used": None,  # Non disponibile da Groq/Gemini senza response metadata
+            "client_ip": None,  # Non disponibile in Streamlit Cloud senza header
+            "metadata": metadata or {}  # JSONB accetta dict direttamente
         }
         
         # Prova Supabase

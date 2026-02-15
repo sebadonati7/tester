@@ -60,28 +60,50 @@ class SupabaseConfig:
 
     @staticmethod
     def get_url() -> str:
-        """Get Supabase URL — tries [supabase].url → flat SUPABASE_URL → env."""
+        """
+        Get Supabase URL — tries multiple formats.
+        Priority: [supabase].url → SUPABASE_URL (flat) → env.
+        """
+        # Try nested format first (like [gemini] and [groq])
         try:
             return st.secrets["supabase"]["url"]
         except (KeyError, TypeError, AttributeError):
             pass
+        # Try flat format
         try:
             return st.secrets["SUPABASE_URL"]
         except (KeyError, TypeError, AttributeError):
             pass
+        # Try alternative nested format
+        try:
+            return st.secrets.get("supabase", {}).get("url", "")
+        except (KeyError, TypeError, AttributeError):
+            pass
+        # Fallback to environment variable
         return os.environ.get("SUPABASE_URL", "")
 
     @staticmethod
     def get_key() -> str:
-        """Get Supabase key — tries [supabase].key → flat SUPABASE_KEY → env."""
+        """
+        Get Supabase key — tries multiple formats.
+        Priority: [supabase].key → SUPABASE_KEY (flat) → env.
+        """
+        # Try nested format first (like [gemini] and [groq])
         try:
             return st.secrets["supabase"]["key"]
         except (KeyError, TypeError, AttributeError):
             pass
+        # Try flat format
         try:
             return st.secrets["SUPABASE_KEY"]
         except (KeyError, TypeError, AttributeError):
             pass
+        # Try alternative nested format
+        try:
+            return st.secrets.get("supabase", {}).get("key", "")
+        except (KeyError, TypeError, AttributeError):
+            pass
+        # Fallback to environment variable
         return os.environ.get("SUPABASE_KEY", "")
 
     @staticmethod

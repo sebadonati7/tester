@@ -250,7 +250,8 @@ class LLMService:
         )
 
         # ── 9. DATABASE LOGGING (con modalità offline) ──
-        self._log_interaction(session_state, user_input, response, start_time)
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        self._log_interaction(session_state, user_input, response, start_time, processing_time_ms)
 
         return response
 
@@ -528,27 +529,34 @@ Se hai bisogno di supporto immediato, contatta uno di questi numeri."""
 
     @staticmethod
     def _log_interaction(ss, user_input: str, response: str,
-                         start_time: float) -> None:
-        """Log su database (Supabase o offline) - best-effort, non blocca il flusso."""
+                         start_time: float, processing_time_ms: int) -> None:
+        """
+        Log su database (Supabase o offline) con tutti i KPI.
+        
+        Best-effort, non blocca il flusso se fallisce.
+        """
         try:
             from .db_service import get_db_service
             
             db = get_db_service()
-            duration_ms = int((time.time() - start_time) * 1000)
             session_id = ss.get("session_id", "unknown")
 
+            # Metadata aggiuntivi per il campo JSONB
             metadata = {
                 "percorso": ss.get("triage_path", "N/D"),
                 "phase": ss.get("current_phase", "N/D"),
                 "urgenza": ss.get("urgency_level", 3),
                 "question_count": ss.get("question_count", 0),
                 "specializzazione": ss.get("specialization", "Generale"),
+                "collected_data": ss.get("collected_data", {}),
             }
 
             db.save_interaction(
                 session_id=session_id,
-                user_input=user_input[:500],
-                assistant_response=response[:2000],
+                user_input=user_input,
+                assistant_response=response,
+                processing_time_ms=processing_time_ms,
+                session_state=ss,
                 metadata=metadata
             )
         except Exception as e:
