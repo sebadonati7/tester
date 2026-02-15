@@ -144,18 +144,19 @@ def render_step_tracker() -> None:
         # Caso speciale per ANAMNESI: completato solo se siamo in fase CLINICAL_TRIAGE
         # e ci sono state domande di triage clinico (non semplici interazioni)
         if square["key"] == "ANAMNESI":
-            current_phase = state.get(StateKeys.CURRENT_PHASE, "")
+            phase = state.get(StateKeys.CURRENT_PHASE, "")
             question_count = state.get(StateKeys.QUESTION_COUNT, 0)
             # Considera completato solo se siamo in triage clinico e ci sono state domande
-            if current_phase == "CLINICAL_TRIAGE" and question_count > 0:
+            if phase == "CLINICAL_TRIAGE" and question_count > 0:
                 return True
             # Oppure se abbiamo già completato il triage
-            if current_phase in ("RECOMMENDATION", "DISPOSITION"):
+            if phase in ("RECOMMENDATION", "DISPOSITION"):
                 return True
         
         # Caso speciale per ESITO: completato se siamo in fase RECOMMENDATION
         if square["key"] == "ESITO":
-            if current_phase in ("RECOMMENDATION", "DISPOSITION"):
+            phase = state.get(StateKeys.CURRENT_PHASE, "")
+            if phase in ("RECOMMENDATION", "DISPOSITION"):
                 return True
         
         return False
