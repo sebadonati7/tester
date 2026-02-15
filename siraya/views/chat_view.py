@@ -88,56 +88,129 @@ def text_to_speech_button(text: str, key: str, auto_play: bool = False) -> None:
 # ============================================================================
 
 def render_step_tracker() -> None:
-    """Render dynamic step tracker using native Streamlit components."""
+    """
+    Render 5 quadrati per mostrare lo stato di raccolta dati:
+    LOCALIZZAZIONE, SINTOMO PRINCIPALE, DOLORE, ANAMNESI, ESITO
+    """
     state = get_state_manager()
-
+    collected = state.get(StateKeys.COLLECTED_DATA, {})
     current_phase = state.get(StateKeys.CURRENT_PHASE, "INTAKE")
-    triage_path = state.get(StateKeys.TRIAGE_PATH)
-
-    # V3 step definitions – aligned with the new state machine
-    steps = [
-        ("INTAKE",           "👋", "Accoglienza"),
-        ("CLINICAL_TRIAGE",  "🩺", "Triage"),
-        ("RECOMMENDATION",   "🏥", "Esito"),
+    
+    # Definizione dei 5 quadrati
+    squares = [
+        {
+            "key": "LOCALIZZAZIONE",
+            "icon": "📍",
+            "data_key": "current_location",
+            "alt_keys": ["location", "patient_location"]
+        },
+        {
+            "key": "SINTOMO PRINCIPALE",
+            "icon": "🩺",
+            "data_key": "chief_complaint",
+            "alt_keys": ["CHIEF_COMPLAINT"]
+        },
+        {
+            "key": "DOLORE",
+            "icon": "😣",
+            "data_key": "pain_scale",
+            "alt_keys": ["PAIN_SCALE"]
+        },
+        {
+            "key": "ANAMNESI",
+            "icon": "📋",
+            "data_key": "anamnesis",
+            "alt_keys": ["question_count"]  # Considerato completo se question_count > 0
+        },
+        {
+            "key": "ESITO",
+            "icon": "🏥",
+            "data_key": "disposition",
+            "alt_keys": ["DISPOSITION", "recommendation"]
+        }
     ]
-
-    # Determine current index
-    phase_order = [s[0] for s in steps]
-    current_idx = phase_order.index(current_phase) if current_phase in phase_order else 0
-    # INFO branch maps to step 1 (Triage area)
-    if current_phase == "INFO":
-        current_idx = 1
-
-    # Use Streamlit native components instead of HTML
-    with st.container():
-        # Create columns for each step
-        cols = st.columns(len(steps))
+    
+    # Funzione per verificare se un quadrato è completato
+    def is_completed(square):
+        # Controlla la chiave principale
+        if collected.get(square["data_key"]):
+            return True
         
-        for idx, (phase, icon, label) in enumerate(steps):
+        # Controlla chiavi alternative
+        for alt_key in square["alt_keys"]:
+            if collected.get(alt_key) or state.get(alt_key):
+                return True
+        
+        # Caso speciale per ANAMNESI: completato se ci sono state domande
+        if square["key"] == "ANAMNESI":
+            question_count = state.get(StateKeys.QUESTION_COUNT, 0)
+            if question_count > 0:
+                return True
+        
+        # Caso speciale per ESITO: completato se siamo in fase RECOMMENDATION
+        if square["key"] == "ESITO":
+            if current_phase in ("RECOMMENDATION", "DISPOSITION"):
+                return True
+        
+        return False
+    
+    # Funzione per ottenere il valore da mostrare
+    def get_value(square):
+        # Prova chiave principale
+        value = collected.get(square["data_key"])
+        if value:
+            return str(value)[:20]  # Limita lunghezza
+        
+        # Prova chiavi alternative
+        for alt_key in square["alt_keys"]:
+            value = collected.get(alt_key) or state.get(alt_key)
+            if value:
+                return str(value)[:20]
+        
+        return None
+    
+    # Render dei 5 quadrati
+    with st.container():
+        cols = st.columns(5)
+        
+        for idx, square in enumerate(squares):
             with cols[idx]:
-                # Determine status
-                if idx < current_idx:
-                    # Completed step
-                    status_emoji = "✅"
-                    status_color = "green"
-                elif idx == current_idx:
-                    # Current step
-                    status_emoji = "🔄"
-                    status_color = "blue"
+                completed = is_completed(square)
+                value = get_value(square) if completed else None
+                
+                # Stile del quadrato
+                if completed:
+                    # Quadrato completato (verde con bordo)
+                    st.markdown(f"""
+                    <div style="
+                        border: 3px solid #10B981;
+                        border-radius: 8px;
+                        padding: 12px;
+                        text-align: center;
+                        background-color: #f0fdf4;
+                        min-height: 100px;
+                    ">
+                        <div style="font-size: 1.5em; margin-bottom: 5px;">{square['icon']}</div>
+                        <div style="font-weight: bold; font-size: 0.75em; color: #059669;">{square['key']}</div>
+                        {f'<div style="font-size: 0.65em; color: #047857; margin-top: 5px;">{value}</div>' if value else ''}
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    # Future step
-                    status_emoji = "⏳"
-                    status_color = "gray"
-                
-                # Display step
-                st.markdown(f"**{status_emoji} {icon}**")
-                st.caption(label)
-                
-                # Show path badge on triage step
-                if idx == 1 and triage_path:
-                    path_labels = {"A": "🔴 Emergenza", "B": "🟣 Salute Mentale", "C": "🟢 Standard", "INFO": "🔵 Info"}
-                    path_label = path_labels.get(triage_path, triage_path)
-                    st.caption(f"**{path_label}**")
+                    # Quadrato vuoto (grigio)
+                    st.markdown(f"""
+                    <div style="
+                        border: 2px dashed #d1d5db;
+                        border-radius: 8px;
+                        padding: 12px;
+                        text-align: center;
+                        background-color: #f9fafb;
+                        min-height: 100px;
+                        opacity: 0.6;
+                    ">
+                        <div style="font-size: 1.5em; margin-bottom: 5px;">{square['icon']}</div>
+                        <div style="font-weight: bold; font-size: 0.75em; color: #6b7280;">{square['key']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 
 # ============================================================================

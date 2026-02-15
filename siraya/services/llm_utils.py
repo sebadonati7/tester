@@ -247,6 +247,93 @@ def get_conversation_ctx(ss, max_messages: int = 8) -> str:
     return "\n".join(lines)
 
 
+def get_collected_data_summary(ss) -> str:
+    """
+    Costruisce un riepilogo dei dati raccolti per il prompt LLM.
+    Il chatbot può vedere questi dati ma NON deve riscriverli nel messaggio.
+    """
+    collected = ss.get("collected_data", {})
+    
+    # Cerca anche in session_state per compatibilità
+    location = (
+        collected.get("current_location") or 
+        collected.get("location") or 
+        ss.get("patient_location") or 
+        "Non specificato"
+    )
+    
+    symptom = (
+        collected.get("chief_complaint") or 
+        ss.get("chief_complaint") or 
+        "Non specificato"
+    )
+    
+    pain = (
+        collected.get("pain_scale") or 
+        ss.get("pain_scale") or 
+        "Non specificato"
+    )
+    
+    # Anamnesi: considera completata se ci sono state domande
+    question_count = ss.get("question_count", 0)
+    anamnesis_status = "In corso" if question_count > 0 else "Non iniziata"
+    
+    # Esito: considera completato se siamo in fase RECOMMENDATION
+    current_phase = ss.get("current_phase", "")
+    esito_status = "Completato" if current_phase in ("RECOMMENDATION", "DISPOSITION") else "In attesa"
+    
+    summary = f"""## DATI RACCOLTI (VISIBILI MA NON DA RISCRIVERE NEL MESSAGGIO)
+
+📍 LOCALIZZAZIONE: {location}
+🩺 SINTOMO PRINCIPALE: {symptom}
+😣 DOLORE: {pain}/10
+📋 ANAMNESI: {anamnesis_status} ({question_count} domande poste)
+🏥 ESITO: {esito_status}
+
+IMPORTANTE: Questi dati sono già stati raccolti. NON riscriverli nel messaggio.
+Fai SOLO la domanda corrente senza ripetere le informazioni già note all'utente."""
+    
+    return summary
+
+
+def get_supabase_session_context(session_id: str) -> str:
+    """
+    Recupera il contesto della sessione da Supabase per migliorare la memoria.
+    """
+    try:
+        from .db_service import get_db_service
+        from ..config.settings import SupabaseConfig
+        
+        db = get_db_service()
+        if not db.is_connected():
+            return ""
+        
+        # Cerca le ultime interazioni di questa sessione
+        try:
+            response = db.supabase.table(SupabaseConfig.TABLE_LOGS).select(
+                "user_input, bot_response, detected_intent, triage_code, created_at"
+            ).eq("session_id", session_id).order("created_at", desc=True).limit(5).execute()
+            
+            if response and response.data:
+                lines = ["## CONTESTO SESSIONE (da Supabase)"]
+                for record in reversed(response.data):  # Ordine cronologico
+                    user_input = record.get("user_input", "")[:100]
+                    detected = record.get("detected_intent", "")
+                    if user_input:
+                        lines.append(f"Utente: {user_input}")
+                    if detected:
+                        lines.append(f"Intento rilevato: {detected}")
+                
+                return "\n".join(lines)
+        except Exception as e:
+            logger.warning(f"Errore lettura Supabase: {e}")
+            return ""
+    except Exception as e:
+        logger.warning(f"Supabase context unavailable: {e}")
+    
+    return ""
+
+
 # ============================================================================
 # RAG CONTEXT HELPER
 # ============================================================================

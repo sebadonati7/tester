@@ -59,17 +59,26 @@ class TriagePhase:
         if q_count >= MAX_QUESTIONS["A"]:
             return None  # → RECOMMENDATION
 
+        # Costruisci contesto dati raccolti (visibili ma non da riscrivere)
+        from ..llm_utils import get_collected_data_summary, get_supabase_session_context
+        data_summary = get_collected_data_summary(ss)
+        supabase_ctx = get_supabase_session_context(ss.get("session_id", ""))
+        
         prompt = f"""{PROMPTS['base_rules']}
 
 {PROMPTS['percorso_a']}
 
-## DATI PAZIENTE (RACCOLTI FINORA)
-- Località corrente: {collected.get('current_location', collected.get('location', 'N/D'))}
-- Sintomo: {collected.get('chief_complaint', 'N/D')}
-- Scala dolore: {collected.get('pain_scale', 'N/D')}/10
+{data_summary}
+
+{supabase_ctx}
+
+## STATO CONVERSAZIONE
 - Domande poste finora: {q_count}/{MAX_QUESTIONS['A']}
 
-NOTA: NON chiedere età o sesso. Concentrati solo su red flags per confermare l'emergenza.
+NOTA CRITICA: 
+- NON riscrivere le informazioni già raccolte (località, sintomo, dolore) nel messaggio
+- Fai SOLO la domanda corrente per confermare/escludere l'emergenza
+- NON chiedere età o sesso. Concentrati solo su red flags.
 
 {rag_ctx}
 
@@ -138,6 +147,11 @@ IMPORTANTE: NON chiedere dati anagrafici. Solo domande cliniche urgenti.
             ),
         }
 
+        # Costruisci contesto dati raccolti
+        from ..llm_utils import get_collected_data_summary, get_supabase_session_context
+        data_summary = get_collected_data_summary(ss)
+        supabase_ctx = get_supabase_session_context(ss.get("session_id", ""))
+        
         prompt = f"""{PROMPTS['base_rules']}
 
 {PROMPTS['percorso_b']}
@@ -145,14 +159,18 @@ IMPORTANTE: NON chiedere dati anagrafici. Solo domande cliniche urgenti.
 ## SOTTO-FASE: {sub_phase}
 {sub_instructions[sub_phase]}
 
-## DATI PAZIENTE
-- Età: {collected.get('age', 'N/D')}
-- Località: {collected.get('location', 'N/D')}
-- Domande poste: {q_count}/{MAX_QUESTIONS['B']}
+{data_summary}
+
+{supabase_ctx}
 
 {rag_ctx}
 
 {conv_ctx}
+
+## STATO CONVERSAZIONE
+- Domande poste: {q_count}/{MAX_QUESTIONS['B']}
+
+NOTA CRITICA: NON riscrivere le informazioni già raccolte nel messaggio. Fai SOLO la domanda corrente.
 """
         return call_llm(self._groq, self._gemini, prompt, f"Utente: {user_input}")
 
@@ -179,15 +197,23 @@ IMPORTANTE: NON chiedere dati anagrafici. Solo domande cliniche urgenti.
                 f'→ termine medico: "{normalized_input}")\n'
             )
 
+        # Costruisci contesto dati raccolti
+        from ..llm_utils import get_collected_data_summary, get_supabase_session_context
+        data_summary = get_collected_data_summary(ss)
+        supabase_ctx = get_supabase_session_context(ss.get("session_id", ""))
+        
         prompt = f"""{PROMPTS['base_rules']}
 
 {PROMPTS['percorso_c']}
 
-## DATI PAZIENTE (RACCOLTI FINORA)
-- Località corrente: {collected.get('current_location', collected.get('location', 'N/D'))}
-- Sintomo principale: {collected.get('chief_complaint', 'N/D')}
-- Scala dolore: {collected.get('pain_scale', 'N/D')}/10
+{data_summary}
+
+{supabase_ctx}
+
+## STATO CONVERSAZIONE
 - Domande poste finora: {q_count}/{MAX_QUESTIONS['C']}
+
+NOTA CRITICA: NON riscrivere le informazioni già raccolte nel messaggio. Fai SOLO la domanda corrente.
 
 NOTA: NON chiedere età o sesso. Questi dati verranno raccolti alla fine del triage.
 
