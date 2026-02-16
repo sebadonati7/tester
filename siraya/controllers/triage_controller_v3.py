@@ -63,19 +63,16 @@ class TriagePhase(Enum):
 
 class UnifiedSlotFiller:
     """
-    Slot filling con NOMI CANONICI.
-    1 dato = 1 nome univoco, MAI alias multipli.
+    Slot filling con MEMORIA PERSISTENTE.
     
-    Mapping chiavi:
-    - Sintomo: chief_complaint (unico)
-    - Località: location (unico)
-    - Dolore: pain_scale (unico)
-    - Età: age (unico)
+    REGOLA CRITICA: chief_complaint è IMMUTABILE dopo prima estrazione.
+    Dettagli vanno in symptom_details (lista cumulativa).
     """
     
     # ✅ CANONICAL KEYS - Single source of truth
     KEYS = {
-        "symptom": "chief_complaint",
+        "symptom": "chief_complaint",      # IMMUTABILE
+        "details": "symptom_details",      # CUMULATIVO (lista)
         "location": "location",
         "pain": "pain_scale",
         "age": "age",
@@ -84,21 +81,52 @@ class UnifiedSlotFiller:
     }
     
     @classmethod
-    def extract(cls, user_input: str) -> Dict[str, Any]:
+    def extract(cls, user_input: str, current_data: Dict = None) -> Dict[str, Any]:
         """
-        Estrae dati usando SOLO nomi canonici.
-        Returns dict con chiavi da KEYS.
+        Estrae dati con MEMORIA: non sovrascrive chief_complaint.
+        
+        Args:
+            user_input: Input utente corrente
+            current_data: Dati già raccolti (per check memoria)
+        
+        Returns:
+            Dict con chiavi canoniche (solo nuovi dati)
         """
         import re
+        if current_data is None:
+            current_data = {}
+        
         extracted = {}
         user_lower = user_input.lower()
         
-        # === SINTOMO ===
-        symptom_keywords = ["dolore", "mal di", "male a", "sintomo", "problema", "fastidio", "ho", "mi fa"]
-        if any(kw in user_lower for kw in symptom_keywords) and len(user_input.strip()) > 5:
-            # Salva con chiave canonica
-            extracted[cls.KEYS["symptom"]] = user_input.strip()[:100]
-            logger.info(f"✅ Sintomo estratto: {user_input[:30]}")
+        # === SINTOMO PRINCIPALE (IMMUTABILE) ===
+        # Estrai SOLO se non già presente
+        if "chief_complaint" not in current_data:
+            symptom_keywords = ["taglio", "tagliato", "ferita", "dolore", "mal di", "male a", "sintomo", "problema", "fastidio", "ho", "mi fa"]
+            if any(kw in user_lower for kw in symptom_keywords) and len(user_input.strip()) > 5:
+                extracted[cls.KEYS["symptom"]] = user_input.strip()[:100]
+                logger.info(f"✅ Sintomo ORIGINALE salvato: {user_input[:40]}")
+        
+        # === DETTAGLI SINTOMO (CUMULATIVI) ===
+        # Caratteristiche aggiuntive vanno in lista separata
+        detail_keywords = {
+            "costante": "dolore costante",
+            "intermittente": "dolore intermittente a intervalli",
+            "pulsante": "dolore pulsante tipo martello",
+            "acuto": "dolore acuto localizzato",
+            "diffuso": "dolore diffuso su area estesa",
+            "bruciante": "sensazione di bruciore",
+            "crampiforme": "dolore a crampi",
+        }
+        
+        for keyword, description in detail_keywords.items():
+            if keyword in user_lower:
+                # Aggiungi a lista dettagli (non sovrascrivere sintomo!)
+                existing_details = current_data.get(cls.KEYS["details"], [])
+                if description not in existing_details:
+                    extracted[cls.KEYS["details"]] = existing_details + [description]
+                    logger.info(f"✅ Dettaglio aggiunto: {description}")
+                break
         
         # === DOLORE (migliorato per "9-10: Dolore estremo") ===
         pain_patterns = [
@@ -529,8 +557,18 @@ Porta con te questo report quando ti rechi alla struttura."""
         }
     
     def _generate_sbar(self, branch: TriageBranch, data: Dict, facility: str) -> str:
-        """Genera SBAR completo per download PDF/TXT."""
-        symptom = data.get("chief_complaint", "Non specificato")
+        """Genera SBAR con sintomo ORIGINALE + dettagli."""
+        
+        # ✅ Usa chief_complaint (originale) + symptom_details
+        symptom_original = data.get("chief_complaint", "Non specificato")
+        symptom_details = data.get("symptom_details", [])
+        
+        # Componi descrizione completa
+        if symptom_details:
+            symptom_full = f"{symptom_original} ({', '.join(symptom_details)})"
+        else:
+            symptom_full = symptom_original
+        
         pain = data.get("pain_scale", "N/D")
         age = data.get("age", "N/D")
         gender = data.get("gender", "N/D")
@@ -541,7 +579,7 @@ Porta con te questo report quando ti rechi alla struttura."""
 **REPORT TRIAGE SIRAYA**
 
 **S - SITUATION (Situazione)**
-{symptom}. Intensità dolore: {pain}/10. Insorgenza: {onset}.
+{symptom_full}. Intensità dolore: {pain}/10. Insorgenza: {onset}.
 
 **B - BACKGROUND (Contesto)**
 Età: {age} anni
@@ -623,8 +661,8 @@ class TriageControllerV3:
         else:
             current_branch = TriageBranch(current_branch)
         
-        # 3. Slot filling (con chiavi canoniche)
-        extracted = self.slot_filler.extract(user_input)
+        # 3. Slot filling (PASS current_data per memoria)
+        extracted = self.slot_filler.extract(user_input, collected)  # ✅ Pass collected
         collected.update(extracted)
         self.state.set(StateKeys.COLLECTED_DATA, collected)
         
@@ -645,9 +683,18 @@ class TriageControllerV3:
         if next_phase == TriagePhase.OUTCOME:
             response = self.outcome_gen.generate(current_branch, collected)
             # Salva SBAR per download
-            self.state.set(StateKeys.SBAR_REPORT_DATA, response["metadata"]["sbar_full"])
+            self.state.set(StateKeys.SBAR_REPORT_DATA, response.get("metadata", {}).get("sbar_full", ""))
         else:
             response = self.question_gen.generate(next_phase, current_branch, collected, phase_q_count)
+        
+        # ✅ Fallback se response non valida
+        if not isinstance(response, dict) or "text" not in response:
+            logger.warning("⚠️ Response non valida, uso fallback")
+            response = {
+                "text": "Grazie per le informazioni fornite.",
+                "type": "open_text",
+                "options": None
+            }
         
         # 6. Incrementa counter (SOLO se non OUTCOME)
         if next_phase != TriagePhase.OUTCOME:
@@ -660,7 +707,7 @@ class TriageControllerV3:
         self.db.save_interaction(
             session_id=session_id,
             user_input=user_input,
-            assistant_response=response["text"],
+            assistant_response=response.get("text", "N/A"),
             processing_time_ms=processing_time,
             session_state={
                 "branch": current_branch.value,

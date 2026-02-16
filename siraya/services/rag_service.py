@@ -199,6 +199,28 @@ class RAGService:
                     "page": "56"
                 }
             ],
+            
+            # === TRAUMI ===
+            "taglio": [
+                {
+                    "content": "TAGLIO/FERITA: Valutare PROFONDITÀ (superficiale/profondo), ESTENSIONE (cm), SANGUINAMENTO (attivo/arrestato), LOCALIZZAZIONE anatomica. Se arteria coinvolta: compressione diretta + 118. Domande chiave: 1) Quanto è profondo? 2) Il sanguinamento si è fermato? 3) Riesci a muovere la parte? 4) Quando è avvenuto?",
+                    "source": "Protocollo Trauma Minore",
+                    "page": "23"
+                },
+                {
+                    "content": "Red flags tagli: sanguinamento arterioso pulsante, esposizione osso/tendini, deficit motorio/sensitivo (possibile lesione nervo), ferita da oggetto sporco (rischio tetano), localizzazione critica (viso, mani, genitali).",
+                    "source": "Linee Guida Ferite",
+                    "page": "25"
+                }
+            ],
+            
+            "ferita": [  # Alias taglio
+                {
+                    "content": "FERITA: Valutare profondità, estensione, sanguinamento, localizzazione. Domande: profondità, sanguinamento fermato, mobilità conservata, quando avvenuto.",
+                    "source": "Protocollo Trauma",
+                    "page": "23"
+                }
+            ],
         }
         
         # ✅ Match sintomo

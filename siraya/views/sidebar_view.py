@@ -267,18 +267,28 @@ def _render_collected_data_preview() -> None:
     else:
         st.warning("📍 **Località:** ⏳ In raccolta...")
     
-    # ===== BOX 2: SINTOMO =====
-    symptom = collected.get('chief_complaint')  # ✅ V3: Chiave canonica unica
-    symptom_hash = hashlib.md5(str(symptom).encode()).hexdigest() if symptom else None
+    # ===== BOX 2: SINTOMO (ORIGINALE + dettagli) =====
+    symptom_original = collected.get('chief_complaint')  # ✅ V3: Chiave canonica unica
+    symptom_details = collected.get('symptom_details', [])
+    
+    if symptom_original:
+        if symptom_details:
+            symptom_display = f"{symptom_original} ({', '.join(symptom_details)})"
+        else:
+            symptom_display = symptom_original
+        symptom_hash = hashlib.md5(symptom_display.encode()).hexdigest()
+    else:
+        symptom_display = None
+        symptom_hash = None
     
     if symptom_hash and symptom_hash != last_state.get('symptom'):
         current_state['symptom'] = symptom_hash
-        logger.info(f"🩺 Box Sintomo aggiornata: {symptom[:30]}")
+        logger.info(f"🩺 Box Sintomo aggiornata: {symptom_display[:30]}")
     elif symptom_hash:
         current_state['symptom'] = symptom_hash
     
-    if symptom:
-        st.success(f"🩺 **Sintomo:** {symptom[:50]}")
+    if symptom_display:
+        st.success(f"🩺 **Sintomo:** {symptom_display[:60]}")
     else:
         st.warning("🩺 **Sintomo:** ⏳ In raccolta...")
     
@@ -300,50 +310,58 @@ def _render_collected_data_preview() -> None:
     else:
         st.warning("📊 **Dolore:** Non valutato")
     
-    # ===== BOX 4: ANAMNESI =====
-    # Conta domande dalla phase_question_count (V3)
-    anamnesi_value = None
-    
-    if current_phase in ["clinical_triage", "fast_triage", "risk_assessment"] and phase_q > 0:
-        anamnesi_value = f"{phase_q} domande"
-    elif current_phase in ["outcome", "sbar"]:
-        anamnesi_value = "✅ Completata"
-    
-    anamnesi_hash = hashlib.md5(str(anamnesi_value).encode()).hexdigest() if anamnesi_value else None
-    
-    if anamnesi_hash and anamnesi_hash != last_state.get('anamnesi'):
-        current_state['anamnesi'] = anamnesi_hash
-        logger.info(f"📋 Box Anamnesi aggiornata: {anamnesi_value}")
-    elif anamnesi_hash:
-        current_state['anamnesi'] = anamnesi_hash
-    
-    # Mostra anamnesi (età + genere + contatore se in fase clinica)
+    # ===== BOX 4: ANAMNESI + COUNTER ===
+    # ✅ NUOVO: Mostra conteggio domande SE in fase clinica
     age = collected.get('age')
     gender = collected.get('gender') or collected.get('sex')
     
-    if age:
-        anamnesi_text = f"{age} anni"
-        if gender:
-            anamnesi_text += f", {gender}"
-        if anamnesi_value:
-            anamnesi_text += f" | {anamnesi_value}"
-        st.success(f"👤 **Anamnesi:** {anamnesi_text}")
-    elif anamnesi_value:
-        st.info(f"📋 **Anamnesi:** {anamnesi_value}")
+    if current_phase.upper() in ["CLINICAL_TRIAGE", "FAST_TRIAGE", "RISK_ASSESSMENT"]:
+        # Determina target domande per branch
+        branch = state.get(StateKeys.TRIAGE_BRANCH, "STANDARD")
+        target_questions = {
+            "EMERGENCY": "3-4",
+            "MENTAL_HEALTH": "4-5",
+            "STANDARD": "5-7"
+        }.get(branch, "5-7")
+        
+        anamnesi_text = f"📋 **Anamnesi:** {phase_q} domande (target: {target_questions})"
+        anamnesi_hash = hashlib.md5(f"{phase_q}_{branch}".encode()).hexdigest()
+        
+        # Progress bar per domande
+        if branch == "EMERGENCY":
+            progress_val = min(phase_q / 4, 1.0)
+        elif branch == "MENTAL_HEALTH":
+            progress_val = min(phase_q / 5, 1.0)
+        else:
+            progress_val = min(phase_q / 7, 1.0)
+        
+        if anamnesi_hash != last_state.get('anamnesi'):
+            current_state['anamnesi'] = anamnesi_hash
+            logger.info(f"📋 Box Anamnesi: {phase_q} domande (target: {target_questions})")
+        elif anamnesi_hash:
+            current_state['anamnesi'] = anamnesi_hash
+        
+        st.info(anamnesi_text)
+        st.progress(progress_val)
+        
+        # Mostra anche età/genere se disponibili
+        if age:
+            st.caption(f"Età: {age} anni" + (f", {gender}" if gender else ""))
+        
+    elif current_phase.upper() == "OUTCOME":
+        st.success("📋 **Anamnesi:** ✅ Completata")
+        if age:
+            st.caption(f"Età: {age} anni" + (f", {gender}" if gender else ""))
     else:
-        st.warning("👤 **Anamnesi:** In corso...")
+        st.warning("📋 **Anamnesi:** In attesa...")
+        if age:
+            st.caption(f"Età: {age} anni" + (f", {gender}" if gender else ""))
     
-    # ===== BOX 5: ESITO =====
-    outcome_value = None
-    outcome_color = "warning"  # Default giallo
-    
-    if current_phase == "outcome":
+    # ===== BOX 5: ESITO ===
+    if current_phase.upper() == "OUTCOME":
         outcome_value = "✅ Raccomandazione pronta"
         outcome_color = "success"  # ✅ VERDE
-    elif current_phase == "sbar":
-        outcome_value = "✅ Report completo"
-        outcome_color = "success"  # ✅ VERDE
-    elif current_phase in ["clinical_triage", "fast_triage", "risk_assessment"]:
+    elif current_phase.upper() in ["CLINICAL_TRIAGE", "FAST_TRIAGE", "RISK_ASSESSMENT"]:
         outcome_value = "⏳ In elaborazione..."
         outcome_color = "info"  # Blu
     else:
