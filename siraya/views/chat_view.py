@@ -18,7 +18,7 @@ import logging
 
 from ..core.state_manager import get_state_manager, StateKeys
 from ..core.authentication import check_privacy_accepted, render_privacy_consent
-from ..controllers.triage_controller import get_triage_controller
+from ..controllers.triage_controller_v3 import get_triage_controller  # ✅ V3
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -357,7 +357,7 @@ def render() -> None:
     options = last_response.get("options", None)
     
     # ✅ NUOVO: Rendering outcome con bottone download SBAR
-    if question_type == "outcome" and last_response.get("metadata", {}).get("sbar_available"):
+    if question_type == "outcome":
         _render_sbar_download_buttons(state)
     
     # Se ci sono opzioni multiple choice E l'ultimo messaggio è del bot, mostra bottoni
@@ -463,14 +463,16 @@ def _process_user_input(
 def _render_sbar_download_buttons(state) -> None:
     """
     Render bottoni per download SBAR (PDF e TXT) quando outcome è disponibile.
+    ✅ V3: SBAR_REPORT_DATA è una stringa (non dict).
     """
     from ..services.pdf_service import get_pdf_service
     from datetime import datetime
     import json
     
-    sbar_data = state.get(StateKeys.SBAR_REPORT_DATA, {})
+    # ✅ V3: SBAR è una stringa diretta
+    sbar_text = state.get(StateKeys.SBAR_REPORT_DATA)
     
-    if not sbar_data:
+    if not sbar_text:
         logger.warning("⚠️ SBAR data non disponibile per download")
         return
     
@@ -485,7 +487,6 @@ def _render_sbar_download_buttons(state) -> None:
         try:
             pdf_service = get_pdf_service()
             patient_data = state.get(StateKeys.COLLECTED_DATA, {})
-            sbar_text = sbar_data.get("text", "")
             
             # Aggiungi session_id ai patient_data se mancante
             if "session_id" not in patient_data:
@@ -512,9 +513,8 @@ def _render_sbar_download_buttons(state) -> None:
     with col2:
         # Download TXT
         try:
-            sbar_text = sbar_data.get("text", "")
-            session_id = sbar_data.get("session_id", state.get(StateKeys.SESSION_ID, "unknown"))
-            collected_data = sbar_data.get("collected_data", {})
+            session_id = state.get(StateKeys.SESSION_ID, "unknown")
+            collected_data = state.get(StateKeys.COLLECTED_DATA, {})
             
             sbar_text_formatted = f"""
 SIRAYA Health Navigator - Report SBAR

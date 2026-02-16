@@ -233,25 +233,17 @@ def _render_collected_data_preview() -> None:
     Update SOLO quando il valore cambia (dirty checking).
     """
     from ..core.state_manager import get_state_manager, StateKeys
-    from ..core.event_store import get_event_store
     import hashlib
     import logging
     
     logger = logging.getLogger(__name__)
     
     state = get_state_manager()
-    event_store = get_event_store()
-    event_store = get_event_store()
     
-    # ✅ Ricostruisci dati da eventi (source of truth)
-    collected = event_store.get_collected_data_from_events()
-    current_phase = event_store.get_current_phase_from_events()
-    
-    # Fallback a session state se eventi non disponibili (backward compatibility)
-    if not collected:
-        collected = state.get(StateKeys.COLLECTED_DATA, {})
-    if current_phase == "intake" and not event_store.get_events():
-        current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+    # ✅ V3: Usa session state direttamente (più semplice, no event store)
+    collected = state.get(StateKeys.COLLECTED_DATA, {})
+    current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+    phase_q = state.get("phase_question_count", 0)  # ✅ V3: Counter unico
     
     # Tracking stato precedente
     last_state = state.get(StateKeys.INFO_BOXES_LAST_STATE, {})
@@ -276,7 +268,7 @@ def _render_collected_data_preview() -> None:
         st.warning("📍 **Località:** ⏳ In raccolta...")
     
     # ===== BOX 2: SINTOMO =====
-    symptom = collected.get('main_symptom') or collected.get('chief_complaint')
+    symptom = collected.get('chief_complaint')  # ✅ V3: Chiave canonica unica
     symptom_hash = hashlib.md5(str(symptom).encode()).hexdigest() if symptom else None
     
     if symptom_hash and symptom_hash != last_state.get('symptom'):
@@ -309,16 +301,11 @@ def _render_collected_data_preview() -> None:
         st.warning("📊 **Dolore:** Non valutato")
     
     # ===== BOX 4: ANAMNESI =====
-    # Conta domande cliniche dalla event store
-    clinical_count = event_store.count_questions_in_phase("clinical_triage")
-    fast_count = event_store.count_questions_in_phase("fast_triage")
-    risk_count = event_store.count_questions_in_phase("risk_assessment")
-    
-    total_clinical = clinical_count + fast_count + risk_count
-    
+    # Conta domande dalla phase_question_count (V3)
     anamnesi_value = None
-    if current_phase in ["clinical_triage", "fast_triage", "risk_assessment"] and total_clinical > 0:
-        anamnesi_value = f"{total_clinical} domande"
+    
+    if current_phase in ["clinical_triage", "fast_triage", "risk_assessment"] and phase_q > 0:
+        anamnesi_value = f"{phase_q} domande"
     elif current_phase in ["outcome", "sbar"]:
         anamnesi_value = "✅ Completata"
     
@@ -352,10 +339,10 @@ def _render_collected_data_preview() -> None:
     
     if current_phase == "outcome":
         outcome_value = "✅ Raccomandazione pronta"
-        outcome_color = "success"  # ✅ Verde
+        outcome_color = "success"  # ✅ VERDE
     elif current_phase == "sbar":
         outcome_value = "✅ Report completo"
-        outcome_color = "success"  # ✅ Verde
+        outcome_color = "success"  # ✅ VERDE
     elif current_phase in ["clinical_triage", "fast_triage", "risk_assessment"]:
         outcome_value = "⏳ In elaborazione..."
         outcome_color = "info"  # Blu

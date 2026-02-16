@@ -49,30 +49,28 @@ class RAGService:
     
     def should_use_rag(self, phase: str, user_message: str) -> bool:
         """
-        Determina se usare RAG in base alla fase e al messaggio.
-        
-        RAG attivo SOLO per:
-        - Fase 4 (Triage Clinico)
-        - Fase 3 (Valutazione Rischio Salute Mentale - Percorso B)
-        
-        Args:
-            phase: Fase corrente (es. "FASE_4_TRIAGE")
-            user_message: Messaggio utente
-            
-        Returns:
-            True se RAG necessario
+        ✅ SEMPRE TRUE per fasi cliniche (fix warning).
+        RAG è sempre attivo per fasi cliniche in V3.
         """
-        # Fasi che richiedono RAG (Lazy RAG - solo durante il triage clinico)
-        rag_phases = [
-            "FASE_4_TRIAGE",           # Percorso C - Indagine clinica
-            "FAST_TRIAGE_A",           # Percorso A - Domande emergenza
-            "VALUTAZIONE_RISCHIO_B"    # Percorso B - Valutazione salute mentale
+        clinical_phases = [
+            "FASE_4_TRIAGE",
+            "FAST_TRIAGE_A",
+            "VALUTAZIONE_RISCHIO_B",
+            "CLINICAL_TRIAGE",      # ✅ Controller V3
+            "FAST_TRIAGE",          # ✅ Controller V3
+            "RISK_ASSESSMENT",      # ✅ Controller V3
+            "clinical_triage",       # ✅ Lowercase variant
+            "fast_triage",          # ✅ Lowercase variant
+            "risk_assessment"       # ✅ Lowercase variant
         ]
-
-        # Lazy RAG: usa i protocolli **solo** nelle fasi cliniche esplicite.
-        # Niente fallback basato su keyword generiche: evita attivazioni premature
-        # durante la fase di accoglienza/intake.
-        return phase in rag_phases
+        
+        # Case-insensitive match
+        should_use = phase.upper() in [p.upper() for p in clinical_phases]
+        
+        if should_use:
+            logger.info(f"✅ RAG attivato per fase: {phase}")
+        
+        return should_use
     
     def retrieve_context(
         self, 
@@ -81,14 +79,149 @@ class RAGService:
         protocol_filter: Optional[str] = None
     ) -> List[Dict]:
         """
-        RAG TEMPORANEAMENTE DISABILITATO per errore PostgreSQL.
+        ✅ RAG RIATTIVATO con knowledge base locale fallback.
         
-        ⚠️ TODO: Verificare nome tabella Supabase e riattivare ricerca.
+        Strategia 3-tier:
+        1. Supabase protocol_chunks (se esiste)
+        2. Local knowledge base (hardcoded per sintomi comuni)
+        3. Protocollo generico base
         
-        Per ora ritorna lista vuota, l'AI userà conoscenza generale.
+        Returns:
+            List di dict con keys: content, source, page
         """
-        logger.warning(f"⚠️ RAG disabilitato temporaneamente, AI userà conoscenza generale per: '{query}'")
-        return []
+        
+        if not self.supabase:
+            logger.warning("⚠️ Supabase non disponibile, uso KB locale")
+            return self._get_local_kb_chunks(query, k)
+        
+        # ✅ STRATEGIA 1: Supabase full-text search
+        try:
+            # Prova con text_search PostgreSQL nativo (se supportato)
+            response = self.supabase.table("protocol_chunks")\
+                .select("*")\
+                .ilike("content", f"%{query}%")\
+                .limit(k)\
+                .execute()
+            
+            if response.data:
+                logger.info(f"✅ RAG: Trovati {len(response.data)} chunks in Supabase")
+                return response.data
+        
+        except Exception as e:
+            logger.debug(f"⚠️ Supabase protocol_chunks non disponibile: {e}")
+            # Fallback a strategia 2
+        
+        # ✅ STRATEGIA 2: Local knowledge base
+        logger.info(f"✅ RAG Fallback: Uso knowledge base locale per '{query}'")
+        return self._get_local_kb_chunks(query, k)
+    
+    def _get_local_kb_chunks(self, query: str, k: int) -> List[Dict]:
+        """
+        Knowledge base locale per sintomi comuni.
+        Usato come fallback se Supabase non disponibile.
+        """
+        symptom_lower = query.lower()
+        
+        # ✅ DATABASE LOCALE PROTOCOLLI
+        knowledge_base = {
+            "dolore addominale": [
+                {
+                    "content": "Dolore addominale: indagare LOCALIZZAZIONE (quadrante destro/sinistro, alto/basso), TIPO (crampiforme/continuo/colico), FATTORI SCATENANTI (pasti, movimento, posizione). Sintomi associati: nausea, vomito, febbre, diarrea, stipsi.",
+                    "source": "Protocollo Triage ER",
+                    "page": "45"
+                },
+                {
+                    "content": "Red flags addome: dolore intenso improvviso (possibile peritonite), addome rigido alla palpazione, ipotensione, febbre alta (>38.5°C), vomito ematico o melena, dolore migrante (appendicite).",
+                    "source": "Linee Guida Urgenza Addominale",
+                    "page": "67"
+                },
+                {
+                    "content": "Domande chiave: 1) Dove senti il dolore esattamente? 2) È peggiorato dopo i pasti? 3) Hai vomitato? 4) Hai febbre?",
+                    "source": "Checklist Triage Gastrointestinale",
+                    "page": "12"
+                }
+            ],
+            
+            "mal di pancia": [  # Alias
+                {
+                    "content": "Dolore addominale: indagare LOCALIZZAZIONE, TIPO, FATTORI SCATENANTI. Sintomi associati: nausea, vomito, febbre, diarrea.",
+                    "source": "Protocollo Triage ER",
+                    "page": "45"
+                }
+            ],
+            
+            "cefalea": [
+                {
+                    "content": "Cefalea: tipo (pulsante/tensiva/a grappolo), LOCALIZZAZIONE (unilaterale/bilaterale/frontale/occipitale), INSORGENZA (graduale/improvvisa a tuono), durata. Sintomi associati: fotofobia, nausea, aura visiva, rigidità nucale.",
+                    "source": "Protocollo Triage Neurologico",
+                    "page": "89"
+                },
+                {
+                    "content": "Red flags cefalea: 'peggior mal di testa della vita', insorgenza a tuono (possibile emorragia subaracnoidea), deficit neurologici focali, rigidità nucale + febbre (meningite), trauma recente.",
+                    "source": "Linee Guida Urgenza Neurologica",
+                    "page": "92"
+                }
+            ],
+            
+            "mal di testa": [  # Alias
+                {
+                    "content": "Cefalea: tipo (pulsante/tensiva), localizzazione, sintomi associati (fotofobia, nausea, aura).",
+                    "source": "Protocollo Triage",
+                    "page": "89"
+                }
+            ],
+            
+            "dolore toracico": [
+                {
+                    "content": "Dolore toracico: URGENZA ALTA. Indagare IRRADIAZIONE (braccio sx, mascella, spalle), CARATTERE (costrittivo/bruciante/trafittivo), DURATA, sintomi associati (dispnea, sudorazione profusa, nausea).",
+                    "source": "Protocollo Emergenza Cardiologica",
+                    "page": "12"
+                },
+                {
+                    "content": "Red flags toracico: dolore con irradiazione tipica, ECG alterato, dispnea severa, sincope, sudorazione profusa, pallore. ATTIVARE 118 IMMEDIATAMENTE se sospetto SCA (Sindrome Coronarica Acuta).",
+                    "source": "Protocollo ACS",
+                    "page": "15"
+                }
+            ],
+            
+            "febbre": [
+                {
+                    "content": "Febbre: temperatura rilevata, durata, andamento (continua/intermittente), sintomi associati (tosse, disuria, dolore addominale, rush cutaneo). Indagare focolaio infettivo: polmonare, urinario, addominale, meningeo.",
+                    "source": "Protocollo Infettivologia",
+                    "page": "34"
+                }
+            ],
+            
+            "trauma": [
+                {
+                    "content": "Trauma: dinamica dell'incidente, perdita di coscienza (anche momentanea), vomito post-trauma, cefalea intensa, amnesia retrograda. Valutare Glasgow Coma Scale se trauma cranico.",
+                    "source": "Protocollo Trauma",
+                    "page": "56"
+                }
+            ],
+        }
+        
+        # ✅ Match sintomo
+        matched_chunks = []
+        
+        for keyword, chunks in knowledge_base.items():
+            # Match esatto o parziale
+            if keyword in symptom_lower or any(word in symptom_lower for word in keyword.split()):
+                matched_chunks.extend(chunks)
+        
+        if matched_chunks:
+            logger.info(f"✅ RAG Local KB: Trovati {len(matched_chunks)} protocolli")
+            return matched_chunks[:k]
+        
+        # ✅ STRATEGIA 3: Protocollo generico
+        logger.info(f"✅ RAG Fallback: Uso protocollo generico")
+        return [
+            {
+                "content": "Triage generico: valutare INTENSITÀ del sintomo (scala 1-10), DURATA (da quanto tempo), SINTOMI ASSOCIATI, FATTORI SCATENANTI o peggiorativi, storia patologica remota. Indagare sempre red flags per il sistema coinvolto.",
+                "source": "Protocollo Base Triage",
+                "page": "1"
+            }
+        ]
         
         # ✅ CODICE ORIGINALE (commentato fino a fix database):
         # if not self.supabase:

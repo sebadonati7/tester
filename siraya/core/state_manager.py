@@ -53,12 +53,13 @@ class StateKeys:
     CURRENT_PHASE = "current_phase"
     TRIAGE_PATH = "triage_path"
     QUESTION_COUNT = "question_count"  # Legacy - mantenuto per backward compatibility
-    QUESTION_COUNT_INTAKE = "question_count_intake"  # ✅ NEW - Counter fasi preliminari (0-4)
-    QUESTION_COUNT_CLINICAL = "question_count_clinical"  # ✅ NEW - Counter fasi cliniche (0-7)
+    QUESTION_COUNT_INTAKE = "question_count_intake"  # Legacy - mantenuto per backward compatibility
+    QUESTION_COUNT_CLINICAL = "question_count_clinical"  # Legacy - mantenuto per backward compatibility
+    PHASE_QUESTION_COUNT = "phase_question_count"  # ✅ V3 - Counter unico per fase clinica corrente
     TRIAGE_BRANCH = "triage_branch"  # Branch A/B/C/INFO
     LAST_BOT_RESPONSE = "last_bot_response"  # Ultima risposta bot per UI (include options)
     INFO_BOXES_LAST_STATE = "info_boxes_last_state"  # ✅ NEW - Tracking hash per dirty checking box
-    SBAR_REPORT_DATA = "sbar_report_data"  # ✅ NEW - Dati SBAR completo per download
+    SBAR_REPORT_DATA = "sbar_report_data"  # ✅ NEW - SBAR completo (stringa) per download
     
     # Patient data
     PATIENT_AGE = "patient_age"
@@ -106,11 +107,12 @@ DEFAULT_STATE: Dict[str, Any] = {
     StateKeys.TRIAGE_PATH: None,             # V3: None until SmartRouter assigns it
     StateKeys.TRIAGE_BRANCH: None,           # V2.1: Branch A/B/C/INFO from TriageController
     StateKeys.QUESTION_COUNT: 0,             # Legacy - mantenuto per backward compatibility
-    StateKeys.QUESTION_COUNT_INTAKE: 0,      # ✅ NEW - Counter fasi preliminari
-    StateKeys.QUESTION_COUNT_CLINICAL: 0,    # ✅ NEW - Counter fasi cliniche
+    StateKeys.QUESTION_COUNT_INTAKE: 0,      # Legacy - mantenuto per backward compatibility
+    StateKeys.QUESTION_COUNT_CLINICAL: 0,    # Legacy - mantenuto per backward compatibility
+    StateKeys.PHASE_QUESTION_COUNT: 0,      # ✅ V3 - Counter unico per fase clinica
     StateKeys.LAST_BOT_RESPONSE: {},         # V2.1: Ultima risposta con type/options
     StateKeys.INFO_BOXES_LAST_STATE: {},     # ✅ NEW - Hash tracking per box updates
-    StateKeys.SBAR_REPORT_DATA: None,        # ✅ NEW - SBAR completo per download
+    StateKeys.SBAR_REPORT_DATA: None,        # ✅ NEW - SBAR completo (stringa) per download
     
     # Patient
     StateKeys.PATIENT_AGE: None,
