@@ -167,53 +167,85 @@ class TriageController:
         return result
     
     def _classify_branch(self, user_input: str) -> TriageBranch:
-        """Classifica intent in Branch A/B/C/INFO tramite keyword + AI fallback."""
-        user_lower = user_input.lower()
+        """
+        Classifica intent in Branch A/B/C/INFO secondo diagramma di flusso V3.
         
-        # Quick keyword matching per emergenze
+        Priorità:
+        1. Keyword matching (veloce e preciso)
+        2. AI classification (per casi ambigui)
+        3. Default STANDARD (per saluti generici)
+        """
+        user_lower = user_input.lower().strip()
+        
+        # ✅ STEP 1: Keyword matching per emergenze (Branch A)
+        # Secondo diagramma: dolore toracico, emorragia, trauma, svenimento, difficoltà respiratorie
         if any(kw in user_lower for kw in self.emergency_keywords):
+            logger.info(f"✅ Branch A (EMERGENCY) rilevato via keyword: {user_input[:50]}")
             return TriageBranch.EMERGENCY
         
+        # ✅ STEP 2: Keyword matching per salute mentale (Branch B)
+        # Secondo diagramma: depressione, suicidio, ansia grave, autolesionismo
         if any(kw in user_lower for kw in self.mental_health_keywords):
+            logger.info(f"✅ Branch B (MENTAL_HEALTH) rilevato via keyword: {user_input[:50]}")
             return TriageBranch.MENTAL_HEALTH
         
-        # Check richieste informative
+        # ✅ STEP 3: Keyword matching per richieste informative (Branch INFO)
+        # Secondo diagramma: orari, dove, telefono, come funziona, prenotare
         if any(kw in user_lower for kw in self.info_keywords):
+            logger.info(f"✅ Branch INFO rilevato via keyword: {user_input[:50]}")
             return TriageBranch.INFO
         
-        # ✅ FIX: AI fallback con approccio semplificato
-        # Per "ciao" o messaggi generici → STANDARD (default sicuro)
-        generic_greetings = ["ciao", "buongiorno", "buonasera", "salve", "hey", "hello"]
+        # ✅ STEP 4: Saluti generici → STANDARD (default sicuro)
+        generic_greetings = ["ciao", "buongiorno", "buonasera", "salve", "hey", "hello", "buondì"]
         if any(greet in user_lower for greet in generic_greetings) or len(user_input.strip()) < 10:
-            logger.info(f"✅ Saluto generico o messaggio breve, classifico come STANDARD")
+            logger.info(f"✅ Saluto generico o messaggio breve, classifico come STANDARD (Branch C)")
             return TriageBranch.STANDARD
         
-        # Fallback: per messaggi più lunghi/specifici, prova AI classification
+        # ✅ STEP 5: AI classification per messaggi specifici ma ambigui
         try:
-            prompt = f"""
-Classifica questo messaggio in UNA delle 4 categorie:
+            prompt = f"""Sei un assistente medico esperto in triage telefonico. Classifica questo messaggio in UNA delle 4 categorie seguenti.
 
-Input utente: "{user_input}"
+**Input utente:** "{user_input}"
 
-Categorie:
-- EMERGENCY: Sintomi gravi (dolore toracico, emorragia, trauma, difficoltà respiratorie)
-- MENTAL_HEALTH: Crisi psichiatrica, rischio autolesionismo, depressione grave
-- STANDARD: Sintomi non urgenti (mal di testa, dolori addominali, febbre)
-- INFO: Richieste informative su servizi sanitari
+**Categorie disponibili:**
 
-Rispondi in JSON:
+1. **EMERGENCY** (Branch A - Codice Rosso/Arancione):
+   - Sintomi gravi che richiedono Pronto Soccorso immediato
+   - Esempi: dolore toracico, emorragia, trauma cranico, svenimento, difficoltà respiratorie gravi, paralisi
+   - Se il paziente descrive sintomi che suggeriscono emergenza medica → EMERGENCY
+
+2. **MENTAL_HEALTH** (Branch B - Salute Mentale):
+   - Crisi psichiatrica, ideazione suicidaria, autolesionismo
+   - Depressione grave, ansia paralizzante, attacchi di panico
+   - Se il paziente menziona pensieri di autolesionismo/suicidio → MENTAL_HEALTH
+
+3. **INFO** (Richieste Informative):
+   - Domande su orari, localizzazione servizi, telefoni, come funziona un servizio
+   - Richieste di prenotazione, informazioni su strutture
+   - Se il paziente chiede informazioni (non descrive sintomi) → INFO
+
+4. **STANDARD** (Branch C - Triage Standard):
+   - Sintomi non urgenti: mal di testa, dolori addominali, febbre lieve, mal di gola
+   - Disturbi comuni che richiedono valutazione ma non emergenza
+   - Default per sintomi generici → STANDARD
+
+**Regola importante:** Se il messaggio contiene sia sintomi che richieste informative, classifica in base al CONTENUTO PRINCIPALE (sintomi > info).
+
+Rispondi SOLO in JSON (nessun altro testo):
 {{
-    "classification": "EMERGENCY" | "MENTAL_HEALTH" | "STANDARD" | "INFO"
+    "classification": "EMERGENCY" | "MENTAL_HEALTH" | "STANDARD" | "INFO",
+    "reasoning": "Breve spiegazione (max 20 parole)"
 }}
 """
             
-            response = self.llm.generate_with_json_parse(prompt, temperature=0.0, max_tokens=20)
+            response = self.llm.generate_with_json_parse(prompt, temperature=0.0, max_tokens=50)
             
             if isinstance(response, dict) and "classification" in response:
                 classification = response["classification"].strip().upper()
+                reasoning = response.get("reasoning", "")
                 
                 if classification in ["EMERGENCY", "MENTAL_HEALTH", "STANDARD", "INFO"]:
-                    logger.info(f"✅ AI classification: {classification}")
+                    logger.info(f"✅ AI classification: {classification} (reasoning: {reasoning})")
                     return TriageBranch[classification]
             
             logger.warning(f"⚠️ Classificazione AI non valida: {response}, uso STANDARD")
@@ -221,7 +253,9 @@ Rispondi in JSON:
         except Exception as e:
             logger.error(f"❌ Errore classify_branch AI: {e}")
         
-        return TriageBranch.STANDARD  # Default sicuro
+        # Default sicuro: STANDARD (Branch C)
+        logger.info(f"✅ Default: classifico come STANDARD (Branch C)")
+        return TriageBranch.STANDARD
     
     def _extract_data_ai(self, user_input: str, current_data: Dict) -> Dict:
         """
@@ -563,17 +597,24 @@ Rispondi in JSON:
         if phase == TriagePhase.SBAR_GENERATION:
             return self._generate_sbar_ai(branch, collected_data)
         
-        # Recupera contesto RAG se fase clinica
+        # Recupera contesto RAG se fase clinica (RAG temporaneamente disabilitato)
         rag_context = ""
         if phase in [TriagePhase.FAST_TRIAGE, TriagePhase.CLINICAL_TRIAGE, TriagePhase.RISK_ASSESSMENT]:
             try:
+                # ✅ RAG è disabilitato (ritorna lista vuota), ma chiamiamo comunque per logging
                 rag_docs = self.rag.retrieve_context(
                     query=collected_data.get("main_symptom", user_input),
                     k=3
                 )
-                rag_context = "\n".join([doc.get("content", "") for doc in rag_docs])
+                # rag_docs sarà sempre [] (RAG disabilitato), quindi rag_context rimane ""
+                if rag_docs:
+                    rag_context = "\n".join([doc.get("content", "") for doc in rag_docs])
+                    logger.info(f"✅ RAG context recuperato: {len(rag_docs)} chunks")
+                else:
+                    logger.debug(f"ℹ️ RAG disabilitato, AI userà conoscenza generale per: {collected_data.get('main_symptom', user_input[:50])}")
             except Exception as e:
-                logger.warning(f"⚠️ RAG context retrieval failed: {e}")
+                # ✅ RAG disabilitato, questo errore non dovrebbe mai verificarsi, ma gestiamolo comunque
+                logger.debug(f"ℹ️ RAG non disponibile (normale se disabilitato): {type(e).__name__}")
                 rag_context = ""
         
         # Prompt AI per generazione domanda
