@@ -292,21 +292,41 @@ def _render_collected_data_preview() -> None:
     else:
         st.warning("🩺 **Sintomo:** ⏳ In raccolta...")
     
-    # ===== BOX 3: DOLORE =====
+    # ===== BOX 3: DOLORE ===
     pain = collected.get('pain_scale')
-    pain_hash = hashlib.md5(str(pain).encode()).hexdigest() if pain else None
-    
-    if pain_hash and pain_hash != last_state.get('pain'):
-        current_state['pain'] = pain_hash
-        logger.info(f"📊 Box Dolore aggiornata: {pain}/10")
-    elif pain_hash:
-        current_state['pain'] = pain_hash
     
     if pain:
-        pain_val = int(pain)
-        st.success("📊 **Dolore:**")
-        st.progress(pain_val / 10)
-        st.caption(f"Intensità: {pain_val}/10")
+        try:
+            # ✅ Safe parsing: handle int or string "7-8"
+            if isinstance(pain, str):
+                # Extract first number from "7-8"
+                import re
+                match = re.search(r'(\d+)', pain)
+                if match:
+                    pain_val = int(match.group(1))
+                else:
+                    raise ValueError("No number found")
+            else:
+                pain_val = int(pain)
+            
+            # Ensure in range
+            pain_val = max(1, min(pain_val, 10))
+            
+            pain_hash = hashlib.md5(str(pain_val).encode()).hexdigest()
+            
+            if pain_hash != last_state.get('pain'):
+                current_state['pain'] = pain_hash
+                logger.info(f"📊 Box Dolore aggiornata: {pain_val}/10")
+            elif pain_hash:
+                current_state['pain'] = pain_hash
+            
+            st.success("📊 **Dolore:**")
+            st.progress(pain_val / 10)
+            st.caption(f"Intensità: {pain_val}/10")
+        
+        except (ValueError, TypeError) as e:
+            logger.warning(f"⚠️ Pain parsing error: {pain}, {e}")
+            st.warning(f"📊 **Dolore:** {pain} (formato non valido)")
     else:
         st.warning("📊 **Dolore:** Non valutato")
     
@@ -343,6 +363,14 @@ def _render_collected_data_preview() -> None:
         
         st.info(anamnesi_text)
         st.progress(progress_val)
+        
+        # ✅ Highlight se vicino al target
+        if branch == "STANDARD" and phase_q >= 5:
+            st.success(f"✅ Raggiunto minimo ({phase_q}/5-7)")
+        elif branch == "EMERGENCY" and phase_q >= 3:
+            st.success(f"✅ Raggiunto minimo ({phase_q}/3-4)")
+        elif branch == "MENTAL_HEALTH" and phase_q >= 4:
+            st.success(f"✅ Raggiunto minimo ({phase_q}/4-5)")
         
         # Mostra anche età/genere se disponibili
         if age:

@@ -152,7 +152,10 @@ class DataLoader:
                     self._facilities_cache = response.data
                     return self._facilities_cache
             except Exception as e:
-                print(f"Supabase facilities query failed: {e}")
+                # ✅ Silent fallback: log debug only, no error shown to user
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.debug(f"Supabase facilities query failed (fallback to local): {e}")
         
         # Fallback to local JSON
         kb = _load_local_master_kb()
@@ -181,7 +184,10 @@ class DataLoader:
                 if response.data:
                     return response.data
             except Exception as e:
-                print(f"Supabase type filter failed: {e}")
+                # ✅ Silent fallback
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.debug(f"Supabase type filter failed (fallback to local): {e}")
         
         # Fallback to local filtering
         facilities = self.get_all_facilities()

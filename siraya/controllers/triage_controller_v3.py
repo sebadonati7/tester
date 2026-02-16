@@ -108,65 +108,65 @@ class UnifiedSlotFiller:
                 logger.info(f"✅ Sintomo ORIGINALE salvato: {user_input[:40]}")
         
         # === DETTAGLI SINTOMO (CUMULATIVI) ===
-        # Caratteristiche aggiuntive vanno in lista separata
         detail_keywords = {
             "costante": "dolore costante",
-            "intermittente": "dolore intermittente a intervalli",
-            "pulsante": "dolore pulsante tipo martello",
-            "acuto": "dolore acuto localizzato",
-            "diffuso": "dolore diffuso su area estesa",
-            "bruciante": "sensazione di bruciore",
-            "crampiforme": "dolore a crampi",
+            "intermittente": "intermittente",
+            "pulsante": "pulsante",
+            "localizzato": "localizzato",
+            "diffuso": "diffuso"
         }
         
-        for keyword, description in detail_keywords.items():
-            if keyword in user_lower:
-                # Aggiungi a lista dettagli (non sovrascrivere sintomo!)
-                existing_details = current_data.get(cls.KEYS["details"], [])
-                if description not in existing_details:
-                    extracted[cls.KEYS["details"]] = existing_details + [description]
-                    logger.info(f"✅ Dettaglio aggiunto: {description}")
+        for kw, desc in detail_keywords.items():
+            if kw in user_lower:
+                existing = current_data.get(cls.KEYS["details"], [])
+                if desc not in existing:
+                    extracted[cls.KEYS["details"]] = existing + [desc]
+                    logger.info(f"✅ Dettaglio: {desc}")
                 break
         
-        # === DOLORE (migliorato per "9-10: Dolore estremo") ===
-        pain_patterns = [
-            r'(\d{1,2})\s*-\s*(\d{1,2}):\s*dolore',  # "9-10: Dolore..."
-            r'(\d{1,2})\s*/\s*10',                    # "7/10"
-            r'(\d{1,2})\s+su\s+10',                   # "7 su 10"
-            r'scala[:\s]*(\d{1,2})',                  # "scala: 7"
-            r'^(\d{1,2})$',                           # "7" (risposta secca)
-        ]
+        # === CONTEXT AWARENESS: usa fase corrente ===
+        current_phase = current_data.get("_current_phase", "")
         
-        for pattern in pain_patterns:
-            match = re.search(pattern, user_lower)
-            if match:
-                try:
-                    scale = int(match.group(1))
-                    if 1 <= scale <= 10:
-                        extracted[cls.KEYS["pain"]] = scale
-                        logger.info(f"✅ Dolore estratto: {scale}/10")
-                        break
-                except (IndexError, ValueError):
-                    pass
+        # === DOLORE (SOLO se in pain_scale phase O contiene "dolore" o "/") ===
+        if current_phase == "pain_scale" or "dolore" in user_lower or "/" in user_input:
+            pain_patterns = [
+                r'(\d{1,2})\s*-\s*(\d{1,2}):\s*',  # "7-8: Forte" → group(1)=7
+                r'(\d{1,2})\s*/\s*10',              # "7/10"
+                r'(\d{1,2})\s+su\s+10',             # "7 su 10"
+            ]
+            
+            for pattern in pain_patterns:
+                match = re.search(pattern, user_lower)
+                if match:
+                    try:
+                        scale = int(match.group(1))
+                        if 1 <= scale <= 10:
+                            extracted[cls.KEYS["pain"]] = scale
+                            logger.info(f"✅ Dolore: {scale}/10")
+                            break
+                    except (IndexError, ValueError):
+                        pass
         
-        # === ETÀ ===
-        age_patterns = [
-            r'\b(\d{1,3})\s+ann[io]',  # "32 anni"
-            r'ho\s+(\d{1,3})',         # "ho 32"
-            r'^(\d{1,3})$',            # "32" (risposta secca)
-        ]
-        
-        for pattern in age_patterns:
-            match = re.search(pattern, user_lower)
-            if match:
-                try:
-                    age = int(match.group(1))
-                    if 0 < age < 120:
-                        extracted[cls.KEYS["age"]] = age
-                        logger.info(f"✅ Età estratta: {age}")
-                        break
-                except (IndexError, ValueError):
-                    pass
+        # === ETÀ (STRICT: SOLO se in demographics phase E numero standalone) ===
+        if "age" not in current_data and current_phase == "demographics":
+            # Pattern strict: SOLO numeri standalone, NO se parte di "7-8"
+            age_patterns = [
+                r'^(\d{1,3})$',                 # "56" (strict standalone)
+                r'\b(\d{1,3})\s+ann[io]',       # "56 anni"
+                r'ho\s+(\d{1,3})\s+ann',        # "ho 56 anni"
+            ]
+            
+            for pattern in age_patterns:
+                match = re.search(pattern, user_lower)
+                if match:
+                    try:
+                        age = int(match.group(1))
+                        if 0 < age < 120:
+                            extracted[cls.KEYS["age"]] = age
+                            logger.info(f"✅ Età: {age}")
+                            break
+                    except (IndexError, ValueError):
+                        pass
         
         # === LOCALITÀ ===
         comuni_er = [
@@ -276,7 +276,16 @@ class TriageFSM:
         return TriagePhase.PAIN_SCALE if "location" in data else TriagePhase.LOCALIZATION
     
     def _std_from_pain(self, data: Dict, q: int) -> TriagePhase:
-        return TriagePhase.DEMOGRAPHICS if "pain_scale" in data else TriagePhase.PAIN_SCALE
+        """
+        Exit da PAIN_SCALE solo se pain_scale estratto.
+        """
+        if "pain_scale" in data:
+            logger.info(f"✅ Pain scale trovato: {data['pain_scale']}, avanzando")
+            return TriagePhase.DEMOGRAPHICS
+        
+        # Rimani in pain_scale
+        logger.warning(f"⚠️ Pain scale non trovato, rimango in PAIN_SCALE")
+        return TriagePhase.PAIN_SCALE
     
     def _std_from_demographics(self, data: Dict, q: int) -> TriagePhase:
         if "age" in data:
@@ -661,9 +670,12 @@ class TriageControllerV3:
         else:
             current_branch = TriageBranch(current_branch)
         
-        # 3. Slot filling (PASS current_data per memoria)
+        # 3. Slot filling (PASS current_data per memoria + phase context)
+        collected["_current_phase"] = current_phase  # ✅ Add phase context
         extracted = self.slot_filler.extract(user_input, collected)  # ✅ Pass collected
         collected.update(extracted)
+        # Remove helper after extraction
+        collected.pop("_current_phase", None)
         self.state.set(StateKeys.COLLECTED_DATA, collected)
         
         # 4. FSM: determina fase successiva
