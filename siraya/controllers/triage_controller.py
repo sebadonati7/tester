@@ -9,6 +9,9 @@ import time
 import logging
 import json
 
+# ✅ Import globale per evitare NameError in contesti Streamlit
+from ..core.state_manager import StateKeys
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +39,7 @@ class TriageController:
     """Orchestrator che delega all'AI la generazione delle domande."""
     
     def __init__(self):
-        from ..core.state_manager import get_state_manager, StateKeys
+        from ..core.state_manager import get_state_manager
         from ..services.llm_service import get_llm_service
         from ..services.data_loader import get_data_loader
         from ..services.db_service import get_db_service
@@ -76,8 +79,6 @@ class TriageController:
         start_time = time.time()
         
         # 1. Recupera stato conversazione
-        from ..core.state_manager import StateKeys
-        
         current_branch = self.state_manager.get(StateKeys.TRIAGE_PATH)
         current_phase = self.state_manager.get(StateKeys.CURRENT_PHASE, TriagePhase.INTAKE.value)
         collected_data = self.state_manager.get(StateKeys.COLLECTED_DATA, {})
@@ -340,8 +341,6 @@ Rispondi in JSON:
         Dati persistenti tra sessioni:
         - age, location, chronic_conditions, allergies, medications
         """
-        from ..core.state_manager import StateKeys
-        
         user_id = self.state_manager.get(StateKeys.USER_ID, "anonymous")
         session_id = self.state_manager.get(StateKeys.SESSION_ID, "unknown")
         
