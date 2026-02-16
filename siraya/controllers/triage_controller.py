@@ -27,11 +27,11 @@ class TriagePhase(Enum):
     CHIEF_COMPLAINT = "chief_complaint"  # Raccolta sintomo principale (open text)
     LOCALIZATION = "localization"
     CONSENT = "consent"              # Solo Branch B
-    FAST_TRIAGE = "fast_triage"      # Branch A: 3-4 domande emergenza
+    FAST_TRIAGE = "fast_triage"      # Branch A: 3-4 domande emergenza (lowercase per match event store)
     PAIN_SCALE = "pain_scale"
     DEMOGRAPHICS = "demographics"
-    CLINICAL_TRIAGE = "clinical_triage"  # Branch C: 5-7 domande
-    RISK_ASSESSMENT = "risk_assessment"  # Branch B: valutazione rischio
+    CLINICAL_TRIAGE = "clinical_triage"  # Branch C: 5-7 domande (lowercase per match event store)
+    RISK_ASSESSMENT = "risk_assessment"  # Branch B: valutazione rischio (lowercase per match event store)
     OUTCOME = "outcome"              # ✅ NEW - Raccomandazione breve + recapiti struttura
     SBAR_GENERATION = "sbar"         # Report completo (background, per download)
 
@@ -66,106 +66,124 @@ class TriageController:
     
     def process_user_input(self, user_input: str) -> dict:
         """
-        CORE: Processa input e ritorna prossima domanda generata dall'AI.
+        VERSIONE 3.0: Event-Driven Architecture.
+        Ogni azione emette eventi, lo stato è ricostruito dagli eventi.
         
         Returns:
             {
                 "assistant_response": str,
-                "question_type": "multiple_choice" | "open_text" | "sbar",
+                "question_type": "multiple_choice" | "open_text" | "outcome" | "sbar",
                 "options": List[str] | None,
                 "metadata": Dict,
                 "processing_time_ms": int
             }
         """
-        start_time = time.time()
+        from ..core.event_store import get_event_store, EventType
         
-        # 1. Recupera stato conversazione
-        current_branch = self.state_manager.get(StateKeys.TRIAGE_PATH)
-        current_phase = self.state_manager.get(StateKeys.CURRENT_PHASE, TriagePhase.INTAKE.value)
-        collected_data = self.state_manager.get(StateKeys.COLLECTED_DATA, {})
-        question_count = self.state_manager.get(StateKeys.QUESTION_COUNT, 0)
+        event_store = get_event_store()
+        start_time = time.time()
         session_id = self.state_manager.get(StateKeys.SESSION_ID, "unknown")
         
-        # ✅ DEBUG: Log stato attuale
-        logger.info(f"📍 Stato attuale: branch={current_branch}, phase={current_phase}, q_count={question_count}")
+        # ✅ STEP 1: Recupera stato da eventi (non da session state)
+        collected_data = event_store.get_collected_data_from_events()
+        current_phase = event_store.get_current_phase_from_events()
+        current_branch = self.state_manager.get(StateKeys.TRIAGE_BRANCH)
         
-        # 2. Prima interazione: classifica branch
+        # Fallback a session state se eventi non disponibili (backward compatibility)
+        if not collected_data:
+            collected_data = self.state_manager.get(StateKeys.COLLECTED_DATA, {})
+        if current_phase == "intake" and not event_store.get_events():
+            current_phase = self.state_manager.get(StateKeys.CURRENT_PHASE, TriagePhase.INTAKE.value)
+        
+        logger.info(f"📍 Stato da eventi: branch={current_branch}, phase={current_phase}")
+        
+        # ✅ STEP 2: Classifica branch (solo prima volta)
         if not current_branch:
             current_branch = self._classify_branch(user_input)
-            self.state_manager.set(StateKeys.TRIAGE_PATH, current_branch.value)  # Legacy key (per compatibilità con vecchio codice)
-            self.state_manager.set(StateKeys.TRIAGE_BRANCH, current_branch.value)  # New key (per nuovo codice)
+            self.state_manager.set(StateKeys.TRIAGE_PATH, current_branch.value)
+            self.state_manager.set(StateKeys.TRIAGE_BRANCH, current_branch.value)
+            
+            # Emetti evento BRANCH_CLASSIFIED
+            event_store.emit(
+                EventType.BRANCH_CLASSIFIED,
+                phase="intake",
+                data={"branch": current_branch.value, "user_input": user_input}
+            )
             logger.info(f"✅ Branch classificato: {current_branch.value}")
         else:
             current_branch = TriageBranch(current_branch)
         
-        # 3. Estrai dati dall'input (slot filling via AI)
-        extracted = self._extract_data_ai(user_input, collected_data)
-        collected_data.update(extracted)
+        # ✅ STEP 3: Estrai dati (slot filling unificato con dual keys)
+        extracted = self._extract_data_unified(user_input, collected_data)
+        if extracted:
+            collected_data.update(extracted)
+            
+            # Emetti evento DATA_EXTRACTED
+            event_store.emit(
+                EventType.DATA_EXTRACTED,
+                phase=current_phase,
+                data={"extracted": extracted, "user_input": user_input}
+            )
+            logger.info(f"✅ Dati estratti: {list(extracted.keys())}")
+        
+        # Salva in session state per backward compatibility UI
         self.state_manager.set(StateKeys.COLLECTED_DATA, collected_data)
         
-        # 4. Verifica memoria Supabase per evitare duplicazioni
+        # ✅ STEP 4: Verifica memoria Supabase per dati persistenti
         known_data = self._fetch_known_data_from_history()
-        collected_data.update(known_data)
+        if known_data:
+            collected_data.update(known_data)
+            # Emetti anche dati persistenti come evento
+            event_store.emit(
+                EventType.DATA_EXTRACTED,
+                phase=current_phase,
+                data={"extracted": known_data, "source": "persistent_history"}
+            )
         
-        # 5. Determina fase successiva (FSM semplice)
-        next_phase = self._determine_next_phase(
-            current_branch, 
-            TriagePhase(current_phase), 
-            collected_data,
-            question_count
+        # ✅ STEP 5: Determina fase successiva (FSM event-driven)
+        next_phase = self._determine_next_phase_event_driven(
+            branch=current_branch,
+            current_phase=TriagePhase(current_phase) if current_phase else TriagePhase.INTAKE,
+            collected_data=collected_data,
+            event_store=event_store
         )
         
-        # ✅ DEBUG: Log transizione fase
+        # Se cambio fase, emetti evento PHASE_ENTERED
         if next_phase.value != current_phase:
+            event_store.emit(
+                EventType.PHASE_ENTERED,
+                phase=next_phase.value,
+                data={"from_phase": current_phase, "to_phase": next_phase.value}
+            )
             logger.info(f"🔄 Transizione fase: {current_phase} → {next_phase.value}")
-        else:
-            logger.info(f"⏸️ Rimango in fase: {current_phase}")
         
         self.state_manager.set(StateKeys.CURRENT_PHASE, next_phase.value)
         
-        # 6. Genera prossima domanda tramite AI
+        # ✅ STEP 6: Genera prossima domanda
         next_question = self._generate_question_ai(
             branch=current_branch,
             phase=next_phase,
             collected_data=collected_data,
-            question_count=question_count,
+            question_count=0,  # Deprecato, calcolato da eventi
             user_input=user_input
         )
         
-        # 7. Incrementa contatore fase-specifico (intake o clinical)
+        # Emetti evento QUESTION_ASKED (solo se non è outcome/sbar)
         if next_phase not in [TriagePhase.SBAR_GENERATION, TriagePhase.OUTCOME]:
-            # Determina quale counter incrementare
-            if next_phase in [TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT]:
-                # Fase clinica: incrementa counter clinico
-                clinical_count = self.state_manager.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)
-                self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, clinical_count + 1)
-                # Mantieni backward compatibility con QUESTION_COUNT (legacy)
-                self.state_manager.set(StateKeys.QUESTION_COUNT, clinical_count + 1)
-            else:
-                # Fase preliminare: incrementa counter intake
-                intake_count = self.state_manager.get(StateKeys.QUESTION_COUNT_INTAKE, 0)
-                self.state_manager.set(StateKeys.QUESTION_COUNT_INTAKE, intake_count + 1)
-                # Mantieni backward compatibility con QUESTION_COUNT (legacy)
-                self.state_manager.set(StateKeys.QUESTION_COUNT, intake_count + 1)
+            event_store.emit(
+                EventType.QUESTION_ASKED,
+                phase=next_phase.value,
+                data={
+                    "question": next_question["text"],
+                    "type": next_question["type"],
+                    "options": next_question.get("options"),
+                    "user_input": user_input
+                }
+            )
         
-        # 8. Salva su Supabase
+        # ✅ STEP 7: Prepara risposta
         processing_time = int((time.time() - start_time) * 1000)
-        self.db.save_interaction(
-            session_id=session_id,
-            user_input=user_input,
-            assistant_response=next_question["text"],
-            processing_time_ms=processing_time,
-            session_state={
-                "triage_path": current_branch.value,
-                "current_phase": next_phase.value,
-                "collected_data": collected_data,
-                "question_count": question_count + 1,
-                "urgency_level": self._get_urgency_level(current_branch)
-            },
-            metadata=next_question.get("metadata", {})
-        )
         
-        # 9. Prepara e salva risposta nello state per UI
         result = {
             "assistant_response": next_question["text"],
             "question_type": next_question["type"],
@@ -176,6 +194,21 @@ class TriageController:
         
         # Salva risposta nello state per chat_view.py
         self.state_manager.set(StateKeys.LAST_BOT_RESPONSE, result)
+        
+        # ✅ STEP 8: Salva su Supabase (legacy, per compatibilità)
+        self.db.save_interaction(
+            session_id=session_id,
+            user_input=user_input,
+            assistant_response=next_question["text"],
+            processing_time_ms=processing_time,
+            session_state={
+                "triage_path": current_branch.value,
+                "current_phase": next_phase.value,
+                "collected_data": collected_data,
+                "urgency_level": self._get_urgency_level(current_branch)
+            },
+            metadata=next_question.get("metadata", {})
+        )
         
         return result
     
@@ -270,7 +303,88 @@ Rispondi SOLO in JSON (nessun altro testo):
         logger.info(f"✅ Default: classifico come STANDARD (Branch C)")
         return TriageBranch.STANDARD
     
+    def _extract_data_unified(self, user_input: str, current_data: Dict) -> Dict:
+        """
+        Slot filling UNIFICATO con normalizzazione chiavi.
+        Tutte le chiavi hanno alias per evitare mismatch.
+        
+        Dual keys:
+        - main_symptom = chief_complaint (alias)
+        - location = current_location (alias)
+        """
+        import re
+        extracted = {}
+        user_lower = user_input.lower()
+        
+        # ✅ SINTOMO PRINCIPALE (chiave unificata)
+        # Salva con ENTRAMBE le chiavi: main_symptom E chief_complaint
+        symptom_keywords = ["dolore", "mal di", "sintomo", "problema", "fastidio", "ho", "mi fa"]
+        if any(kw in user_lower for kw in symptom_keywords) and len(user_input.strip()) > 5:
+            # Estrai sintomo (primi 100 caratteri)
+            symptom_raw = user_input.strip()[:100]
+            extracted["main_symptom"] = symptom_raw  # Chiave primaria
+            extracted["chief_complaint"] = symptom_raw  # Alias per UI
+            logger.info(f"✅ Sintomo estratto (dual-key): {symptom_raw[:30]}")
+        
+        # ✅ SCALA DOLORE
+        pain_patterns = [
+            r'(?:scala|dolore|intensità)[:\s]*(\d{1,2})',
+            r'(\d{1,2})\s*su\s*10',
+            r'(\d{1,2})/10',
+            r'(\d{1,2})\s*-\s*(\d{1,2}):\s*dolore',  # Match "9-10: Dolore estremo"
+            r'^(\d{1,2})$',  # Risposta secca "6"
+        ]
+        
+        for pattern in pain_patterns:
+            match = re.search(pattern, user_lower)
+            if match:
+                try:
+                    scale = int(match.group(1))
+                    if 1 <= scale <= 10:
+                        extracted['pain_scale'] = scale
+                        logger.info(f"✅ Dolore estratto: {scale}/10")
+                        break
+                except:
+                    pass
+        
+        # ✅ ETÀ
+        age_patterns = [
+            r'(\d{1,3})\s*ann[io]',
+            r'ho\s*(\d{1,3})',
+            r'^(\d{1,3})$',  # Risposta secca "54"
+        ]
+        
+        for pattern in age_patterns:
+            match = re.search(pattern, user_lower)
+            if match:
+                age = int(match.group(1))
+                if 0 < age < 120:
+                    extracted['age'] = age
+                    logger.info(f"✅ Età estratta: {age}")
+                    break
+        
+        # ✅ LOCALITÀ
+        comuni_er = [
+            "bologna", "modena", "parma", "reggio emilia", "piacenza",
+            "ferrara", "ravenna", "forlì", "cesena", "rimini",
+            "imola", "faenza", "lugo", "cervia", "riccione", "cattolica"
+        ]
+        
+        for comune in comuni_er:
+            if comune in user_lower:
+                extracted['location'] = comune.title()
+                extracted['current_location'] = comune.title()  # Alias
+                logger.info(f"✅ Località estratta: {comune}")
+                break
+        
+        return extracted
+    
     def _extract_data_ai(self, user_input: str, current_data: Dict) -> Dict:
+        """
+        DEPRECATED: Usa _extract_data_unified() invece.
+        Mantenuto per backward compatibility.
+        """
+        return self._extract_data_unified(user_input, current_data)
         """
         Slot filling ROBUSTO con pattern matching + AI fallback.
         
@@ -592,6 +706,140 @@ Rispondi SOLO in JSON (nessun altro testo):
         
         # Fallback sicuro
         logger.warning(f"⚠️ FSM fallback: branch={branch}, phase={current_phase}")
+        return current_phase
+    
+    def _determine_next_phase_event_driven(
+        self,
+        branch: TriageBranch,
+        current_phase: TriagePhase,
+        collected_data: Dict,
+        event_store
+    ) -> TriagePhase:
+        """
+        FSM con logica event-driven: conta domande dalla event store.
+        Più affidabile del counter globale.
+        """
+        from ..core.event_store import EventType
+        
+        # Branch C: STANDARD
+        if branch == TriageBranch.STANDARD:
+            
+            if current_phase == TriagePhase.INTAKE:
+                has_symptom = any(k in collected_data for k in ["main_symptom", "chief_complaint"])
+                if has_symptom:
+                    if any(k in collected_data for k in ["location", "current_location"]):
+                        return TriagePhase.PAIN_SCALE
+                    return TriagePhase.LOCALIZATION
+                return TriagePhase.CHIEF_COMPLAINT
+            
+            if current_phase == TriagePhase.CHIEF_COMPLAINT:
+                has_symptom = any(k in collected_data for k in ["main_symptom", "chief_complaint"])
+                if has_symptom:
+                    if any(k in collected_data for k in ["location", "current_location"]):
+                        return TriagePhase.PAIN_SCALE
+                    return TriagePhase.LOCALIZATION
+                return TriagePhase.CHIEF_COMPLAINT
+            
+            if current_phase == TriagePhase.LOCALIZATION:
+                if any(k in collected_data for k in ["location", "current_location"]):
+                    return TriagePhase.PAIN_SCALE
+                return TriagePhase.LOCALIZATION
+            
+            if current_phase == TriagePhase.PAIN_SCALE:
+                if "pain_scale" in collected_data:
+                    return TriagePhase.DEMOGRAPHICS
+                return TriagePhase.PAIN_SCALE
+            
+            if current_phase == TriagePhase.DEMOGRAPHICS:
+                if "age" in collected_data:
+                    return TriagePhase.CLINICAL_TRIAGE
+                return TriagePhase.DEMOGRAPHICS
+            
+            if current_phase == TriagePhase.CLINICAL_TRIAGE:
+                # ✅ Conta domande dalla event store
+                clinical_questions = event_store.count_questions_in_phase("clinical_triage")
+                
+                has_symptom = any(k in collected_data for k in ["main_symptom", "chief_complaint"])
+                has_location = any(k in collected_data for k in ["location", "current_location"])
+                has_pain = "pain_scale" in collected_data
+                has_age = "age" in collected_data
+                has_required = has_symptom and has_pain and has_age
+                
+                # Vai a OUTCOME se:
+                # - Almeno 5 domande clinical E dati completi
+                # - OPPURE 7 domande (max assoluto)
+                if clinical_questions >= 5 and has_location and has_required:
+                    logger.info(f"✅ {clinical_questions} domande clinical + dati OK → OUTCOME")
+                    return TriagePhase.OUTCOME
+                
+                if clinical_questions >= 7:
+                    logger.warning(f"⚠️ Max 7 domande clinical → forzo OUTCOME")
+                    return TriagePhase.OUTCOME
+                
+                logger.info(f"⏸️ Clinical triage continua ({clinical_questions + 1}/5-7)")
+                return TriagePhase.CLINICAL_TRIAGE
+            
+            if current_phase == TriagePhase.OUTCOME:
+                return TriagePhase.OUTCOME
+            
+            if current_phase == TriagePhase.SBAR_GENERATION:
+                return TriagePhase.SBAR_GENERATION
+        
+        # Branch A: EMERGENCY
+        if branch == TriageBranch.EMERGENCY:
+            if current_phase == TriagePhase.INTAKE:
+                if any(k in collected_data for k in ["location", "current_location"]):
+                    return TriagePhase.FAST_TRIAGE
+                return TriagePhase.LOCALIZATION
+            
+            if current_phase == TriagePhase.LOCALIZATION:
+                if any(k in collected_data for k in ["location", "current_location"]):
+                    return TriagePhase.FAST_TRIAGE
+                return TriagePhase.LOCALIZATION
+            
+            if current_phase == TriagePhase.FAST_TRIAGE:
+                fast_questions = event_store.count_questions_in_phase("fast_triage")
+                
+                if fast_questions >= 3:
+                    logger.info(f"✅ {fast_questions} domande fast-triage → OUTCOME")
+                    return TriagePhase.OUTCOME
+                
+                logger.info(f"⏸️ Fast triage continua ({fast_questions + 1}/3-4)")
+                return TriagePhase.FAST_TRIAGE
+            
+            if current_phase in [TriagePhase.OUTCOME, TriagePhase.SBAR_GENERATION]:
+                return current_phase
+        
+        # Branch B: MENTAL_HEALTH
+        if branch == TriageBranch.MENTAL_HEALTH:
+            if current_phase == TriagePhase.INTAKE:
+                return TriagePhase.CONSENT
+            
+            if current_phase == TriagePhase.CONSENT:
+                if collected_data.get("consent") == "yes":
+                    return TriagePhase.DEMOGRAPHICS
+                return TriagePhase.OUTCOME  # Rifiuto consenso → outcome con hotline
+            
+            if current_phase == TriagePhase.DEMOGRAPHICS:
+                if "age" in collected_data:
+                    return TriagePhase.RISK_ASSESSMENT
+                return TriagePhase.DEMOGRAPHICS
+            
+            if current_phase == TriagePhase.RISK_ASSESSMENT:
+                risk_questions = event_store.count_questions_in_phase("risk_assessment")
+                
+                if risk_questions >= 4:
+                    logger.info(f"✅ {risk_questions} domande risk → OUTCOME")
+                    return TriagePhase.OUTCOME
+                
+                logger.info(f"⏸️ Risk assessment continua ({risk_questions + 1}/4-5)")
+                return TriagePhase.RISK_ASSESSMENT
+            
+            if current_phase in [TriagePhase.OUTCOME, TriagePhase.SBAR_GENERATION]:
+                return current_phase
+        
+        # Fallback
+        logger.warning(f"⚠️ No transition for {branch}/{current_phase}")
         return current_phase
     
     def _generate_question_ai(

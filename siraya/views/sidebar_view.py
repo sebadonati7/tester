@@ -233,83 +233,106 @@ def _render_collected_data_preview() -> None:
     Update SOLO quando il valore cambia (dirty checking).
     """
     from ..core.state_manager import get_state_manager, StateKeys
+    from ..core.event_store import get_event_store
     import hashlib
     import logging
     
     logger = logging.getLogger(__name__)
     
     state = get_state_manager()
-    collected = state.get(StateKeys.COLLECTED_DATA, {})
-    current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+    event_store = get_event_store()
+    event_store = get_event_store()
     
-    # Recupera stato precedente delle box
+    # ✅ Ricostruisci dati da eventi (source of truth)
+    collected = event_store.get_collected_data_from_events()
+    current_phase = event_store.get_current_phase_from_events()
+    
+    # Fallback a session state se eventi non disponibili (backward compatibility)
+    if not collected:
+        collected = state.get(StateKeys.COLLECTED_DATA, {})
+    if current_phase == "intake" and not event_store.get_events():
+        current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+    
+    # Tracking stato precedente
     last_state = state.get(StateKeys.INFO_BOXES_LAST_STATE, {})
     current_state = {}
     
     st.markdown("### 📋 Dati Raccolti")
     
-    # === BOX 1: LOCALITÀ ===
-    location = collected.get('current_location') or collected.get('location') or collected.get('patient_location')
+    # ===== BOX 1: LOCALITÀ =====
+    location = collected.get('location') or collected.get('current_location')
     location_hash = hashlib.md5(str(location).encode()).hexdigest() if location else None
     
-    # Aggiorna SOLO se cambiato
-    if location_hash != last_state.get('location'):
+    if location_hash and location_hash != last_state.get('location'):
         current_state['location'] = location_hash
-        if location:
-            logger.info(f"📍 Box Località aggiornata: {location}")
+        logger.info(f"📍 Box Località aggiornata: {location}")
+    elif location_hash:
+        current_state['location'] = location_hash  # Mantieni hash
     
-    st.success(f"📍 **Località:** {location if location else '⏳ In raccolta...'}")
+    # Colore: verde se completo, warning se mancante
+    if location:
+        st.success(f"📍 **Località:** {location}")
+    else:
+        st.warning("📍 **Località:** ⏳ In raccolta...")
     
-    # === BOX 2: SINTOMO ===
-    symptom = collected.get('chief_complaint') or collected.get('CHIEF_COMPLAINT') or collected.get('main_symptom')
+    # ===== BOX 2: SINTOMO =====
+    symptom = collected.get('main_symptom') or collected.get('chief_complaint')
     symptom_hash = hashlib.md5(str(symptom).encode()).hexdigest() if symptom else None
     
-    if symptom_hash != last_state.get('symptom'):
+    if symptom_hash and symptom_hash != last_state.get('symptom'):
         current_state['symptom'] = symptom_hash
-        if symptom:
-            logger.info(f"🩺 Box Sintomo aggiornata: {symptom[:30]}")
+        logger.info(f"🩺 Box Sintomo aggiornata: {symptom[:30]}")
+    elif symptom_hash:
+        current_state['symptom'] = symptom_hash
     
-    st.info(f"🩺 **Sintomo:** {symptom[:50] if symptom else '⏳ In raccolta...'}")
+    if symptom:
+        st.success(f"🩺 **Sintomo:** {symptom[:50]}")
+    else:
+        st.warning("🩺 **Sintomo:** ⏳ In raccolta...")
     
-    # === BOX 3: DOLORE ===
-    pain = collected.get('pain_scale') or collected.get('PAIN_SCALE')
+    # ===== BOX 3: DOLORE =====
+    pain = collected.get('pain_scale')
     pain_hash = hashlib.md5(str(pain).encode()).hexdigest() if pain else None
     
-    if pain_hash != last_state.get('pain'):
+    if pain_hash and pain_hash != last_state.get('pain'):
         current_state['pain'] = pain_hash
-        if pain:
-            logger.info(f"📊 Box Dolore aggiornata: {pain}/10")
+        logger.info(f"📊 Box Dolore aggiornata: {pain}/10")
+    elif pain_hash:
+        current_state['pain'] = pain_hash
     
     if pain:
-        try:
-            pain_val = int(pain)
-            st.progress(pain_val / 10)
-            st.caption(f"📊 Intensità: {pain_val}/10")
-        except:
-            st.warning(f"📊 **Dolore:** {pain}")
+        pain_val = int(pain)
+        st.success("📊 **Dolore:**")
+        st.progress(pain_val / 10)
+        st.caption(f"Intensità: {pain_val}/10")
     else:
         st.warning("📊 **Dolore:** Non valutato")
     
-    # === BOX 4: ANAMNESI ===
-    # Mostra contatore SOLO in fase CLINICAL_TRIAGE
-    clinical_count = state.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)  # ✅ Usa nuovo counter
-    anamnesi_value = None
+    # ===== BOX 4: ANAMNESI =====
+    # Conta domande cliniche dalla event store
+    clinical_count = event_store.count_questions_in_phase("clinical_triage")
+    fast_count = event_store.count_questions_in_phase("fast_triage")
+    risk_count = event_store.count_questions_in_phase("risk_assessment")
     
-    if current_phase == "clinical_triage" and clinical_count > 0:
-        anamnesi_value = f"{clinical_count} domande"
-    elif current_phase in ("outcome", "sbar"):
-        anamnesi_value = "Completata"
+    total_clinical = clinical_count + fast_count + risk_count
+    
+    anamnesi_value = None
+    if current_phase in ["clinical_triage", "fast_triage", "risk_assessment"] and total_clinical > 0:
+        anamnesi_value = f"{total_clinical} domande"
+    elif current_phase in ["outcome", "sbar"]:
+        anamnesi_value = "✅ Completata"
     
     anamnesi_hash = hashlib.md5(str(anamnesi_value).encode()).hexdigest() if anamnesi_value else None
     
-    if anamnesi_hash != last_state.get('anamnesi'):
+    if anamnesi_hash and anamnesi_hash != last_state.get('anamnesi'):
         current_state['anamnesi'] = anamnesi_hash
-        if anamnesi_value:
-            logger.info(f"📋 Box Anamnesi aggiornata: {anamnesi_value}")
+        logger.info(f"📋 Box Anamnesi aggiornata: {anamnesi_value}")
+    elif anamnesi_hash:
+        current_state['anamnesi'] = anamnesi_hash
     
     # Mostra anamnesi (età + genere + contatore se in fase clinica)
-    age = collected.get('age') or collected.get('patient_age')
-    gender = collected.get('gender') or collected.get('sex') or collected.get('patient_sex')
+    age = collected.get('age')
+    gender = collected.get('gender') or collected.get('sex')
     
     if age:
         anamnesi_text = f"{age} anni"
@@ -318,31 +341,43 @@ def _render_collected_data_preview() -> None:
         if anamnesi_value:
             anamnesi_text += f" | {anamnesi_value}"
         st.success(f"👤 **Anamnesi:** {anamnesi_text}")
+    elif anamnesi_value:
+        st.info(f"📋 **Anamnesi:** {anamnesi_value}")
     else:
-        if anamnesi_value:
-            st.info(f"📋 **Anamnesi:** {anamnesi_value}")
-        else:
-            st.warning("👤 **Anamnesi:** Incompleta")
+        st.warning("👤 **Anamnesi:** In corso...")
     
-    # === BOX 5: ESITO ===
-    # Mostra SOLO se in fase OUTCOME o SBAR_GENERATION
+    # ===== BOX 5: ESITO =====
     outcome_value = None
-    if current_phase == "outcome":
-        outcome_value = "✅ Disponibile"
-    elif current_phase == "sbar":
-        outcome_value = "✅ Report pronto"
+    outcome_color = "warning"  # Default giallo
     
-    outcome_hash = hashlib.md5(str(outcome_value).encode()).hexdigest() if outcome_value else None
+    if current_phase == "outcome":
+        outcome_value = "✅ Raccomandazione pronta"
+        outcome_color = "success"  # ✅ Verde
+    elif current_phase == "sbar":
+        outcome_value = "✅ Report completo"
+        outcome_color = "success"  # ✅ Verde
+    elif current_phase in ["clinical_triage", "fast_triage", "risk_assessment"]:
+        outcome_value = "⏳ In elaborazione..."
+        outcome_color = "info"  # Blu
+    else:
+        outcome_value = "⏳ In attesa..."
+        outcome_color = "warning"  # Giallo
+    
+    outcome_hash = hashlib.md5(str(outcome_value).encode()).hexdigest()
     
     if outcome_hash != last_state.get('outcome'):
         current_state['outcome'] = outcome_hash
-        if outcome_value:
-            logger.info(f"✅ Box Esito aggiornata: {outcome_value}")
-    
-    if outcome_value:
-        st.success(f"✅ **Esito:** {outcome_value}")
+        logger.info(f"🏥 Box Esito aggiornata: {outcome_value} (color: {outcome_color})")
     else:
-        st.warning("⏳ **Esito:** In attesa...")
+        current_state['outcome'] = outcome_hash
+    
+    # Render con colore dinamico
+    if outcome_color == "success":
+        st.success(f"🏥 **Esito:** {outcome_value}")
+    elif outcome_color == "info":
+        st.info(f"🏥 **Esito:** {outcome_value}")
+    else:
+        st.warning(f"🏥 **Esito:** {outcome_value}")
     
     # Salva stato corrente per prossima iterazione
     state.set(StateKeys.INFO_BOXES_LAST_STATE, current_state)
