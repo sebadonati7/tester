@@ -229,29 +229,57 @@ def _render_system_status() -> None:
 
 def _render_collected_data_preview() -> None:
     """
-    Visualizza 5 categorie obbligatorie:
-    1. Località  2. Sintomo  3. Dolore  4. Anamnesi  5. Esito
-    
-    Update SOLO quando categoria cambia (non ogni messaggio).
+    Visualizza 5 box: Località, Sintomo, Dolore, Anamnesi, Esito.
+    Update SOLO quando il valore cambia (dirty checking).
     """
     from ..core.state_manager import get_state_manager, StateKeys
+    import hashlib
+    import logging
+    
+    logger = logging.getLogger(__name__)
     
     state = get_state_manager()
     collected = state.get(StateKeys.COLLECTED_DATA, {})
-    current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")  # ✅ lowercase per match con enum
+    current_phase = state.get(StateKeys.CURRENT_PHASE, "intake")
+    
+    # Recupera stato precedente delle box
+    last_state = state.get(StateKeys.INFO_BOXES_LAST_STATE, {})
+    current_state = {}
     
     st.markdown("### 📋 Dati Raccolti")
     
-    # 1. Località
+    # === BOX 1: LOCALITÀ ===
     location = collected.get('current_location') or collected.get('location') or collected.get('patient_location')
+    location_hash = hashlib.md5(str(location).encode()).hexdigest() if location else None
+    
+    # Aggiorna SOLO se cambiato
+    if location_hash != last_state.get('location'):
+        current_state['location'] = location_hash
+        if location:
+            logger.info(f"📍 Box Località aggiornata: {location}")
+    
     st.success(f"📍 **Località:** {location if location else '⏳ In raccolta...'}")
     
-    # 2. Sintomo Principale
+    # === BOX 2: SINTOMO ===
     symptom = collected.get('chief_complaint') or collected.get('CHIEF_COMPLAINT') or collected.get('main_symptom')
+    symptom_hash = hashlib.md5(str(symptom).encode()).hexdigest() if symptom else None
+    
+    if symptom_hash != last_state.get('symptom'):
+        current_state['symptom'] = symptom_hash
+        if symptom:
+            logger.info(f"🩺 Box Sintomo aggiornata: {symptom[:30]}")
+    
     st.info(f"🩺 **Sintomo:** {symptom[:50] if symptom else '⏳ In raccolta...'}")
     
-    # 3. Valutazione Dolore
+    # === BOX 3: DOLORE ===
     pain = collected.get('pain_scale') or collected.get('PAIN_SCALE')
+    pain_hash = hashlib.md5(str(pain).encode()).hexdigest() if pain else None
+    
+    if pain_hash != last_state.get('pain'):
+        current_state['pain'] = pain_hash
+        if pain:
+            logger.info(f"📊 Box Dolore aggiornata: {pain}/10")
+    
     if pain:
         try:
             pain_val = int(pain)
@@ -262,7 +290,24 @@ def _render_collected_data_preview() -> None:
     else:
         st.warning("📊 **Dolore:** Non valutato")
     
-    # 4. Anamnesi (età + genere)
+    # === BOX 4: ANAMNESI ===
+    # Mostra contatore SOLO in fase CLINICAL_TRIAGE
+    clinical_count = state.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)  # ✅ Usa nuovo counter
+    anamnesi_value = None
+    
+    if current_phase == "clinical_triage" and clinical_count > 0:
+        anamnesi_value = f"{clinical_count} domande"
+    elif current_phase in ("outcome", "sbar"):
+        anamnesi_value = "Completata"
+    
+    anamnesi_hash = hashlib.md5(str(anamnesi_value).encode()).hexdigest() if anamnesi_value else None
+    
+    if anamnesi_hash != last_state.get('anamnesi'):
+        current_state['anamnesi'] = anamnesi_hash
+        if anamnesi_value:
+            logger.info(f"📋 Box Anamnesi aggiornata: {anamnesi_value}")
+    
+    # Mostra anamnesi (età + genere + contatore se in fase clinica)
     age = collected.get('age') or collected.get('patient_age')
     gender = collected.get('gender') or collected.get('sex') or collected.get('patient_sex')
     
@@ -270,18 +315,37 @@ def _render_collected_data_preview() -> None:
         anamnesi_text = f"{age} anni"
         if gender:
             anamnesi_text += f", {gender}"
+        if anamnesi_value:
+            anamnesi_text += f" | {anamnesi_value}"
         st.success(f"👤 **Anamnesi:** {anamnesi_text}")
     else:
-        st.warning("👤 **Anamnesi:** Incompleta")
+        if anamnesi_value:
+            st.info(f"📋 **Anamnesi:** {anamnesi_value}")
+        else:
+            st.warning("👤 **Anamnesi:** Incompleta")
     
-    # 5. Esito
-    if current_phase in ["RECOMMENDATION", "DISPOSITION", "sbar"]:
-        st.success("✅ **Esito:** Report SBAR disponibile")
-    elif current_phase in ["CLINICAL_TRIAGE", "DEMOGRAPHICS"]:
-        question_count = state.get(StateKeys.QUESTION_COUNT, 0)
-        st.info(f"⏳ **Esito:** Triage in corso ({question_count} domande)")
+    # === BOX 5: ESITO ===
+    # Mostra SOLO se in fase OUTCOME o SBAR_GENERATION
+    outcome_value = None
+    if current_phase == "outcome":
+        outcome_value = "✅ Disponibile"
+    elif current_phase == "sbar":
+        outcome_value = "✅ Report pronto"
+    
+    outcome_hash = hashlib.md5(str(outcome_value).encode()).hexdigest() if outcome_value else None
+    
+    if outcome_hash != last_state.get('outcome'):
+        current_state['outcome'] = outcome_hash
+        if outcome_value:
+            logger.info(f"✅ Box Esito aggiornata: {outcome_value}")
+    
+    if outcome_value:
+        st.success(f"✅ **Esito:** {outcome_value}")
     else:
-        st.info(f"⏳ **Esito:** Fase iniziale ({current_phase})")
+        st.warning("⏳ **Esito:** In attesa...")
+    
+    # Salva stato corrente per prossima iterazione
+    state.set(StateKeys.INFO_BOXES_LAST_STATE, current_state)
 
 
 # ============================================================================

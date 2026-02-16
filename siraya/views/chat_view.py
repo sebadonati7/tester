@@ -345,7 +345,7 @@ def render() -> None:
     
     # === CHECK IF DISPOSITION COMPLETE ===
     current_phase = state.get(StateKeys.CURRENT_PHASE, "")
-    if current_phase in ("DISPOSITION", "RECOMMENDATION", "sbar") and messages:
+    if current_phase in ("DISPOSITION", "RECOMMENDATION", "sbar", "outcome") and messages:
         _render_disposition_summary()
         # Non bloccare l'input, ma mostra l'esito in un container distinto
         st.markdown("---")
@@ -355,6 +355,10 @@ def render() -> None:
     last_response = state.get(StateKeys.LAST_BOT_RESPONSE, {})
     question_type = last_response.get("question_type", "open_text")
     options = last_response.get("options", None)
+    
+    # ✅ NUOVO: Rendering outcome con bottone download SBAR
+    if question_type == "outcome" and last_response.get("metadata", {}).get("sbar_available"):
+        _render_sbar_download_buttons(state)
     
     # Se ci sono opzioni multiple choice E l'ultimo messaggio è del bot, mostra bottoni
     if question_type == "multiple_choice" and options and messages:
@@ -454,6 +458,98 @@ def _process_user_input(
     # Log success
     logger.info(f"✅ Processato input, type={question_type}, branch={branch}")
 
+
+
+def _render_sbar_download_buttons(state) -> None:
+    """
+    Render bottoni per download SBAR (PDF e TXT) quando outcome è disponibile.
+    """
+    from ..services.pdf_service import get_pdf_service
+    from datetime import datetime
+    import json
+    
+    sbar_data = state.get(StateKeys.SBAR_REPORT_DATA, {})
+    
+    if not sbar_data:
+        logger.warning("⚠️ SBAR data non disponibile per download")
+        return
+    
+    st.markdown("---")
+    st.markdown("### 📄 Report SBAR Disponibile")
+    st.info("Puoi scaricare il report completo in formato PDF o testo.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Download PDF
+        try:
+            pdf_service = get_pdf_service()
+            patient_data = state.get(StateKeys.COLLECTED_DATA, {})
+            sbar_text = sbar_data.get("text", "")
+            
+            # Aggiungi session_id ai patient_data se mancante
+            if "session_id" not in patient_data:
+                patient_data["session_id"] = state.get(StateKeys.SESSION_ID, "unknown")
+            
+            pdf_bytes = pdf_service.generate_sbar_pdf(
+                patient_data=patient_data,
+                sbar_text=sbar_text,
+                facility_name=None
+            )
+            
+            st.download_button(
+                label="📄 Scarica Report SBAR (PDF)",
+                data=pdf_bytes,
+                file_name=f"SBAR_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="download_sbar_pdf"
+            )
+        except Exception as e:
+            logger.error(f"❌ Errore generazione PDF: {e}")
+            st.error("❌ Errore nella generazione del PDF")
+    
+    with col2:
+        # Download TXT
+        try:
+            sbar_text = sbar_data.get("text", "")
+            session_id = sbar_data.get("session_id", state.get(StateKeys.SESSION_ID, "unknown"))
+            collected_data = sbar_data.get("collected_data", {})
+            
+            sbar_text_formatted = f"""
+SIRAYA Health Navigator - Report SBAR
+Generato: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+Session ID: {session_id}
+
+═══════════════════════════════════════
+REPORT TRIAGE COMPLETO
+═══════════════════════════════════════
+
+{sbar_text}
+
+═══════════════════════════════════════
+DATI RACCOLTI
+═══════════════════════════════════════
+{json.dumps(collected_data, indent=2, ensure_ascii=False)}
+
+═══════════════════════════════════════
+NOTA IMPORTANTE
+═══════════════════════════════════════
+Questo report è generato automaticamente e non costituisce diagnosi medica.
+In caso di emergenza, chiama immediatamente il 118.
+            """.strip()
+            
+            st.download_button(
+                label="📋 Scarica Report SBAR (TXT)",
+                data=sbar_text_formatted.encode('utf-8'),
+                file_name=f"SBAR_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                mime="text/plain",
+                use_container_width=True,
+                key="download_sbar_txt"
+            )
+        except Exception as e:
+            logger.error(f"❌ Errore generazione TXT: {e}")
+            st.error("❌ Errore nella generazione del TXT")
 
 
 def _render_disposition_summary() -> None:

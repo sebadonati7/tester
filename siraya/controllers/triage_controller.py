@@ -32,7 +32,8 @@ class TriagePhase(Enum):
     DEMOGRAPHICS = "demographics"
     CLINICAL_TRIAGE = "clinical_triage"  # Branch C: 5-7 domande
     RISK_ASSESSMENT = "risk_assessment"  # Branch B: valutazione rischio
-    SBAR_GENERATION = "sbar"
+    OUTCOME = "outcome"              # ✅ NEW - Raccomandazione breve + recapiti struttura
+    SBAR_GENERATION = "sbar"         # Report completo (background, per download)
 
 
 class TriageController:
@@ -131,9 +132,21 @@ class TriageController:
             user_input=user_input
         )
         
-        # 7. Incrementa contatore solo se non è SBAR
-        if next_phase != TriagePhase.SBAR_GENERATION:
-            self.state_manager.set(StateKeys.QUESTION_COUNT, question_count + 1)
+        # 7. Incrementa contatore fase-specifico (intake o clinical)
+        if next_phase not in [TriagePhase.SBAR_GENERATION, TriagePhase.OUTCOME]:
+            # Determina quale counter incrementare
+            if next_phase in [TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT]:
+                # Fase clinica: incrementa counter clinico
+                clinical_count = self.state_manager.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, clinical_count + 1)
+                # Mantieni backward compatibility con QUESTION_COUNT (legacy)
+                self.state_manager.set(StateKeys.QUESTION_COUNT, clinical_count + 1)
+            else:
+                # Fase preliminare: incrementa counter intake
+                intake_count = self.state_manager.get(StateKeys.QUESTION_COUNT_INTAKE, 0)
+                self.state_manager.set(StateKeys.QUESTION_COUNT_INTAKE, intake_count + 1)
+                # Mantieni backward compatibility con QUESTION_COUNT (legacy)
+                self.state_manager.set(StateKeys.QUESTION_COUNT, intake_count + 1)
         
         # 8. Salva su Supabase
         processing_time = int((time.time() - start_time) * 1000)
@@ -420,7 +433,7 @@ Rispondi SOLO in JSON (nessun altro testo):
         branch: TriageBranch, 
         current_phase: TriagePhase,
         collected_data: Dict,
-        question_count: int
+        question_count: int  # Legacy parameter - mantenuto per compatibilità
     ) -> TriagePhase:
         """
         FSM con FORCE ADVANCE: Se dato già presente, salta fase automaticamente.
@@ -477,38 +490,36 @@ Rispondi SOLO in JSON (nessun altro testo):
                 # FORCE ADVANCE: Se età presente, vai a clinical triage
                 if "age" in collected_data:
                     logger.info(f"✅ Età raccolta: {collected_data['age']}, avanzo a CLINICAL_TRIAGE")
-                    # ✅ RESET COUNTER: Quando entriamo in CLINICAL_TRIAGE, resettiamo il contatore
-                    # In questo modo contiamo solo le domande della fase clinica (5-7)
-                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
+                    # ✅ RESET COUNTER CLINICO: Quando entriamo in CLINICAL_TRIAGE, resettiamo SOLO il counter clinico
+                    # Mantieni storico intake (non resettare)
+                    self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                    logger.info("✅ Entrando in CLINICAL_TRIAGE - Counter clinico resettato")
                     return TriagePhase.CLINICAL_TRIAGE
                 return TriagePhase.DEMOGRAPHICS
             
             # FASE 5: Clinical Triage (5-7 domande basate su protocolli)
             if current_phase == TriagePhase.CLINICAL_TRIAGE:
-                # ✅ FIX: question_count ora conta SOLO domande clinical triage (resettato sopra)
-                # Quindi quando arriviamo qui con question_count=0, è la prima domanda clinical
+                # ✅ Usa counter clinico specifico (non question_count globale)
+                clinical_count = self.state_manager.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)
                 
-                # Verifica dati minimi per SBAR
+                # Verifica dati minimi per OUTCOME
                 required_data = ["main_symptom", "pain_scale", "age"]
                 has_location = "location" in collected_data or "current_location" in collected_data
                 has_required = all(key in collected_data for key in required_data)
                 
-                # ⚠️ REGOLA IMPORTANTE: Contare solo domande CLINICAL_TRIAGE
-                # question_count dovrebbe essere tra 0-7 in questa fase
-                
-                # Avanza a SBAR se:
+                # Avanza a OUTCOME se:
                 # - Almeno 5 domande clinical E dati completi
                 # - OPPURE max 7 domande clinical raggiunte
-                if question_count >= 5 and has_location and has_required:
-                    logger.info(f"✅ {question_count} domande clinical + dati completi, genero SBAR")
-                    return TriagePhase.SBAR_GENERATION
+                if clinical_count >= 5 and has_location and has_required:
+                    logger.info(f"✅ {clinical_count} domande clinical completate → OUTCOME")
+                    return TriagePhase.OUTCOME
                 
-                if question_count >= 7:
-                    logger.warning(f"⚠️ Max domande clinical raggiunto ({question_count}), forzo SBAR")
-                    return TriagePhase.SBAR_GENERATION
+                if clinical_count >= 7:
+                    logger.warning(f"⚠️ Max 7 domande clinical → forzo OUTCOME")
+                    return TriagePhase.OUTCOME
                 
                 # Continua clinical triage
-                logger.info(f"⏸️ Clinical triage continua (domanda {question_count + 1}/5-7)")
+                logger.info(f"⏸️ Clinical triage continua (domanda {clinical_count + 1}/5-7)")
                 return TriagePhase.CLINICAL_TRIAGE
             
             # FASE 6: SBAR (report finale)
@@ -519,26 +530,31 @@ Rispondi SOLO in JSON (nessun altro testo):
         if branch == TriageBranch.EMERGENCY:
             if current_phase == TriagePhase.INTAKE:
                 if "location" in collected_data or "current_location" in collected_data:
-                    # ✅ RESET COUNTER: Quando entriamo in FAST_TRIAGE, resettiamo
-                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
+                    # ✅ RESET COUNTER CLINICO: Quando entriamo in FAST_TRIAGE, resettiamo
+                    self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                    logger.info("✅ Entrando in FAST_TRIAGE - Counter clinico resettato")
                     return TriagePhase.FAST_TRIAGE
                 return TriagePhase.LOCALIZATION
             
             if current_phase == TriagePhase.LOCALIZATION:
                 if "location" in collected_data or "current_location" in collected_data:
-                    # ✅ RESET COUNTER
-                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
+                    # ✅ RESET COUNTER CLINICO
+                    self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                    logger.info("✅ Entrando in FAST_TRIAGE - Counter clinico resettato")
                     return TriagePhase.FAST_TRIAGE
                 return TriagePhase.LOCALIZATION
             
             if current_phase == TriagePhase.FAST_TRIAGE:
-                # ✅ FIX: Ora question_count conta solo domande FAST_TRIAGE (3-4)
-                if question_count >= 3:  # Min 3 domande per emergenza
-                    logger.info(f"✅ {question_count} domande fast-triage completate, genero SBAR")
-                    return TriagePhase.SBAR_GENERATION
-                logger.info(f"⏸️ Fast triage continua (domanda {question_count + 1}/3-4)")
+                # ✅ Usa counter clinico specifico
+                clinical_count = self.state_manager.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                if clinical_count >= 3:  # Min 3 domande per emergenza
+                    logger.info(f"✅ {clinical_count} domande fast-triage completate → OUTCOME")
+                    return TriagePhase.OUTCOME
+                logger.info(f"⏸️ Fast triage continua (domanda {clinical_count + 1}/3-4)")
                 return TriagePhase.FAST_TRIAGE
             
+            if current_phase == TriagePhase.OUTCOME:
+                return TriagePhase.OUTCOME
             if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
         
@@ -550,23 +566,27 @@ Rispondi SOLO in JSON (nessun altro testo):
             if current_phase == TriagePhase.CONSENT:
                 if collected_data.get("consent") == "yes":
                     return TriagePhase.DEMOGRAPHICS
-                return TriagePhase.SBAR_GENERATION  # Se rifiuta consenso, vai a SBAR (con hotline)
+                return TriagePhase.OUTCOME  # Se rifiuta consenso, vai a OUTCOME (con hotline)
             
             if current_phase == TriagePhase.DEMOGRAPHICS:
                 if "age" in collected_data:
-                    # ✅ RESET COUNTER: Quando entriamo in RISK_ASSESSMENT, resettiamo
-                    self.state_manager.set(StateKeys.QUESTION_COUNT, 0)
+                    # ✅ RESET COUNTER CLINICO: Quando entriamo in RISK_ASSESSMENT, resettiamo
+                    self.state_manager.set(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                    logger.info("✅ Entrando in RISK_ASSESSMENT - Counter clinico resettato")
                     return TriagePhase.RISK_ASSESSMENT
                 return TriagePhase.DEMOGRAPHICS
             
             if current_phase == TriagePhase.RISK_ASSESSMENT:
-                # ✅ FIX: Ora question_count conta solo domande RISK_ASSESSMENT (4-5)
-                if question_count >= 4:
-                    logger.info(f"✅ {question_count} domande risk assessment completate, genero SBAR")
-                    return TriagePhase.SBAR_GENERATION
-                logger.info(f"⏸️ Risk assessment continua (domanda {question_count + 1}/4-5)")
+                # ✅ Usa counter clinico specifico
+                clinical_count = self.state_manager.get(StateKeys.QUESTION_COUNT_CLINICAL, 0)
+                if clinical_count >= 4:
+                    logger.info(f"✅ {clinical_count} domande risk assessment completate → OUTCOME")
+                    return TriagePhase.OUTCOME
+                logger.info(f"⏸️ Risk assessment continua (domanda {clinical_count + 1}/4-5)")
                 return TriagePhase.RISK_ASSESSMENT
             
+            if current_phase == TriagePhase.OUTCOME:
+                return TriagePhase.OUTCOME
             if current_phase == TriagePhase.SBAR_GENERATION:
                 return TriagePhase.SBAR_GENERATION
         
@@ -593,9 +613,13 @@ Rispondi SOLO in JSON (nessun altro testo):
         NO hardcoded questions!
         """
         
-        # Se fase SBAR → genera report finale
+        # ✅ NUOVO: Gestione fase OUTCOME (raccomandazione breve)
+        if phase == TriagePhase.OUTCOME:
+            return self._generate_outcome_ai(branch, collected_data)
+        
+        # Se fase SBAR → genera report completo (legacy/fallback)
         if phase == TriagePhase.SBAR_GENERATION:
-            return self._generate_sbar_ai(branch, collected_data)
+            return self._generate_sbar_with_logs(branch, collected_data)
         
         # Recupera contesto RAG se fase clinica (RAG temporaneamente disabilitato)
         rag_context = ""
@@ -823,63 +847,187 @@ ESEMPIO PER QUESTA FASE ({phase.value}):
         
         return prompt
     
-    def _generate_sbar_ai(self, branch: TriageBranch, collected_data: Dict) -> Dict:
-        """Genera report SBAR finale tramite AI."""
+    def _generate_outcome_ai(self, branch: TriageBranch, collected_data: Dict) -> Dict:
+        """
+        Genera OUTCOME breve (2-4 righe) con raccomandazione struttura.
+        SBAR completo viene generato in background ma non mostrato.
+        """
+        from datetime import datetime
         
-        # Trova struttura sanitaria appropriata
+        # 1. Trova struttura appropriata
         location = collected_data.get("location") or collected_data.get("current_location")
         recommendation = self._get_recommendation(branch, location, collected_data)
         
-        prompt = f"""
-        Genera report SBAR (Situation, Background, Assessment, Recommendation) per triage completato.
+        # 2. Genera messaggio breve outcome
+        prompt_outcome = f"""
+        Genera un messaggio breve (MAX 3-4 righe) per concludere il triage.
         
         BRANCH: {branch.value}
-        DATI RACCOLTI:
-        {json.dumps(collected_data, indent=2, ensure_ascii=False)}
+        SINTOMO: {collected_data.get('chief_complaint') or collected_data.get('main_symptom', 'N/D')}
+        DOLORE: {collected_data.get('pain_scale', 'N/D')}/10
         
         RACCOMANDAZIONE STRUTTURA:
         {recommendation}
         
-        OUTPUT (formato SBAR):
-        **REPORT TRIAGE SIRAYA**
+        OUTPUT RICHIESTO:
+        - 1-2 righe di sintesi ("Considerando i sintomi descritti...")
+        - Raccomandazione struttura con emoji + nome + indirizzo + telefono + orari
+        - Frase di chiusura empatica
         
-        **S - SITUATION (Situazione)**
-        [Sintomo principale + intensità dolore se presente]
+        NON includere SBAR completo. NON elencare tutti i sintomi.
+        Tono: professionale, rassicurante, conciso.
         
-        **B - BACKGROUND (Contesto)**
-        [Età, genere, farmaci, patologie croniche]
+        ESEMPIO FORMATO:
+        Considerando i sintomi descritti, ti consiglio di rivolgerti al:
         
-        **A - ASSESSMENT (Valutazione)**
-        [Triage {branch.value} completato, red flags rilevate, codice colore]
+        📍 **CAU Ravenna**
+        Ospedale S. Maria delle Croci - Viale Randi, 5
+        📞 0544 285111 | ⏰ Aperto 24/7
         
-        **R - RECOMMENDATION (Raccomandazione)**
-        {recommendation}
+        Porta con te questo report quando ti recherai alla struttura.
         """
         
         try:
             if self.llm._groq_client:
                 response = self.llm._groq_client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[{"role": "user", "content": prompt_outcome}],
                     temperature=0.3,
-                    max_tokens=500
+                    max_tokens=300
+                )
+                outcome_text = response.choices[0].message.content
+            elif self.llm._gemini_model:
+                response = self.llm._gemini_model.generate_content(prompt_outcome)
+                outcome_text = response.text
+            else:
+                outcome_text = f"❌ Servizio AI non disponibile\n\n{recommendation}"
+        except Exception as e:
+            logger.error(f"❌ Errore generate_outcome_ai: {e}")
+            outcome_text = f"{recommendation}\n\n(Report SBAR disponibile per download)"
+        
+        # 3. Genera SBAR completo in background (per download)
+        sbar_data = self._generate_sbar_with_logs(branch, collected_data)
+        
+        # 4. Salva SBAR nello stato per permettere download
+        self.state_manager.set(StateKeys.SBAR_REPORT_DATA, sbar_data)
+        
+        return {
+            "text": outcome_text,
+            "type": "outcome",  # ✅ Nuovo tipo (non "sbar_output")
+            "options": None,
+            "metadata": {
+                "branch": branch.value,
+                "complete": True,
+                "sbar_available": True  # Flag per mostrare bottone download
+            }
+        }
+    
+    def _generate_sbar_with_logs(self, branch: TriageBranch, collected_data: Dict) -> Dict:
+        """
+        Genera report SBAR COMPLETO consultando triage_logs di Supabase.
+        Questo metodo NON viene usato per chat output, solo per download PDF/TXT.
+        """
+        from datetime import datetime
+        
+        session_id = self.state_manager.get(StateKeys.SESSION_ID, "unknown")
+        
+        # ✅ 1. Recupera TUTTI i log della sessione da Supabase
+        try:
+            logs_response = self.db.supabase.table("triage_logs")\
+                .select("*")\
+                .eq("session_id", session_id)\
+                .order("timestamp", desc=False)\
+                .execute()
+            
+            all_logs = logs_response.data if logs_response.data else []
+            logger.info(f"📊 Recuperati {len(all_logs)} log da Supabase per session {session_id}")
+        except Exception as e:
+            logger.error(f"❌ Errore fetch triage_logs: {e}")
+            all_logs = []
+        
+        # ✅ 2. Estrai contesto conversazionale completo
+        conversation_context = self._extract_conversation_context(all_logs)
+        
+        # ✅ 3. Trova struttura sanitaria
+        location = collected_data.get("location") or collected_data.get("current_location")
+        recommendation = self._get_recommendation(branch, location, collected_data)
+        
+        # ✅ 4. Genera SBAR usando TUTTI i dati
+        prompt_sbar = f"""
+        Genera report SBAR (Situation, Background, Assessment, Recommendation) COMPLETO.
+        
+        CONVERSAZIONE COMPLETA (da triage_logs):
+        {conversation_context}
+        
+        DATI RACCOLTI (collected_data):
+        {json.dumps(collected_data, indent=2, ensure_ascii=False)}
+        
+        BRANCH: {branch.value}
+        RACCOMANDAZIONE STRUTTURA: {recommendation}
+        
+        OUTPUT RICHIESTO (formato SBAR standard):
+        
+        **S - SITUATION (Situazione)**
+        [Sintomo principale + intensità dolore + insorgenza temporale]
+        
+        **B - BACKGROUND (Contesto)**
+        [Età, genere, località, farmaci, patologie croniche, anamnesi rilevante]
+        
+        **A - ASSESSMENT (Valutazione)**
+        [Triage {branch.value} completato, red flags rilevate, codice colore assegnato, numero domande poste]
+        
+        **R - RECOMMENDATION (Raccomandazione)**
+        {recommendation}
+        
+        NOTA: Includi TUTTI i dettagli clinici raccolti durante la conversazione.
+        """
+        
+        try:
+            if self.llm._groq_client:
+                response = self.llm._groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": prompt_sbar}],
+                    temperature=0.3,
+                    max_tokens=800  # ← Aumentato per SBAR completo
                 )
                 sbar_text = response.choices[0].message.content
             elif self.llm._gemini_model:
-                response = self.llm._gemini_model.generate_content(prompt)
+                response = self.llm._gemini_model.generate_content(prompt_sbar)
                 sbar_text = response.text
             else:
                 sbar_text = "❌ Servizio AI non disponibile per generare SBAR"
         except Exception as e:
-            logger.error(f"❌ Errore generate_sbar_ai: {e}")
+            logger.error(f"❌ Errore generate_sbar_with_logs: {e}")
             sbar_text = f"❌ Errore generazione SBAR: {str(e)}"
         
         return {
             "text": sbar_text,
-            "type": "sbar_output",
-            "options": None,
-            "metadata": {"branch": branch.value, "complete": True}
+            "timestamp": datetime.now().isoformat(),
+            "session_id": session_id,
+            "branch": branch.value,
+            "collected_data": collected_data
         }
+    
+    def _extract_conversation_context(self, logs: list) -> str:
+        """
+        Estrae contesto conversazionale completo da triage_logs.
+        Formato: timestamp, user_input, assistant_response.
+        """
+        if not logs:
+            return "(Nessun log disponibile)"
+        
+        context_lines = []
+        for i, log in enumerate(logs, 1):
+            timestamp = log.get("timestamp", "")
+            user_msg = log.get("user_input", "")
+            bot_msg = log.get("assistant_response", "")
+            
+            context_lines.append(f"[{i}] {timestamp}")
+            context_lines.append(f"User: {user_msg}")
+            context_lines.append(f"Bot: {bot_msg[:200]}...")  # Tronca risposte lunghe
+            context_lines.append("")  # Linea vuota
+        
+        return "\n".join(context_lines)
     
     def _get_recommendation(self, branch: TriageBranch, location: Optional[str], data: Dict) -> str:
         """Trova struttura sanitaria appropriata da master_kb.json."""
