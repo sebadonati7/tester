@@ -200,6 +200,18 @@ RISPONDI SOLO CON IL JSON, NESSUN TESTO PRIMA O DOPO."""
                 "urgency_hint": "standard"
             }
 
+        # Build extracted_symptom from body part if detected
+        detected_bp = None
+        extracted_symptom = None
+        if has_body:
+            for bp in body_parts:
+                if bp in text:
+                    detected_bp = bp
+                    extracted_symptom = UnifiedSlotFiller.BODY_PARTS_MAP.get(
+                        bp, f"Dolore al {bp}"
+                    )
+                    break
+
         return {
             "is_specific_symptom": has_body and not is_emg,
             "is_generic_symptom": not has_body and not is_emg and not is_generic_pain,
@@ -207,8 +219,8 @@ RISPONDI SOLO CON IL JSON, NESSUN TESTO PRIMA O DOPO."""
             "is_age_info": any(w.isdigit() and len(w) <= 3 for w in words),
             "is_info_request": any(k in text for k in ["orari", "dove", "prenot", "telefono"]),
             "is_emergency": is_emg,
-            "extracted_symptom": None,
-            "body_part": None,
+            "extracted_symptom": extracted_symptom,
+            "body_part": detected_bp,
             "extracted_location": None,
             "extracted_age": None,
             "clarification_question": "Puoi dirmi dove provi dolore o fastidio? Ad esempio: testa, pancia, petto, schiena...",
@@ -237,6 +249,22 @@ class UnifiedSlotFiller:
         "onset": "onset"
     }
 
+    # Known body parts for direct matching (clarification responses)
+    BODY_PARTS_MAP = {
+        "testa": "Cefalea", "pancia": "Dolore addominale", "stomaco": "Dolore gastrico",
+        "schiena": "Lombalgia", "gola": "Faringodinia", "petto": "Dolore toracico",
+        "gamba": "Dolore alla gamba", "braccio": "Dolore al braccio",
+        "ginocchio": "Gonalgia", "spalla": "Dolore alla spalla",
+        "piede": "Dolore al piede", "mano": "Dolore alla mano",
+        "occhio": "Dolore oculare", "orecchio": "Otalgia",
+        "collo": "Cervicalgia", "addome": "Dolore addominale",
+        "torace": "Dolore toracico", "fianco": "Dolore al fianco",
+        "anca": "Coxalgia", "dente": "Odontalgia", "denti": "Odontalgia",
+        "naso": "Rinorrea", "caviglia": "Dolore alla caviglia",
+        "polso": "Dolore al polso", "seno": "Dolore al seno",
+        "costole": "Dolore costale", "gluteo": "Dolore al gluteo",
+    }
+
     @classmethod
     def extract(cls, user_input: str, current_data: Dict, llm_service=None, current_phase: str = "") -> Dict[str, Any]:
         """
@@ -246,8 +274,70 @@ class UnifiedSlotFiller:
         extracted = {}
         user_lower = user_input.lower().strip()
 
-        # ═══ SYMPTOM via LLM Judge (only if needed and LLM available) ═══
-        if "chief_complaint" not in current_data and llm_service and current_phase in ("intake", "chief_complaint", ""):
+        # ═══════════════════════════════════════════════════════════════════════
+        # PRIORITY 1: If we asked "where does it hurt?" and user gave a body part,
+        # combine it with the previous generic symptom to create chief_complaint.
+        # This MUST run BEFORE the LLM Judge to avoid re-classifying the body part.
+        # ═══════════════════════════════════════════════════════════════════════
+        if (current_phase == "chief_complaint"
+                and current_data.get("_generic_symptom")
+                and "chief_complaint" not in current_data):
+
+            # Check if user input contains a known body part
+            matched_bp = None
+            matched_term = None
+            for bp, medical_term in cls.BODY_PARTS_MAP.items():
+                if bp in user_lower:
+                    matched_bp = bp
+                    matched_term = medical_term
+                    break
+
+            if matched_bp:
+                extracted[cls.KEYS["symptom"]] = matched_term
+                extracted["_body_part"] = matched_bp
+                # Clear generic flags — symptom is now specific
+                extracted["_generic_symptom"] = False
+                logger.info(f"✅ Body part '{matched_bp}' + generico → chief_complaint='{matched_term}'")
+                # Skip LLM Judge — we already have what we need
+            else:
+                # Body part not in our list — use LLM with CONTEXT
+                if llm_service:
+                    raw_symptom = current_data.get("_raw_symptom", "dolore generico")
+                    context_prompt = LLMJudge.INTAKE_EVAL_PROMPT.format(
+                        user_input=f"Il paziente aveva detto '{raw_symptom}'. Ora specifica: '{user_input}'. Combinali in un sintomo SPECIFICO."
+                    )
+                    try:
+                        result = llm_service.generate_with_json_parse(context_prompt, temperature=0.0, max_tokens=350)
+                        if result and result.get("extracted_symptom"):
+                            extracted[cls.KEYS["symptom"]] = result["extracted_symptom"]
+                            extracted["_generic_symptom"] = False
+                            if result.get("body_part"):
+                                extracted["_body_part"] = result["body_part"]
+                            logger.info(f"✅ LLM context combine: '{raw_symptom}' + '{user_input}' → '{result['extracted_symptom']}'")
+                        elif result and result.get("is_specific_symptom"):
+                            # LLM said specific but no extracted_symptom — build one
+                            extracted[cls.KEYS["symptom"]] = f"Dolore: {user_input.strip()}"
+                            extracted["_generic_symptom"] = False
+                            logger.info(f"✅ LLM specific (no term): → 'Dolore: {user_input.strip()}'")
+                        else:
+                            # LLM couldn't classify — use raw input as symptom
+                            extracted[cls.KEYS["symptom"]] = f"Dolore ({user_input.strip()})"
+                            extracted["_generic_symptom"] = False
+                            logger.info(f"⚠️ Fallback: generic + '{user_input}' → 'Dolore ({user_input.strip()})'")
+                    except Exception as e:
+                        logger.error(f"❌ LLM context combine error: {e}")
+                        extracted[cls.KEYS["symptom"]] = f"Dolore ({user_input.strip()})"
+                        extracted["_generic_symptom"] = False
+                else:
+                    # No LLM — just combine raw
+                    extracted[cls.KEYS["symptom"]] = f"Dolore ({user_input.strip()})"
+                    extracted["_generic_symptom"] = False
+
+            # Return early — don't run LLM Judge again for body part responses
+            # But still extract other structured fields below (pain, age, location, etc.)
+
+        # ═══ SYMPTOM via LLM Judge (only if chief_complaint still missing) ═══
+        elif "chief_complaint" not in current_data and "chief_complaint" not in extracted and llm_service and current_phase in ("intake", "chief_complaint", ""):
             judgment = LLMJudge.evaluate_input(llm_service, user_input)
 
             # Store full judgment for downstream use
@@ -262,11 +352,18 @@ class UnifiedSlotFiller:
             if judgment.get("urgency_hint") == "mental_health":
                 extracted["_urgency_override"] = "mental_health"
 
-            if judgment.get("is_specific_symptom") and judgment.get("extracted_symptom"):
-                extracted[cls.KEYS["symptom"]] = judgment["extracted_symptom"]
+            if judgment.get("is_specific_symptom"):
+                if judgment.get("extracted_symptom"):
+                    extracted[cls.KEYS["symptom"]] = judgment["extracted_symptom"]
+                elif judgment.get("body_part"):
+                    # LLM said specific but no medical term — build from body part
+                    bp = judgment["body_part"]
+                    extracted[cls.KEYS["symptom"]] = cls.BODY_PARTS_MAP.get(
+                        bp.lower(), f"Dolore al {bp}"
+                    )
                 if judgment.get("body_part"):
                     extracted["_body_part"] = judgment["body_part"]
-                logger.info(f"✅ Sintomo SPECIFICO (LLM): '{judgment['extracted_symptom']}'")
+                logger.info(f"✅ Sintomo SPECIFICO (LLM): '{extracted.get(cls.KEYS['symptom'], 'N/A')}'")
 
             elif judgment.get("is_generic_symptom"):
                 extracted["_generic_symptom"] = True
