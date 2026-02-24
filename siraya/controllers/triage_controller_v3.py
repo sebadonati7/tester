@@ -59,6 +59,38 @@ class LLMJudge:
     Called ONCE per user turn during intake/chief_complaint phases.
     """
 
+    # ═══ FIX 3a: Typo normalization map (before LLM call) ═══
+    TYPO_CORRECTIONS = {
+        # Common Italian symptom typos → normalized form
+        "malwe": "male", "malee": "male", "mle": "male", "amle": "male",
+        "mael": "male", "malle": "male", "mla": "male",
+        "dolroe": "dolore", "doloer": "dolore", "dlore": "dolore",
+        "dolroe": "dolore", "doore": "dolore",
+        "febr": "febbre", "febre": "febbre", "fbbr": "febbre",
+        "tsta": "testa", "tesa": "testa", "tetsa": "testa",
+        "pcnai": "pancia", "panaci": "pancia", "pacnia": "pancia",
+        "sceina": "schiena", "schenia": "schiena", "scheina": "schiena",
+        "repsiro": "respiro", "rspiro": "respiro",
+        "stmaco": "stomaco", "stoamco": "stomaco",
+    }
+
+    @staticmethod
+    def _normalize_typos(text: str) -> str:
+        """Pre-process user input to fix common typos before LLM evaluation."""
+        words = text.split()
+        corrected = []
+        for word in words:
+            clean = word.lower().strip(".,!?;:")
+            replacement = LLMJudge.TYPO_CORRECTIONS.get(clean)
+            if replacement:
+                # Preserve original casing pattern approximately
+                corrected.append(replacement)
+                logger.info(f"🔧 Typo fix: '{word}' → '{replacement}'")
+            else:
+                corrected.append(word)
+        return " ".join(corrected)
+
+    # ═══ FIX 3b: Enhanced prompt with typo handling instructions ═══
     INTAKE_EVAL_PROMPT = """Sei un medico triagista esperto. Valuta l'input del paziente e rispondi SOLO con JSON.
 
 INPUT PAZIENTE: "{user_input}"
@@ -80,14 +112,17 @@ RISPONDI con questo JSON ESATTO (tutti i campi obbligatori):
 }}
 
 REGOLE DI CLASSIFICAZIONE:
-1. GENERICO (is_generic_symptom=true): "ho male", "sto male", "non sto bene", "mi sento male", "sento dolore", "ho un dolore", "mi fa male", "non mi sento bene", "mi fa malissimo", "sento una fitta", qualsiasi lamentela SENZA localizzazione anatomica.
+1. GENERICO (is_generic_symptom=true): "ho male", "sto male", "non sto bene", "mi sento male", "sento dolore", "ho un dolore", "mi fa male", "non mi sento bene", "mi fa malissimo", "sento una fitta", qualsiasi lamentela SENZA localizzazione anatomica specifica.
 2. SPECIFICO (is_specific_symptom=true): "mal di testa", "dolore alla pancia", "mi fa male la schiena", "ho la febbre", "mi brucia lo stomaco", qualsiasi sintomo CON parte del corpo o patologia identificabile. In questo caso compila extracted_symptom con il TERMINE MEDICO (es: "Cefalea", "Lombalgia", "Dolore addominale") e body_part.
 3. EMERGENZA (is_emergency=true): "dolore al petto", "non riesco a respirare", "emorragia", "svenimento", "convulsioni", "paralisi". urgency_hint="emergency".
 4. SALUTE MENTALE: "voglio morire", "mi voglio fare del male", "depressione grave", "attacco di panico". urgency_hint="mental_health".
 5. INFO: "orari", "dove si trova", "come prenoto", "numero telefono". urgency_hint="info", is_info_request=true.
 6. Se generico, clarification_question DEVE essere una domanda specifica come "Dove provi dolore o fastidio?" o "Puoi descrivermi meglio il sintomo?"
 
-RISPONDI SOLO CON IL JSON."""
+⚠️ ATTENZIONE ERRORI DI BATTITURA: L'utente potrebbe scrivere con errori di digitazione (es: "ho maLWE" = "ho male", "ho mle" = "ho male", "doloer" = "dolore"). Interpreta SEMPRE l'intenzione dietro il testo, NON la lettera esatta. Se il messaggio sembra esprimere dolore/malessere generico ma contiene typo, classificalo come GENERICO.
+⚠️ "ho male" e TUTTE le sue varianti con typo (malwe, malee, mle, mael, ecc.) sono SEMPRE GENERICI perché NON specificano una parte del corpo.
+
+RISPONDI SOLO CON IL JSON, NESSUN TESTO PRIMA O DOPO."""
 
     @staticmethod
     def evaluate_input(llm_service, user_input: str) -> Dict[str, Any]:
@@ -95,7 +130,12 @@ RISPONDI SOLO CON IL JSON."""
         Evaluate user input using LLM structured output.
         Returns classification dict. Falls back to heuristics if LLM fails.
         """
-        prompt = LLMJudge.INTAKE_EVAL_PROMPT.format(user_input=user_input)
+        # FIX 3a: Normalize typos before sending to LLM
+        normalized_input = LLMJudge._normalize_typos(user_input)
+        if normalized_input.lower() != user_input.lower():
+            logger.info(f"🔧 Input normalizzato: '{user_input}' → '{normalized_input}'")
+
+        prompt = LLMJudge.INTAKE_EVAL_PROMPT.format(user_input=normalized_input)
 
         try:
             result = llm_service.generate_with_json_parse(prompt, temperature=0.0, max_tokens=350)
@@ -115,7 +155,7 @@ RISPONDI SOLO CON IL JSON."""
         except Exception as e:
             logger.error(f"❌ LLM Judge failed: {e}")
 
-        return LLMJudge._heuristic_fallback(user_input)
+        return LLMJudge._heuristic_fallback(normalized_input)
 
     @staticmethod
     def _heuristic_fallback(user_input: str) -> Dict[str, Any]:
@@ -127,7 +167,15 @@ RISPONDI SOLO CON IL JSON."""
         emergency_kw = ["petto", "respiro", "svengo", "sangue", "convulsion", "paralisi"]
         is_emg = any(k in text for k in emergency_kw)
 
-        # Very basic: if short and no body part → generic
+        # FIX 3c: Generic symptom detection (keyword list)
+        generic_indicators = [
+            "ho male", "sto male", "non sto bene", "mi sento male",
+            "sento dolore", "ho un dolore", "mi fa male", "fa malissimo",
+            "sento una fitta", "non mi sento", "male", "malessere"
+        ]
+        is_generic_pain = any(gi in text for gi in generic_indicators)
+
+        # Body parts for SPECIFIC detection
         body_parts = [
             "testa", "pancia", "stomaco", "schiena", "gola", "petto",
             "gamba", "braccio", "ginocchio", "spalla", "piede", "mano",
@@ -135,9 +183,26 @@ RISPONDI SOLO CON IL JSON."""
         ]
         has_body = any(bp in text for bp in body_parts)
 
+        # FIX 3c: If generic pain AND no body part → always GENERIC
+        if is_generic_pain and not has_body:
+            return {
+                "is_specific_symptom": False,
+                "is_generic_symptom": True,
+                "is_location_info": False,
+                "is_age_info": False,
+                "is_info_request": False,
+                "is_emergency": False,
+                "extracted_symptom": None,
+                "body_part": None,
+                "extracted_location": None,
+                "extracted_age": None,
+                "clarification_question": "Puoi dirmi dove provi dolore o fastidio? Ad esempio: testa, pancia, petto, schiena...",
+                "urgency_hint": "standard"
+            }
+
         return {
             "is_specific_symptom": has_body and not is_emg,
-            "is_generic_symptom": not has_body and not is_emg,
+            "is_generic_symptom": not has_body and not is_emg and not is_generic_pain,
             "is_location_info": False,
             "is_age_info": any(w.isdigit() and len(w) <= 3 for w in words),
             "is_info_request": any(k in text for k in ["orari", "dove", "prenot", "telefono"]),
@@ -487,6 +552,13 @@ class QuestionGenerator:
         logger.error(f"❌ QuestionGenerator: unexpected phase {phase.value}")
         return {"text": "Puoi fornirmi maggiori dettagli sulla tua situazione?", "type": "open_text", "options": None}
 
+    # FIX 4: Phrases that indicate the LLM generated a closing/summary instead of a question
+    BLOCK_PHRASES = [
+        "grazie per", "grazie delle", "informazioni fornite", "dati raccolti",
+        "riepilogo", "in sintesi", "riassumendo", "sulla base di",
+        "ti consiglio", "ti suggerisco", "il mio consiglio",
+    ]
+
     def _generate_clinical_question(self, phase, branch, data, phase_q_count):
         symptom = data.get("chief_complaint", "sintomo generico")
         pain = data.get("pain_scale", "N/D")
@@ -509,24 +581,35 @@ class QuestionGenerator:
         else:
             branch_instr = "Indagine clinica strutturata. Formato: multiple_choice con 3 opzioni A/B/C."
 
-        prompt = f"""Sei un medico esperto in triage. Genera la domanda {phase_q_count + 1}.
+        # FIX 4a: STRICT JSON-only prompt
+        prompt = f"""Genera UNA domanda clinica per il triage. Rispondi ESCLUSIVAMENTE con JSON valido.
+NESSUN testo prima del JSON. NESSUN testo dopo il JSON. NESSUN commento. SOLO il JSON.
 
 DATI PAZIENTE: Sintomo={symptom}, Dolore={pain}/10, Età={age}
+Domanda numero: {phase_q_count + 1}
 
 PROTOCOLLI:
 {rag_context}
 
 {branch_instr}
 
-REGOLE: 1) Domanda SPECIFICA per il sintomo 2) USA i protocolli 3) UNA SOLA domanda 4) NO diagnosi
+REGOLE:
+1) Domanda SPECIFICA per il sintomo "{symptom}"
+2) USA i protocolli clinici sopra
+3) UNA SOLA domanda (NON fare riepiloghi, ringraziamenti o diagnosi)
+4) Il campo "text" DEVE contenere una DOMANDA (deve terminare con "?")
 
-OUTPUT JSON:
-{{"text": "Domanda specifica", "type": "multiple_choice", "options": ["A", "B", "C"]}}"""
+{{"text": "La tua domanda specifica qui?", "type": "multiple_choice", "options": ["A) Prima opzione", "B) Seconda opzione", "C) Terza opzione"]}}"""
 
         try:
             response = self.llm.generate_with_json_parse(prompt, temperature=0.3)
             if response and response.get("text"):
-                return response
+                # FIX 4b: Detect "Grazie" / closing statements → skip
+                text_lower = response["text"].lower()
+                if any(bp in text_lower for bp in self.BLOCK_PHRASES):
+                    logger.warning(f"⚠️ LLM ha generato chiusura invece di domanda: '{response['text'][:60]}' → fallback")
+                else:
+                    return response
         except Exception as e:
             logger.error(f"❌ Clinical question error: {e}")
 
@@ -821,14 +904,21 @@ class TriageControllerV3:
         # If ALL mandatory slots filled AND clinical phase complete,
         # generate outcome IMMEDIATELY (no "Grazie" dead-end)
         # ═══════════════════════════════════════════════════════════
-        if current_branch == TriageBranch.STANDARD:
-            mandatory = ["chief_complaint", "location", "pain_scale", "age"]
+        if current_branch in (TriageBranch.STANDARD, TriageBranch.EMERGENCY):
+            mandatory = ["chief_complaint", "location", "pain_scale", "age"] if current_branch == TriageBranch.STANDARD else ["location"]
             all_filled = all(k in collected for k in mandatory)
             phase_q = self.state.get("phase_question_count", 0)
-            clinical_done = (current_phase == "clinical_triage" and phase_q >= 5)
+
+            # Trigger auto-outcome if:
+            # (a) Standard: clinical phase done (>=5 questions) OR hard cap (>=7)
+            # (b) Emergency: fast triage done (>=3 questions)
+            if current_branch == TriageBranch.STANDARD:
+                clinical_done = (current_phase == "clinical_triage" and phase_q >= 5)
+            else:
+                clinical_done = (current_phase == "fast_triage" and phase_q >= 3)
 
             if all_filled and clinical_done:
-                logger.info("⚡ Auto-outcome: tutti gli slot pieni + clinical done → OUTCOME")
+                logger.info(f"⚡ Auto-outcome: slots OK + {phase_q} domande → OUTCOME")
                 self.state.set(StateKeys.CURRENT_PHASE, TriagePhase.OUTCOME.value)
                 response = self.outcome_gen.generate(current_branch, collected)
                 self.state.set(StateKeys.SBAR_REPORT_DATA, response.get("metadata", {}).get("sbar_full", ""))
@@ -836,11 +926,21 @@ class TriageControllerV3:
                 return self._format_response(response, start_time)
 
         # 6. FSM transition
+        prev_phase = TriagePhase(current_phase)
         phase_q_count = self.state.get("phase_question_count", 0)
         next_phase = self.fsm.next_phase(
-            current_branch, TriagePhase(current_phase), collected, phase_q_count
+            current_branch, prev_phase, collected, phase_q_count
         )
         phase_q_count = self.state.get("phase_question_count", 0)  # Re-read after FSM (may have reset)
+
+        # ═══ FIX 2a: Reset counter on EVERY phase transition ═══
+        if next_phase != prev_phase:
+            # Only reset if we're entering a clinical/fast/risk phase from a non-clinical phase
+            CLINICAL_PHASES = {TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT}
+            if next_phase in CLINICAL_PHASES and prev_phase not in CLINICAL_PHASES:
+                self.state.set("phase_question_count", 0)
+                phase_q_count = 0
+                logger.info(f"🔄 Counter reset: {prev_phase.value} → {next_phase.value}")
 
         # Auto-advance: if next phase already has data, skip forward
         MAX_AUTO = 3
@@ -853,6 +953,12 @@ class TriageControllerV3:
             logger.info(f"🔄 Auto-advance: {next_phase.value} → {next_attempt.value}")
             next_phase = next_attempt
             phase_q_count = self.state.get("phase_question_count", 0)
+
+        # ═══ FIX 2b: HARD CAP — force outcome at 7 questions regardless ═══
+        CLINICAL_PHASES = {TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT}
+        if next_phase in CLINICAL_PHASES and phase_q_count >= 7:
+            logger.warning(f"⚠️ HARD CAP: {phase_q_count} domande → forza OUTCOME")
+            next_phase = TriagePhase.OUTCOME
 
         self.state.set(StateKeys.CURRENT_PHASE, next_phase.value)
 
@@ -867,8 +973,8 @@ class TriageControllerV3:
         if not isinstance(response, dict) or "text" not in response:
             response = {"text": "Puoi fornirmi maggiori dettagli?", "type": "open_text", "options": None}
 
-        # 8. Increment counter (only for non-outcome phases)
-        if next_phase not in [TriagePhase.OUTCOME, TriagePhase.SBAR_GENERATION]:
+        # 8. Increment counter (ONLY for clinical/fast/risk phases)
+        if next_phase in CLINICAL_PHASES:
             self.state.set("phase_question_count", phase_q_count + 1)
 
         # 9. Log

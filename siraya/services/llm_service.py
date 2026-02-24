@@ -132,13 +132,49 @@ class LLMService:
                 logger.error("❌ Nessun LLM disponibile per generate_with_json_parse")
                 return {}
 
-            # Estrai JSON da markdown code blocks se presente
-            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
-            if json_match:
-                response_text = json_match.group(1)
+            # ═══ ROBUST JSON EXTRACTION (3 strategies) ═══
+            parsed = None
 
-            # Parse JSON
-            parsed = json.loads(response_text)
+            # Strategy 1: Direct parse (LLM returned clean JSON)
+            clean = response_text.strip()
+            if clean.startswith("{"):
+                try:
+                    parsed = json.loads(clean)
+                except json.JSONDecodeError:
+                    pass
+
+            # Strategy 2: Extract from markdown code blocks
+            if parsed is None:
+                json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+                if json_match:
+                    try:
+                        parsed = json.loads(json_match.group(1))
+                    except json.JSONDecodeError:
+                        pass
+
+            # Strategy 3: Find first { ... last } in text (bare JSON in prose)
+            if parsed is None:
+                first_brace = response_text.find("{")
+                last_brace = response_text.rfind("}")
+                if first_brace != -1 and last_brace > first_brace:
+                    candidate = response_text[first_brace:last_brace + 1]
+                    try:
+                        parsed = json.loads(candidate)
+                    except json.JSONDecodeError:
+                        # Try fixing common issues: trailing commas, single quotes
+                        try:
+                            fixed = re.sub(r',\s*}', '}', candidate)
+                            fixed = re.sub(r',\s*]', ']', fixed)
+                            parsed = json.loads(fixed)
+                        except json.JSONDecodeError:
+                            pass
+
+            if parsed is None:
+                logger.error(f"❌ JSON parsing error: no valid JSON found in response")
+                logger.error(f"Response text: {response_text[:500] if response_text else 'N/A'}")
+                return {}
+
+            logger.info(f"✅ JSON parsed successfully (keys: {list(parsed.keys())[:5]})")
 
             # VALIDATION: Se type='multiple_choice' ma mancano options, fallback
             if parsed.get("type") == "multiple_choice" and not parsed.get("options"):
@@ -148,10 +184,6 @@ class LLMService:
 
             return parsed
 
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ JSON parsing error: {e}")
-            logger.error(f"Response text: {response_text[:500] if response_text else 'N/A'}")
-            return {}
         except Exception as e:
             logger.error(f"❌ LLM generate_with_json_parse error: {type(e).__name__} - {e}")
             return {}
