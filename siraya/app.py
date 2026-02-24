@@ -186,7 +186,8 @@ siraya/
 │   ├── data_loader.py
 │   └── analytics_service.py
 ├── controllers/
-│   └── triage_controller.py
+│   ├── triage_controller_v3.py
+│   └── smart_router.py
 └── views/
     ├── chat_view.py
     ├── dashboard_view.py
@@ -302,7 +303,7 @@ def render_import_error_page() -> None:
         ("siraya.services.llm_service", "LLM Service"),
         ("siraya.services.data_loader", "Data Loader"),
         ("siraya.services.analytics_service", "Analytics Service"),
-        ("siraya.controllers.triage_controller", "Triage Controller"),
+        ("siraya.controllers.triage_controller_v3", "Triage Controller V3"),
         ("siraya.views.chat_view", "Chat View"),
         ("siraya.views.dashboard_view", "Dashboard View"),
         ("siraya.views.map_view", "Map View"),
