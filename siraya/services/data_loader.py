@@ -599,15 +599,11 @@ class DataLoader:
 # SINGLETON INSTANCE
 # ============================================================================
 
-_data_loader: Optional[DataLoader] = None
-
-
+@st.cache_resource
 def get_data_loader() -> DataLoader:
-    """Get singleton DataLoader instance."""
-    global _data_loader
-    if _data_loader is None:
-        _data_loader = DataLoader()
-    return _data_loader
+    """Get DataLoader instance. Streamlit manages lifecycle and auto-invalidates on file change."""
+    logger.info("🔄 Creating NEW DataLoader instance")
+    return DataLoader()
 
 
 # ============================================================================

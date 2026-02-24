@@ -1007,15 +1007,14 @@ class TriageControllerV3:
 
 
 # ============================================================================
-# SINGLETON (unchanged interface)
+# SINGLETON via st.cache_resource (auto-invalidates when file changes)
 # ============================================================================
 
-_controller_instance = None
+import streamlit as st
 
 
+@st.cache_resource
 def get_triage_controller():
-    """Get singleton controller instance."""
-    global _controller_instance
-    if _controller_instance is None:
-        _controller_instance = TriageControllerV3()
-    return _controller_instance
+    """Get controller instance. Streamlit manages lifecycle and auto-invalidates on file change."""
+    logger.info("🔄 Creating NEW TriageControllerV3 instance")
+    return TriageControllerV3()

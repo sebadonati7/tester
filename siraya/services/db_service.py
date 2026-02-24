@@ -295,15 +295,11 @@ class DatabaseService:
 
 
 # Singleton instance
-_db_service: Optional[DatabaseService] = None
-
-
+@st.cache_resource
 def get_db_service() -> DatabaseService:
-    """Get singleton DatabaseService instance."""
-    global _db_service
-    if _db_service is None:
-        _db_service = DatabaseService()
-    return _db_service
+    """Get DatabaseService instance. Streamlit manages lifecycle and auto-invalidates on file change."""
+    logger.info("🔄 Creating NEW DatabaseService instance")
+    return DatabaseService()
 
 
 def init_db_connection() -> DatabaseService:

@@ -247,6 +247,7 @@ class StateManager:
             StateKeys.QUESTION_COUNT,      # Legacy - mantenuto per backward compatibility
             StateKeys.QUESTION_COUNT_INTAKE,  # ✅ NEW
             StateKeys.QUESTION_COUNT_CLINICAL,  # ✅ NEW
+            StateKeys.PHASE_QUESTION_COUNT,     # ✅ V3 - Counter unico per fase clinica
             StateKeys.LAST_BOT_RESPONSE,    # V2.1
             StateKeys.INFO_BOXES_LAST_STATE,  # ✅ NEW
             StateKeys.SBAR_REPORT_DATA,     # ✅ NEW

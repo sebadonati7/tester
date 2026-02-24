@@ -235,16 +235,12 @@ class LLMService:
 
 
 # ============================================================================
-# SINGLETON
+# SINGLETON via st.cache_resource (auto-invalidates when file changes)
 # ============================================================================
 
-_llm_service: Optional[LLMService] = None
 
-
+@st.cache_resource
 def get_llm_service() -> LLMService:
-    """Restituisce l'istanza singleton di LLMService."""
-    global _llm_service
-    if _llm_service is None:
-        logger.info("Creating new LLMService instance")
-        _llm_service = LLMService()
-    return _llm_service
+    """Get LLM service instance. Streamlit manages lifecycle and auto-invalidates on file change."""
+    logger.info("🔄 Creating NEW LLMService instance")
+    return LLMService()
