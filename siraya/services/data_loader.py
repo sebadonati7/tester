@@ -243,8 +243,10 @@ class DataLoader:
         **filters
     ) -> Optional[Dict[str, Any]]:
         """
-        Funzione UNIFICATA per cercare strutture sanitarie.
-        FIX: Aggiunto filtro età — esclude Pediatrico per adulti (>14).
+        Ricerca strutture con PRE-FILTERING rigoroso per età.
+        V4.0 FIX: Cerca in ENTRAMBI tipologia E nome.
+        V4.0 FIX: Filtro età come STEP 0 (non-negoziabile).
+        V4.0 FIX: Prioritizza 'Generale' su 'Specialistico'.
         
         Args:
             location: Comune Emilia-Romagna (es: "Bologna")
@@ -255,55 +257,75 @@ class DataLoader:
         Returns:
             Prima struttura che match, None se non trovata
         """
+        import logging
+        _logger = logging.getLogger(__name__)
+        
         facilities = self.get_all_facilities()
         
-        # FILTRO 1: Tipologia
-        type_lower = facility_type.lower()
-        results = [f for f in facilities if type_lower in f.get("tipologia", "").lower()]
-        
-        # FIX — FILTRO 2: VALIDAZIONE ETÀ (hard-coded, non-negotiable)
+        # ══ STEP 0: PRE-FILTER ETÀ (prima di qualsiasi altra operazione) ══
         if patient_age is not None:
+            PEDIATRIC_MARKERS = ["pediatric", "pediatrico", "pediatrica", "bambini", "bambino", "minori"]
+            
             if patient_age > 14:
-                # Adulto: escludi TUTTE le strutture pediatriche
-                results = [
-                    f for f in results
-                    if "pediatric" not in f.get("nome", "").lower()
-                    and "pediatric" not in f.get("tipologia", "").lower()
-                    and "bambini" not in f.get("nome", "").lower()
-                    and "pediatrico" not in f.get("nome", "").lower()
-                    and "pediatrico" not in f.get("tipologia", "").lower()
+                pre_count = len(facilities)
+                facilities = [
+                    f for f in facilities
+                    if not any(
+                        marker in f.get("nome", "").lower()
+                        or marker in f.get("tipologia", "").lower()
+                        or marker in " ".join(f.get("servizi_disponibili", [])).lower()
+                        for marker in PEDIATRIC_MARKERS
+                    )
                 ]
+                _logger.info(f"🔒 Pre-filter età adulto ({patient_age}): {pre_count} → {len(facilities)} strutture")
             elif patient_age <= 14:
-                # Minore: PREFERISCI strutture pediatriche se disponibili
-                pediatric = [
-                    f for f in results
-                    if "pediatric" in f.get("nome", "").lower()
-                    or "pediatric" in f.get("tipologia", "").lower()
-                    or "pediatrico" in f.get("nome", "").lower()
-                    or "pediatrico" in f.get("tipologia", "").lower()
-                    or "bambini" in f.get("nome", "").lower()
+                pediatric_facilities = [
+                    f for f in facilities
+                    if any(
+                        marker in f.get("nome", "").lower()
+                        or marker in f.get("tipologia", "").lower()
+                        for marker in PEDIATRIC_MARKERS
+                    )
                 ]
-                if pediatric:
-                    results = pediatric
+                if pediatric_facilities:
+                    facilities = pediatric_facilities
+                    _logger.info(f"🔒 Pre-filter età minore ({patient_age}): preferendo {len(facilities)} strutture pediatriche")
         
-        # FILTRO 3: Località
-        if location:
+        # ══ STEP 1: Filtro tipologia (cerca in TIPOLOGIA + NOME) ══
+        type_lower = facility_type.lower()
+        results = [
+            f for f in facilities
+            if type_lower in f.get("tipologia", "").lower()
+            or type_lower in f.get("nome", "").lower()
+        ]
+        
+        # ══ STEP 2: Filtro località ══
+        if location and results:
             location_lower = location.lower().strip()
             local_results = [
-                f for f in results 
+                f for f in results
                 if f.get("comune", "").lower() == location_lower
             ]
             if local_results:
                 results = local_results
         
-        # Filtri aggiuntivi (es. specialty, servizi_disponibili)
+        # ══ STEP 3: Priorità — preferisci "Generale" su "Specialistico" ══
+        if len(results) > 1:
+            general = [
+                f for f in results
+                if "generale" in f.get("nome", "").lower()
+                or "hub" in f.get("tipologia", "").lower()
+            ]
+            if general:
+                results = general + [f for f in results if f not in general]
+        
+        # Filtri aggiuntivi opzionali
         for key, value in filters.items():
             if key == "services":
                 results = [f for f in results if value in f.get("servizi_disponibili", [])]
             else:
                 results = [f for f in results if f.get(key) == value]
         
-        # Ritorna prima struttura o None
         return results[0] if results else None
     
     def find_facilities_smart(

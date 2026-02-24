@@ -440,7 +440,7 @@ def _render_disposition_summary() -> None:
             st.write(f"Red Flags: {', '.join(red_flags) if red_flags else 'Nessuno'}")
             
             st.markdown("**R - Raccomandazione**")
-            triage_path = state.get(StateKeys.TRIAGE_PATH, 'C')
+            triage_path = state.get(StateKeys.TRIAGE_BRANCH, state.get(StateKeys.TRIAGE_PATH, 'C'))
             path_labels = {"A": "Emergenza", "B": "Salute Mentale", "C": "Standard", "INFO": "Informazioni"}
             st.write(f"Percorso: {path_labels.get(triage_path, triage_path)}")
     
