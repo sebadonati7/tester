@@ -11,6 +11,7 @@ This service:
 """
 
 import json
+import logging
 import difflib
 import streamlit as st
 from pathlib import Path
@@ -20,6 +21,8 @@ from functools import lru_cache
 from ..config.settings import (
     PATHS, SupabaseConfig, haversine_distance, ClinicalMappings
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
