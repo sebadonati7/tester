@@ -1016,5 +1016,4 @@ import streamlit as st
 @st.cache_resource
 def get_triage_controller():
     """Get controller instance. Streamlit manages lifecycle and auto-invalidates on file change."""
-    logger.info("🔄 Creating NEW TriageControllerV3 instance")
     return TriageControllerV3()

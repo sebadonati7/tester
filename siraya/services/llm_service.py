@@ -242,5 +242,4 @@ class LLMService:
 @st.cache_resource
 def get_llm_service() -> LLMService:
     """Get LLM service instance. Streamlit manages lifecycle and auto-invalidates on file change."""
-    logger.info("🔄 Creating NEW LLMService instance")
     return LLMService()

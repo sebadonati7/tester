@@ -605,7 +605,6 @@ class DataLoader:
 @st.cache_resource
 def get_data_loader() -> DataLoader:
     """Get DataLoader instance. Streamlit manages lifecycle and auto-invalidates on file change."""
-    logger.info("🔄 Creating NEW DataLoader instance")
     return DataLoader()
 
 

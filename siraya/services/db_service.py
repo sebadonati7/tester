@@ -298,7 +298,6 @@ class DatabaseService:
 @st.cache_resource
 def get_db_service() -> DatabaseService:
     """Get DatabaseService instance. Streamlit manages lifecycle and auto-invalidates on file change."""
-    logger.info("🔄 Creating NEW DatabaseService instance")
     return DatabaseService()
 
 
