@@ -460,17 +460,22 @@ class UnifiedSlotFiller:
                     extracted[cls.KEYS["location"]] = comune.title()
                     break
 
-        # ═══ ONSET ═══
-        if "ieri" in user_lower:
-            extracted[cls.KEYS["onset"]] = "ieri"
-        elif "stamattina" in user_lower or "questa mattina" in user_lower:
-            extracted[cls.KEYS["onset"]] = "stamattina"
-        elif "oggi" in user_lower:
-            extracted[cls.KEYS["onset"]] = "oggi"
-        elif "settimana" in user_lower:
-            extracted[cls.KEYS["onset"]] = "da una settimana"
-        elif "mese" in user_lower or "mesi" in user_lower:
-            extracted[cls.KEYS["onset"]] = "da un mese"
+        # ═══ ONSET (also handles multiple-choice answers like "A) Meno di 1 settimana") ═══
+        if "onset" not in current_data:
+            if "ieri" in user_lower:
+                extracted[cls.KEYS["onset"]] = "ieri"
+            elif "stamattina" in user_lower or "questa mattina" in user_lower:
+                extracted[cls.KEYS["onset"]] = "stamattina"
+            elif "oggi" in user_lower or "poche ore" in user_lower or "meno di 2 ore" in user_lower:
+                extracted[cls.KEYS["onset"]] = "oggi"
+            elif "meno di 1 settimana" in user_lower or "meno di una settimana" in user_lower:
+                extracted[cls.KEYS["onset"]] = "meno di 1 settimana"
+            elif "settimana" in user_lower or "giorni" in user_lower or "qualche giorno" in user_lower:
+                extracted[cls.KEYS["onset"]] = "da una settimana"
+            elif "mese" in user_lower or "mesi" in user_lower:
+                extracted[cls.KEYS["onset"]] = "da un mese"
+            elif "anno" in user_lower or "anni" in user_lower:
+                extracted[cls.KEYS["onset"]] = "da oltre un anno"
 
         # ═══ CONSENT (binary) ═══
         if current_phase == "consent":
@@ -503,6 +508,9 @@ class TriageFSM:
             (TriageBranch.STANDARD, TriagePhase.OUTCOME): lambda d, q: TriagePhase.OUTCOME,
 
             (TriageBranch.EMERGENCY, TriagePhase.INTAKE): self._emg_from_intake,
+            (TriageBranch.EMERGENCY, TriagePhase.CHIEF_COMPLAINT): self._emg_from_complaint,
+            (TriageBranch.EMERGENCY, TriagePhase.PAIN_SCALE): self._emg_from_pain,
+            (TriageBranch.EMERGENCY, TriagePhase.DEMOGRAPHICS): self._emg_from_demographics,
             (TriageBranch.EMERGENCY, TriagePhase.LOCALIZATION): self._emg_from_location,
             (TriageBranch.EMERGENCY, TriagePhase.FAST_TRIAGE): self._emg_from_fast,
             (TriageBranch.EMERGENCY, TriagePhase.OUTCOME): lambda d, q: TriagePhase.OUTCOME,
@@ -565,6 +573,27 @@ class TriageFSM:
 
     # === EMERGENCY ===
     def _emg_from_intake(self, data, q):
+        if "location" in data:
+            self.state.set("phase_question_count", 0)
+            return TriagePhase.FAST_TRIAGE
+        return TriagePhase.LOCALIZATION
+
+    def _emg_from_complaint(self, data, q):
+        """Handle escalation C→A when in CHIEF_COMPLAINT."""
+        if "location" in data:
+            self.state.set("phase_question_count", 0)
+            return TriagePhase.FAST_TRIAGE
+        return TriagePhase.LOCALIZATION
+
+    def _emg_from_pain(self, data, q):
+        """Handle escalation C→A when in PAIN_SCALE."""
+        if "location" in data:
+            self.state.set("phase_question_count", 0)
+            return TriagePhase.FAST_TRIAGE
+        return TriagePhase.LOCALIZATION
+
+    def _emg_from_demographics(self, data, q):
+        """Handle escalation C→A when in DEMOGRAPHICS."""
         if "location" in data:
             self.state.set("phase_question_count", 0)
             return TriagePhase.FAST_TRIAGE
@@ -660,6 +689,7 @@ class QuestionGenerator:
         symptom = data.get("chief_complaint", "sintomo generico")
         pain = data.get("pain_scale", "N/D")
         age = data.get("age", "N/D")
+        onset = data.get("onset", "N/D")
 
         rag_context = "(Nessun protocollo specifico, usa conoscenza medica generale)"
         try:
@@ -678,23 +708,38 @@ class QuestionGenerator:
         else:
             branch_instr = "Indagine clinica strutturata. Formato: multiple_choice con 3 opzioni A/B/C."
 
-        # FIX 4a: STRICT JSON-only prompt
+        # ═══ Build conversation history for context ═══
+        chat_history = data.get("_chat_history", [])
+        history_text = ""
+        if chat_history:
+            history_lines = []
+            for msg in chat_history:
+                role = "Paziente" if msg.get("role") == "user" else "Medico"
+                content = msg.get("content", "")[:150]  # Truncate long messages
+                history_lines.append(f"  {role}: {content}")
+            history_text = "\n".join(history_lines)
+
+        # FIX: STRICT JSON-only prompt WITH conversation history
         prompt = f"""Genera UNA domanda clinica per il triage. Rispondi ESCLUSIVAMENTE con JSON valido.
 NESSUN testo prima del JSON. NESSUN testo dopo il JSON. NESSUN commento. SOLO il JSON.
 
-DATI PAZIENTE: Sintomo={symptom}, Dolore={pain}/10, Età={age}
-Domanda numero: {phase_q_count + 1}
+DATI PAZIENTE: Sintomo={symptom}, Dolore={pain}/10, Età={age}, Insorgenza={onset}
+Domanda numero: {phase_q_count + 1} (target: 5-7 domande totali)
+
+CONVERSAZIONE PRECEDENTE:
+{history_text if history_text else "(Prima domanda clinica)"}
 
 PROTOCOLLI:
 {rag_context}
 
 {branch_instr}
 
-REGOLE:
-1) Domanda SPECIFICA per il sintomo "{symptom}"
-2) USA i protocolli clinici sopra
-3) UNA SOLA domanda (NON fare riepiloghi, ringraziamenti o diagnosi)
-4) Il campo "text" DEVE contenere una DOMANDA (deve terminare con "?")
+REGOLE CRITICHE:
+1) NON ripetere domande già fatte nella conversazione precedente
+2) Domanda SPECIFICA per il sintomo "{symptom}" — avanza l'indagine clinica
+3) Se la conversazione mostra già risposte su insorgenza/durata, chiedi ALTRO (es: sintomi associati, fattori scatenanti, farmaci, patologie pregresse, irradiazione)
+4) UNA SOLA domanda (NON fare riepiloghi, ringraziamenti o diagnosi)
+5) Il campo "text" DEVE contenere una DOMANDA (deve terminare con "?")
 
 {{"text": "La tua domanda specifica qui?", "type": "multiple_choice", "options": ["A) Prima opzione", "B) Seconda opzione", "C) Terza opzione"]}}"""
 
@@ -1064,7 +1109,13 @@ class TriageControllerV3:
             response = self.outcome_gen.generate(current_branch, collected)
             self.state.set(StateKeys.SBAR_REPORT_DATA, response.get("metadata", {}).get("sbar_full", ""))
         else:
+            # Inject chat history for clinical question generation (avoids repeating questions)
+            messages = self.state.get(StateKeys.MESSAGES, [])
+            if messages:
+                # Pass last 14 messages (7 Q&A pairs) for context
+                collected["_chat_history"] = messages[-14:]
             response = self.question_gen.generate(next_phase, current_branch, collected, phase_q_count)
+            collected.pop("_chat_history", None)  # Don't persist chat history in collected
 
         # Validate response
         if not isinstance(response, dict) or "text" not in response:
