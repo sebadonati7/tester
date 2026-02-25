@@ -30,15 +30,14 @@ class RAGService:
                     SupabaseConfig.get_key()
                 )
                 
-                # Test connection with a simple query
+                # Test connection — query protocol_chunks directly
                 try:
-                    # Try to query protocol_chunks table (if exists) or logs table
-                    test_result = self.supabase.table("triage_logs").select("id").limit(1).execute()
+                    test_result = self.supabase.table("protocol_chunks").select("id", count="exact").limit(1).execute()
                     self.connection_tested = True
-                    logger.info("✅ RAG Service connesso a Supabase (test connessione OK)")
+                    chunk_count = test_result.count if hasattr(test_result, 'count') and test_result.count else len(test_result.data or [])
+                    logger.info(f"✅ RAG Service: protocol_chunks OK ({chunk_count}+ chunks)")
                 except Exception as test_e:
-                    logger.warning(f"⚠️ Supabase connesso ma test query fallito: {test_e}")
-                    # Still keep connection, might be a table permission issue
+                    logger.warning(f"⚠️ protocol_chunks non accessibile: {test_e}")
                     self.connection_tested = False
             else:
                 logger.warning("⚠️ Supabase non configurato — RAG disabilitato")
@@ -72,6 +71,20 @@ class RAGService:
         
         return should_use
     
+    # Mapping from medical terms to search keywords for protocol_chunks
+    SYMPTOM_SEARCH_TERMS = {
+        "cefalea": ["cefalea", "testa", "emicrania", "mal di testa"],
+        "dolore toracico": ["toracico", "petto", "cardiaco", "cuore", "dolore toracico"],
+        "toracalgia": ["toracico", "petto", "cardiaco", "dolore toracico"],
+        "dolore addominale": ["addominale", "addome", "pancia", "stomaco", "gastrico"],
+        "lombalgia": ["lombalgia", "schiena", "lombare", "dorsale"],
+        "cervicalgia": ["cervicale", "collo", "cervicalgia"],
+        "gonalgia": ["ginocchio", "gonalgia", "articolare"],
+        "febbre": ["febbre", "temperatura", "ipertermia"],
+        "dispnea": ["respiro", "dispnea", "respiratorio", "polmonare"],
+        "trauma": ["trauma", "ferita", "frattura", "contusione"],
+    }
+
     def retrieve_context(
         self, 
         query: str, 
@@ -79,41 +92,105 @@ class RAGService:
         protocol_filter: Optional[str] = None
     ) -> List[Dict]:
         """
-        ✅ RAG RIATTIVATO con knowledge base locale fallback.
+        RAG with Supabase protocol_chunks + local KB fallback.
         
-        Strategia 3-tier:
-        1. Supabase protocol_chunks (se esiste)
+        Strategy:
+        1. Supabase protocol_chunks — multi-keyword search
         2. Local knowledge base (hardcoded per sintomi comuni)
-        3. Protocollo generico base
+        3. Generic fallback protocol
         
         Returns:
             List di dict con keys: content, source, page
         """
         
-        if not self.supabase:
-            logger.warning("⚠️ Supabase non disponibile, uso KB locale")
-            return self._get_local_kb_chunks(query, k)
+        # ═══ STRATEGIA 1: Supabase protocol_chunks ═══
+        if self.supabase:
+            supabase_results = self._search_supabase(query, k)
+            if supabase_results:
+                return supabase_results
+
+        # ═══ STRATEGIA 2: Local knowledge base ═══
+        local_results = self._get_local_kb_chunks(query, k)
+        if local_results:
+            logger.info(f"✅ RAG Local KB: {len(local_results)} chunks per '{query[:30]}'")
+            return local_results
+
+        # ═══ STRATEGIA 3: Generic fallback ═══
+        logger.info("⚠️ RAG: Nessun risultato, uso protocollo generico")
+        return [{
+            "content": "Triage generico: valutare INTENSITÀ (scala 1-10), DURATA, SINTOMI ASSOCIATI, FATTORI SCATENANTI, storia patologica. Indagare sempre red flags.",
+            "source": "Protocollo Base Triage",
+            "page": "1"
+        }]
+
+    def _search_supabase(self, query: str, k: int) -> List[Dict]:
+        """Multi-keyword search on Supabase protocol_chunks table."""
+        # Build search terms from the query
+        search_terms = self._get_search_terms(query)
         
-        # ✅ STRATEGIA 1: Supabase full-text search
-        try:
-            # Prova con text_search PostgreSQL nativo (se supportato)
-            response = self.supabase.table("protocol_chunks")\
-                .select("*")\
-                .ilike("content", f"%{query}%")\
-                .limit(k)\
-                .execute()
-            
-            if response.data:
-                logger.info(f"✅ RAG: Trovati {len(response.data)} chunks in Supabase")
-                return response.data
+        all_results = []
+        seen_ids = set()
         
-        except Exception as e:
-            logger.debug(f"⚠️ Supabase protocol_chunks non disponibile: {e}")
-            # Fallback a strategia 2
+        for term in search_terms:
+            try:
+                response = self.supabase.table("protocol_chunks")\
+                    .select("*")\
+                    .ilike("content", f"%{term}%")\
+                    .limit(k)\
+                    .execute()
+                
+                if response.data:
+                    for chunk in response.data:
+                        chunk_id = chunk.get("id", id(chunk))
+                        if chunk_id not in seen_ids:
+                            seen_ids.add(chunk_id)
+                            # Normalize field names for downstream compatibility
+                            normalized = {
+                                "content": chunk.get("content", chunk.get("chunk_text", "")),
+                                "source": chunk.get("source", chunk.get("protocol_name", chunk.get("document_name", "Protocollo Clinico"))),
+                                "page": chunk.get("page", chunk.get("chunk_index", chunk.get("page_number", "?"))),
+                            }
+                            all_results.append(normalized)
+            except Exception as e:
+                logger.debug(f"⚠️ Supabase search failed for '{term}': {e}")
+                continue
         
-        # ✅ STRATEGIA 2: Local knowledge base
-        logger.info(f"✅ RAG Fallback: Uso knowledge base locale per '{query}'")
-        return self._get_local_kb_chunks(query, k)
+        if all_results:
+            logger.info(f"✅ RAG Supabase: Trovati {len(all_results)} chunks per '{query[:30]}'")
+            return all_results[:k]
+        
+        return []
+
+    def _get_search_terms(self, query: str) -> List[str]:
+        """Generate multiple search terms from a symptom query."""
+        query_lower = query.lower().strip()
+        terms = []
+        
+        # Check symptom mapping first
+        for symptom, keywords in self.SYMPTOM_SEARCH_TERMS.items():
+            if symptom in query_lower or any(kw in query_lower for kw in keywords):
+                terms.extend(keywords)
+                break
+        
+        # Add individual words from the query (length > 3)
+        for word in query_lower.split():
+            clean = word.strip(".,;:!?")
+            if len(clean) > 3 and clean not in terms:
+                terms.append(clean)
+        
+        # If nothing found, use the full query
+        if not terms:
+            terms = [query_lower]
+        
+        # Deduplicate and limit
+        seen = set()
+        unique_terms = []
+        for t in terms:
+            if t not in seen:
+                seen.add(t)
+                unique_terms.append(t)
+        
+        return unique_terms[:5]  # Max 5 search terms
     
     def _get_local_kb_chunks(self, query: str, k: int) -> List[Dict]:
         """

@@ -720,6 +720,34 @@ class QuestionGenerator:
             {"topic": "FATTORI POSIZIONALI", "instruction": "Chiedi se il dolore CAMBIA con la posizione: peggiora stando seduti, in piedi, durante il movimento, migliora sdraiati. Opzioni: A) Peggiora stando seduto o in piedi a lungo B) Peggiora con i movimenti C) È costante, non cambia con la posizione"},
             {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: episodi precedenti simili, interventi alla schiena, farmaci antidolorifici assunti, osteoporosi nota. Opzioni: A) Sì, ho avuto episodi simili in passato B) Prendo antidolorifici ma non migliorano C) È la prima volta"},
         ],
+        "dolore al piede": [
+            {"topic": "INSORGENZA E CAUSA", "instruction": "Chiedi da QUANTO TEMPO dura il dolore al piede e se è legato a un evento specifico: trauma, caduta, camminata prolungata, nuovo paio di scarpe. Opzioni: A) Dopo un trauma o una caduta B) Dopo attività fisica o camminata prolungata C) Senza causa apparente, gradualmente"},
+            {"topic": "LOCALIZZAZIONE NEL PIEDE", "instruction": "Chiedi DOVE esattamente nel piede è localizzato il dolore: pianta, tallone, dita, dorso del piede, caviglia. Opzioni: A) Pianta del piede o tallone B) Dita o dorso del piede C) Caviglia o zona laterale"},
+            {"topic": "CARICO E MOVIMENTO", "instruction": "Chiedi se il dolore PEGGIORA con il carico, la camminata o specifici movimenti, oppure se è presente anche a riposo. Opzioni: A) Peggiora camminando o stando in piedi B) Presente anche a riposo o di notte C) Solo con movimenti specifici"},
+            {"topic": "SEGNI VISIBILI", "instruction": "Chiedi se ci sono SEGNI VISIBILI: gonfiore, arrossamento, lividi, deformità, difficoltà a muovere le dita. Opzioni: A) Sì, gonfiore e/o arrossamento B) Sì, livido o deformità visibile C) No, nessun segno visibile"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: diabete (neuropatia), problemi circolatori, gotta, episodi simili, farmaci in uso. Opzioni: A) Sì, ho diabete o problemi circolatori B) Ho avuto episodi simili in passato C) Nessuna patologia nota"},
+        ],
+        "dolore alla gamba": [
+            {"topic": "INSORGENZA E CAUSA", "instruction": "Chiedi da QUANTO TEMPO dura il dolore alla gamba e se è collegato a un evento: sforzo, trauma, posizione prolungata. Opzioni: A) Dopo un trauma o sforzo fisico B) Gradualmente, senza causa apparente C) Improvvisamente, a riposo"},
+            {"topic": "LOCALIZZAZIONE NELLA GAMBA", "instruction": "Chiedi DOVE nella gamba è il dolore: coscia, polpaccio, ginocchio, dietro il ginocchio. Il dolore al polpaccio improvviso può indicare trombosi venosa. Opzioni: A) Polpaccio B) Coscia C) Ginocchio o dietro il ginocchio"},
+            {"topic": "CARATTERISTICHE E SEGNI", "instruction": "Chiedi le CARATTERISTICHE: crampo, bruciore, intorpidimento, formicolio. Chiedi se c'è gonfiore, rossore o calore al tatto (segni di trombosi). Opzioni: A) Crampo o dolore muscolare B) Formicolio o intorpidimento C) Gonfiore, rossore o calore"},
+            {"topic": "IRRADIAZIONE", "instruction": "Chiedi se il dolore INIZIA dalla schiena e scende lungo la gamba (possibile sciatica) o se è localizzato solo nella gamba. Opzioni: A) Parte dalla schiena e scende lungo la gamba B) Solo nella gamba, non parte dalla schiena C) Si estende al piede"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: problemi circolatori (vene varicose, trombosi precedente), diabete, lombalgia cronica, farmaci in uso. Opzioni: A) Sì, ho problemi circolatori o vene varicose B) Ho problemi alla schiena C) Nessuna patologia nota"},
+        ],
+        "dolore articolare": [
+            {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO dura il dolore articolare e se è iniziato dopo un trauma, sforzo o spontaneamente. Opzioni: A) Dopo un trauma o movimento brusco B) Gradualmente, senza causa evidente C) Improvvisamente, senza trauma"},
+            {"topic": "MOBILITÀ", "instruction": "Chiedi se l'articolazione ha LIMITAZIONI DI MOVIMENTO: rigidità mattutina, impossibilità di piegare/estendere, blocco. Opzioni: A) Sì, rigidità soprattutto al mattino B) Sì, non riesco a muovere normalmente l'articolazione C) No, movimento normale nonostante il dolore"},
+            {"topic": "SEGNI INFIAMMATORI", "instruction": "Chiedi se ci sono SEGNI DI INFIAMMAZIONE: gonfiore, rossore, calore al tatto, versamento articolare. Opzioni: A) Sì, gonfiore e rossore B) Sì, calore al tatto C) No, nessun segno visibile"},
+            {"topic": "PATTERN", "instruction": "Chiedi se il dolore COINVOLGE più articolazioni o solo una, e se è simmetrico. Questo aiuta a distinguere artrite, artrosi, gotta. Opzioni: A) Solo un'articolazione B) Più articolazioni, simmetrico (es. entrambe le mani) C) Più articolazioni, asimmetrico"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: artrite nota, gotta, patologie autoimmuni, farmaci (cortisone, antinfiammatori), episodi precedenti. Opzioni: A) Sì, ho artrite o gotta nota B) Ho avuto episodi simili in passato C) Nessuna patologia articolare nota"},
+        ],
+        "febbre": [
+            {"topic": "TEMPERATURA E DURATA", "instruction": "Chiedi la TEMPERATURA misurata e da QUANTO TEMPO è presente la febbre. Opzioni: A) Lieve (37-38°C), da oggi B) Alta (>38.5°C), da più di un giorno C) Non ho misurato ma mi sento molto caldo/freddo"},
+            {"topic": "SINTOMI RESPIRATORI", "instruction": "Chiedi se ci sono SINTOMI RESPIRATORI associati: tosse, mal di gola, raffreddore, difficoltà a respirare. Opzioni: A) Sì, tosse e/o mal di gola B) Sì, difficoltà a respirare C) No, nessun sintomo respiratorio"},
+            {"topic": "ALTRI SINTOMI", "instruction": "Chiedi se ci sono ALTRI SINTOMI: dolori muscolari, mal di testa, nausea/vomito, diarrea, eruzioni cutanee, dolore a urinare. Opzioni: A) Dolori muscolari e/o mal di testa B) Nausea, vomito o diarrea C) Dolore a urinare o altri sintomi"},
+            {"topic": "CONTESTO", "instruction": "Chiedi il CONTESTO: viaggi recenti, contatto con persone malate, vaccinazioni recenti, interventi chirurgici recenti. Opzioni: A) Sì, contatto con persone malate B) Viaggio recente o intervento chirurgico C) Nessun contesto particolare"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: farmaci antipiretici assunti, patologie croniche (immunosoppressione, diabete), allergie. Opzioni: A) Ho preso antipiretici ma la febbre non scende B) Ho patologie croniche C) Nessun farmaco e nessuna patologia nota"},
+        ],
         "_default": [
             {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO è presente il sintomo e come è iniziato (improvvisamente o gradualmente). Opzioni: A) Improvvisamente, da poche ore B) Gradualmente, da alcuni giorni C) Da più di una settimana"},
             {"topic": "CARATTERISTICHE", "instruction": "Chiedi le CARATTERISTICHE del disturbo: è costante o intermittente? Peggiora o migliora? Opzioni: A) Costante, non migliora B) Va e viene C) Sta peggiorando nel tempo"},
@@ -729,25 +757,48 @@ class QuestionGenerator:
         ],
     }
 
+    # Extra aliases to map medicalized terms to dimension keys
+    DIMENSION_ALIASES = {
+        "cefalea": "cefalea", "mal di testa": "cefalea",
+        "dolore toracico": "dolore toracico", "toracalgia": "dolore toracico",
+        "dolore addominale": "dolore addominale", "dolore gastrico": "dolore addominale",
+        "lombalgia": "lombalgia", "dolore alla schiena": "lombalgia",
+        "dolore al piede": "dolore al piede",
+        "dolore alla gamba": "dolore alla gamba",
+        "gonalgia": "dolore articolare", "coxalgia": "dolore articolare",
+        "dolore alla spalla": "dolore articolare", "dolore al polso": "dolore articolare",
+        "dolore alla caviglia": "dolore articolare",
+        "dolore al braccio": "dolore articolare", "dolore alla mano": "dolore articolare",
+        "cervicalgia": "lombalgia",  # Similar investigation (spine-related)
+        "febbre": "febbre",
+    }
+
     def _get_clinical_dimension(self, symptom: str, phase_q_count: int) -> Dict[str, str]:
         """Get the clinical dimension to investigate based on symptom and question number."""
         symptom_lower = symptom.lower()
 
-        # Match symptom to dimension set
-        dimensions = None
-        for key in self.CLINICAL_DIMENSIONS:
-            if key == "_default":
-                continue
-            if key in symptom_lower or any(word in symptom_lower for word in key.split()):
-                dimensions = self.CLINICAL_DIMENSIONS[key]
-                break
+        # 1. Check aliases first (exact match for medicalized terms)
+        dimension_key = self.DIMENSION_ALIASES.get(symptom_lower)
+        if dimension_key and dimension_key in self.CLINICAL_DIMENSIONS:
+            dimensions = self.CLINICAL_DIMENSIONS[dimension_key]
+        else:
+            # 2. Partial match against dimension keys
+            dimensions = None
+            for key in self.CLINICAL_DIMENSIONS:
+                if key == "_default":
+                    continue
+                if key in symptom_lower or any(word in symptom_lower for word in key.split() if len(word) > 3):
+                    dimensions = self.CLINICAL_DIMENSIONS[key]
+                    break
 
-        if not dimensions:
-            dimensions = self.CLINICAL_DIMENSIONS["_default"]
+            if not dimensions:
+                dimensions = self.CLINICAL_DIMENSIONS["_default"]
 
-        # Select dimension by index (cycle if more questions than dimensions)
+        # Select dimension by index (cap at last dimension if more questions)
         idx = min(phase_q_count, len(dimensions) - 1)
-        return dimensions[idx]
+        selected = dimensions[idx]
+        logger.info(f"🩺 Dimension map: '{symptom}' → key='{dimension_key or 'partial/default'}', Q{phase_q_count} → {selected['topic']}")
+        return selected
 
     def _generate_clinical_question(self, phase, branch, data, phase_q_count):
         symptom = data.get("chief_complaint", "sintomo generico")
@@ -1248,10 +1299,12 @@ class TriageControllerV3:
 # SINGLETON via st.cache_resource (auto-invalidates when file changes)
 # ============================================================================
 
-import streamlit as st
 
 
-@st.cache_resource
 def get_triage_controller():
-    """Get controller instance. Streamlit manages lifecycle and auto-invalidates on file change."""
+    """
+    Create controller instance.
+    NOT cached — controller is lightweight (services LLM/RAG/DB/KB are cached separately).
+    This ensures code changes to controller/FSM/QuestionGenerator are immediately active.
+    """
     return TriageControllerV3()
