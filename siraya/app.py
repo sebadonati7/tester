@@ -1,6 +1,6 @@
 """
 SIRAYA Health Navigator - Application Entry Point
-V2.0: Final Assembly with proper routing.
+V4.1: Nuclear module reload + Supabase RAG.
 
 This is the ONLY file that Streamlit executes directly.
 
@@ -10,6 +10,7 @@ Responsibilities:
 - State initialization
 - Page routing
 - Error handling
+- NUCLEAR MODULE RELOAD: ensures code changes always take effect
 
 Usage:
     cd siraya
@@ -32,9 +33,41 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 # ============================================================================
+# NUCLEAR MODULE RELOAD — Ensures code changes ALWAYS take effect
+# Without this, Streamlit's hot-reload caches old module objects in
+# sys.modules, so even restarting Streamlit may not pick up changes.
+# Only clears CONTROLLERS + VIEWS (change frequently).
+# Services (@st.cache_resource) are kept cached for performance.
+# ============================================================================
+
+# Clean __pycache__ to force fresh bytecode compilation
+import shutil as _shutil
+for _pycache_dir in _siraya_dir.rglob('__pycache__'):
+    try:
+        _shutil.rmtree(_pycache_dir, ignore_errors=True)
+    except Exception:
+        pass
+
+# Clear controller + view + RAG modules from sys.modules
+# (RAG is included because it needs lazy-reconnect on every fresh load)
+_mods_to_clear = [k for k in list(sys.modules.keys())
+                  if 'siraya.controllers' in k 
+                  or 'siraya.views' in k
+                  or k == 'siraya.services.rag_service']
+for _mod_name in _mods_to_clear:
+    del sys.modules[_mod_name]
+
+# ============================================================================
 # STREAMLIT IMPORTS
 # ============================================================================
 import streamlit as st
+
+# Force RAG service cache clear so it re-checks protocol_chunks on next use
+try:
+    from siraya.services.rag_service import get_rag_service
+    get_rag_service.clear()
+except Exception:
+    pass
 
 # ============================================================================
 # PAGE CONFIGURATION (MUST BE FIRST STREAMLIT CALL)

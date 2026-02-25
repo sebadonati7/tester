@@ -462,19 +462,32 @@ class UnifiedSlotFiller:
 
         # ═══ ONSET (also handles multiple-choice answers like "A) Meno di 1 settimana") ═══
         if "onset" not in current_data:
-            if "ieri" in user_lower:
+            # Strip "A) ", "B) ", "C) " prefix from multiple choice answers
+            clean_input = re.sub(r'^[A-C]\)\s*', '', user_lower).strip()
+            
+            if "improvvis" in clean_input or "fulmine" in clean_input or "colpo" in clean_input:
+                extracted[cls.KEYS["onset"]] = "improvviso"
+            elif "gradual" in clean_input or "piano" in clean_input:
+                extracted[cls.KEYS["onset"]] = "graduale"
+            elif "meno di 30 minuti" in clean_input or "mezz'ora" in clean_input:
+                extracted[cls.KEYS["onset"]] = "meno di 30 minuti"
+            elif "meno di 1 ora" in clean_input or "meno di un'ora" in clean_input or "meno di 2 ore" in clean_input:
+                extracted[cls.KEYS["onset"]] = "meno di 1 ora"
+            elif "poche ore" in clean_input or "alcune ore" in clean_input:
+                extracted[cls.KEYS["onset"]] = "da poche ore"
+            elif "ieri" in clean_input:
                 extracted[cls.KEYS["onset"]] = "ieri"
-            elif "stamattina" in user_lower or "questa mattina" in user_lower:
-                extracted[cls.KEYS["onset"]] = "stamattina"
-            elif "oggi" in user_lower or "poche ore" in user_lower or "meno di 2 ore" in user_lower:
+            elif "stamattina" in clean_input or "questa mattina" in clean_input or "oggi" in clean_input:
                 extracted[cls.KEYS["onset"]] = "oggi"
-            elif "meno di 1 settimana" in user_lower or "meno di una settimana" in user_lower:
+            elif "meno di 1 settimana" in clean_input or "meno di una settimana" in clean_input:
                 extracted[cls.KEYS["onset"]] = "meno di 1 settimana"
-            elif "settimana" in user_lower or "giorni" in user_lower or "qualche giorno" in user_lower:
+            elif "più di un giorno" in clean_input or "più di 1 giorno" in clean_input:
+                extracted[cls.KEYS["onset"]] = "più di un giorno"
+            elif "settimana" in clean_input or "giorni" in clean_input or "qualche giorno" in clean_input:
                 extracted[cls.KEYS["onset"]] = "da una settimana"
-            elif "mese" in user_lower or "mesi" in user_lower:
+            elif "mese" in clean_input or "mesi" in clean_input:
                 extracted[cls.KEYS["onset"]] = "da un mese"
-            elif "anno" in user_lower or "anni" in user_lower:
+            elif "anno" in clean_input or "anni" in clean_input:
                 extracted[cls.KEYS["onset"]] = "da oltre un anno"
 
         # ═══ CONSENT (binary) ═══
@@ -548,6 +561,9 @@ class TriageFSM:
             if "location" in data:
                 return TriagePhase.PAIN_SCALE
             return TriagePhase.LOCALIZATION
+        # If generic symptom but no chief_complaint yet, stay to collect body part
+        if data.get("_generic_symptom"):
+            return TriagePhase.CHIEF_COMPLAINT
         return TriagePhase.CHIEF_COMPLAINT
 
     def _std_from_location(self, data, q):
@@ -680,9 +696,13 @@ class QuestionGenerator:
 
     # Phrases that indicate the LLM generated a closing/summary instead of a question
     BLOCK_PHRASES = [
-        "grazie per", "grazie delle", "informazioni fornite", "dati raccolti",
+        "grazie per", "grazie delle", "grazie dell'", "informazioni fornite",
+        "dati raccolti", "dati che mi hai",
         "riepilogo", "in sintesi", "riassumendo", "sulla base di",
         "ti consiglio", "ti suggerisco", "il mio consiglio",
+        "in base a quanto", "dalle informazioni", "concludendo",
+        "posso dirti che", "la mia valutazione", "consiglio di recarti",
+        "ti raccomando", "il quadro clinico",
     ]
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -843,39 +863,67 @@ class QuestionGenerator:
         else:
             format_instr = "Formato: multiple_choice con 3 opzioni A/B/C."
 
+        # ═══ Build summary of already-collected clinical info ═══
+        clinical_answers = data.get("_clinical_answers", [])
+        already_collected = []
+        if onset != "N/D":
+            already_collected.append(f"  - Insorgenza: {onset}")
+        for ans in clinical_answers:
+            already_collected.append(f"  - {ans['topic']}: {ans['answer']}")
+        collected_summary = "\n".join(already_collected) if already_collected else ""
+
         # ═══ STRICT prompt: topic is MANDATORY ═══
-        prompt = f"""Rispondi ESCLUSIVAMENTE con JSON valido. NESSUN testo prima o dopo.
+        prompt = f"""Rispondi ESCLUSIVAMENTE con JSON valido. NESSUN testo prima o dopo il JSON.
 
 PAZIENTE: {symptom}, Dolore {pain}/10, Età {age}, Insorgenza {onset}
+{f"INFORMAZIONI GIÀ RACCOLTE:{chr(10)}{collected_summary}" if collected_summary else ""}
 
-ARGOMENTO OBBLIGATORIO PER QUESTA DOMANDA: **{topic}**
+═══════════════════════════════════════════════
+ARGOMENTO OBBLIGATORIO: {topic}
+═══════════════════════════════════════════════
 {instruction}
+{f"{chr(10)}RIFERIMENTI CLINICI:{chr(10)}{rag_context}" if rag_context else ""}
 
-{f"CONTESTO CONVERSAZIONE RECENTE:{chr(10)}{history_summary}" if history_summary else ""}
-{f"RIFERIMENTI CLINICI:{chr(10)}{rag_context}" if rag_context else ""}
+{f"ULTIME RISPOSTE PAZIENTE:{chr(10)}{history_summary}" if history_summary else ""}
 
 {format_instr}
-La domanda DEVE riguardare {topic}. DEVE terminare con "?".
-NON fare riepiloghi, ringraziamenti o diagnosi. SOLO la domanda su {topic}.
 
-{{"text": "La domanda su {topic} qui?", "type": "multiple_choice", "options": ["A) Opzione 1", "B) Opzione 2", "C) Opzione 3"]}}"""
+⚠️ REGOLE INVIOLABILI — se le violi la risposta viene scartata:
+1. La domanda DEVE riguardare SOLO: {topic}
+2. DEVE terminare con il carattere "?"
+3. VIETATO ringraziare, riassumere, diagnosticare o consigliare
+4. VIETATO usare frasi come "Grazie per", "In base a", "Ti consiglio"
+5. Output: SOLO il JSON, niente altro
+
+{{"text": "La tua domanda su {topic} qui?", "type": "multiple_choice", "options": ["A) Opzione 1", "B) Opzione 2", "C) Opzione 3"]}}"""
 
         try:
             response = self.llm.generate_with_json_parse(prompt, temperature=0.4)
             if response and response.get("text"):
-                # Detect closing statements → skip
-                text_lower = response["text"].lower()
+                text = response["text"].strip()
+                text_lower = text.lower()
+
+                # ── Reject closing statements ──
                 if any(bp in text_lower for bp in self.BLOCK_PHRASES):
-                    logger.warning(f"⚠️ LLM ha generato chiusura: '{response['text'][:60]}' → fallback")
+                    logger.warning(f"⚠️ LLM ha generato chiusura: '{text[:60]}' → fallback")
+                # ── Reject if text doesn't end with '?' (not a question) ──
+                elif not text.rstrip().endswith("?"):
+                    logger.warning(f"⚠️ LLM non ha generato domanda (no '?'): '{text[:60]}' → fallback")
                 else:
-                    logger.info(f"✅ Q{phase_q_count+1} ({topic}): {response['text'][:80]}...")
+                    # Ensure options are present for multiple_choice
+                    if response.get("type") == "multiple_choice" and not response.get("options"):
+                        response["options"] = self._extract_fallback_options(instruction)
+                    logger.info(f"✅ Q{phase_q_count+1} ({topic}): {text[:80]}...")
                     return response
         except Exception as e:
             logger.error(f"❌ Clinical question error: {e}")
 
         # Deterministic fallback: build question directly from dimension instruction
+        fallback_text = instruction.split("Opzioni:")[0].replace("Chiedi ", "").strip()
+        # Clean up trailing period before adding '?'
+        fallback_text = fallback_text.rstrip(".")
         return {
-            "text": instruction.split("Opzioni:")[0].replace("Chiedi ", "").strip() + "?",
+            "text": fallback_text + "?",
             "type": "multiple_choice",
             "options": self._extract_fallback_options(instruction)
         }
@@ -1143,6 +1191,13 @@ class TriageControllerV3:
         collected.update(extracted)
         collected["_last_user_input"] = user_input
 
+        # ═══ DEFENSIVE GUARD: If chief_complaint is set, _generic_symptom MUST be False ═══
+        # Prevents edge cases where both are True (which would cause an infinite loop
+        # asking "Dove provi dolore?" even after the body part was already provided).
+        if collected.get("chief_complaint") and collected.get("_generic_symptom"):
+            collected["_generic_symptom"] = False
+            logger.info(f"🛡️ Defensive: forced _generic_symptom=False (chief_complaint='{collected['chief_complaint']}')")
+
         # 3. Classify branch (first time) — use LLM Judge hint + SmartRouter safety net
         if not current_branch:
             urgency_override = extracted.get("_urgency_override")
@@ -1245,7 +1300,24 @@ class TriageControllerV3:
 
         self.state.set(StateKeys.CURRENT_PHASE, next_phase.value)
 
-        # 7. Generate response
+        # 7. Save clinical answer from previous question (before generating next)
+        CLINICAL_PHASES = {TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT}
+        if prev_phase in CLINICAL_PHASES and user_input.strip():
+            # Save the user's answer with the dimension topic that was asked
+            clinical_answers = collected.get("_clinical_answers", [])
+            # Get the dimension that was asked in the PREVIOUS question
+            symptom = collected.get("chief_complaint", "")
+            if symptom:
+                prev_dimension = self.question_gen._get_clinical_dimension(symptom, max(0, phase_q_count - 1))
+                clinical_answers.append({
+                    "topic": prev_dimension["topic"],
+                    "answer": user_input.strip()[:200]  # Cap length
+                })
+                collected["_clinical_answers"] = clinical_answers
+                self.state.set(StateKeys.COLLECTED_DATA, collected)
+                logger.info(f"💬 Saved clinical answer: {prev_dimension['topic']} → {user_input[:60]}")
+
+        # 8. Generate response
         if next_phase == TriagePhase.OUTCOME:
             response = self.outcome_gen.generate(current_branch, collected)
             self.state.set(StateKeys.SBAR_REPORT_DATA, response.get("metadata", {}).get("sbar_full", ""))
@@ -1262,11 +1334,12 @@ class TriageControllerV3:
         if not isinstance(response, dict) or "text" not in response:
             response = {"text": "Puoi fornirmi maggiori dettagli?", "type": "open_text", "options": None}
 
-        # 8. Increment counter (ONLY for clinical/fast/risk phases)
-        if next_phase in CLINICAL_PHASES:
+        # 9. Increment counter (ONLY for clinical/fast/risk phases)
+        CLINICAL_PHASES_INC = {TriagePhase.CLINICAL_TRIAGE, TriagePhase.FAST_TRIAGE, TriagePhase.RISK_ASSESSMENT}
+        if next_phase in CLINICAL_PHASES_INC:
             self.state.set("phase_question_count", phase_q_count + 1)
 
-        # 9. Log
+        # 10. Log
         self._log_interaction(user_input, response, current_branch, next_phase, phase_q_count, start_time)
 
         return self._format_response(response, start_time)
@@ -1290,7 +1363,15 @@ class TriageControllerV3:
             user_input=user_input,
             assistant_response=response.get("text", ""),
             processing_time_ms=processing_time,
-            session_state={"branch": branch.value, "phase": phase.value, "phase_q_count": phase_q, "collected": collected},
+            session_state={
+                "branch": branch.value,
+                "phase": phase.value,
+                "phase_q_count": phase_q,
+                "collected_data": collected,  # ← db_service expects "collected_data" key
+                "chief_complaint": collected.get("chief_complaint"),
+                "triage_path": branch.value,
+                "urgency_level": 4 if branch == TriageBranch.EMERGENCY else 3,
+            },
             metadata={}
         )
 

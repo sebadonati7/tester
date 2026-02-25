@@ -1,6 +1,10 @@
 """
-SIRAYA RAG Service - Ricerca Full-Text + Groq
-Usa RAG SOLO per indagine clinica (Fase 4)
+SIRAYA RAG Service V2.0 — Supabase protocol_chunks PRIMARY
+No hardcoded knowledge base. All clinical protocols come from Supabase.
+
+Strategy:
+1. Supabase protocol_chunks — multi-keyword + category search
+2. Minimal generic fallback (only if Supabase unavailable)
 """
 
 import streamlit as st
@@ -12,30 +16,39 @@ logger = logging.getLogger(__name__)
 
 class RAGService:
     """
-    RAG Service con ricerca full-text PostgreSQL.
-    Attivato SOLO per domande cliniche specifiche.
+    RAG Service backed by Supabase protocol_chunks table.
+    NO hardcoded knowledge base — all clinical data from database.
+    
+    Implements LAZY RECONNECT: if the initial connection fails (e.g. table
+    didn't exist yet), every call to retrieve_context will retry once.
     """
 
     def __init__(self):
-        """Inizializza connessione Supabase via SupabaseConfig (nested + flat)."""
+        """Initialize Supabase connection."""
         self.supabase = None
         self.connection_tested = False
+        self.chunk_count = 0
+        self._init_connection()
+
+    def _init_connection(self):
+        """Try to connect to Supabase and verify protocol_chunks table."""
         try:
             from ..config.settings import SupabaseConfig
 
             if SupabaseConfig.is_configured():
-                from supabase import create_client
-                self.supabase = create_client(
-                    SupabaseConfig.get_url(),
-                    SupabaseConfig.get_key()
-                )
+                if not self.supabase:
+                    from supabase import create_client
+                    self.supabase = create_client(
+                        SupabaseConfig.get_url(),
+                        SupabaseConfig.get_key()
+                    )
                 
-                # Test connection — query protocol_chunks directly
+                # Test connection + count chunks
                 try:
                     test_result = self.supabase.table("protocol_chunks").select("id", count="exact").limit(1).execute()
                     self.connection_tested = True
-                    chunk_count = test_result.count if hasattr(test_result, 'count') and test_result.count else len(test_result.data or [])
-                    logger.info(f"✅ RAG Service: protocol_chunks OK ({chunk_count}+ chunks)")
+                    self.chunk_count = test_result.count if hasattr(test_result, 'count') and test_result.count else len(test_result.data or [])
+                    logger.info(f"✅ RAG Service: protocol_chunks OK ({self.chunk_count} chunks)")
                 except Exception as test_e:
                     logger.warning(f"⚠️ protocol_chunks non accessibile: {test_e}")
                     self.connection_tested = False
@@ -45,44 +58,75 @@ class RAGService:
             logger.error(f"❌ RAG Supabase init failed: {type(e).__name__} - {e}")
             self.supabase = None
             self.connection_tested = False
+
+    def _ensure_connection(self):
+        """Lazy reconnect: retry if initial connection failed."""
+        if not self.connection_tested and self.supabase:
+            logger.info("🔄 RAG: Retrying protocol_chunks connection...")
+            self._init_connection()
+        elif not self.supabase:
+            logger.info("🔄 RAG: No client — attempting full reconnect...")
+            self._init_connection()
     
-    def should_use_rag(self, phase: str, user_message: str) -> bool:
-        """
-        ✅ SEMPRE TRUE per fasi cliniche (fix warning).
-        RAG è sempre attivo per fasi cliniche in V3.
-        """
-        clinical_phases = [
-            "FASE_4_TRIAGE",
-            "FAST_TRIAGE_A",
-            "VALUTAZIONE_RISCHIO_B",
-            "CLINICAL_TRIAGE",      # ✅ Controller V3
-            "FAST_TRIAGE",          # ✅ Controller V3
-            "RISK_ASSESSMENT",      # ✅ Controller V3
-            "clinical_triage",       # ✅ Lowercase variant
-            "fast_triage",          # ✅ Lowercase variant
-            "risk_assessment"       # ✅ Lowercase variant
-        ]
-        
-        # Case-insensitive match
-        should_use = phase.upper() in [p.upper() for p in clinical_phases]
-        
-        if should_use:
-            logger.info(f"✅ RAG attivato per fase: {phase}")
-        
-        return should_use
+    def should_use_rag(self, phase: str, user_message: str = "") -> bool:
+        """Always True for clinical phases."""
+        clinical_phases = {
+            "clinical_triage", "fast_triage", "risk_assessment",
+            "CLINICAL_TRIAGE", "FAST_TRIAGE", "RISK_ASSESSMENT",
+            "FASE_4_TRIAGE", "FAST_TRIAGE_A", "VALUTAZIONE_RISCHIO_B",
+        }
+        return phase in clinical_phases
     
-    # Mapping from medical terms to search keywords for protocol_chunks
+    # =========================================================================
+    # SYMPTOM → SEARCH TERMS mapping (for Supabase query building)
+    # =========================================================================
     SYMPTOM_SEARCH_TERMS = {
-        "cefalea": ["cefalea", "testa", "emicrania", "mal di testa"],
-        "dolore toracico": ["toracico", "petto", "cardiaco", "cuore", "dolore toracico"],
-        "toracalgia": ["toracico", "petto", "cardiaco", "dolore toracico"],
-        "dolore addominale": ["addominale", "addome", "pancia", "stomaco", "gastrico"],
-        "lombalgia": ["lombalgia", "schiena", "lombare", "dorsale"],
-        "cervicalgia": ["cervicale", "collo", "cervicalgia"],
-        "gonalgia": ["ginocchio", "gonalgia", "articolare"],
+        "cefalea": ["cefalea", "testa", "emicrania"],
+        "mal di testa": ["cefalea", "testa", "emicrania"],
+        "dolore toracico": ["toracico", "petto", "cardiaco"],
+        "toracalgia": ["toracico", "petto", "cardiaco"],
+        "dolore addominale": ["addominale", "addome", "pancia", "stomaco"],
+        "mal di pancia": ["addominale", "addome", "pancia"],
+        "lombalgia": ["lombalgia", "schiena", "lombare"],
+        "cervicalgia": ["cervicale", "collo"],
+        "gonalgia": ["ginocchio", "articolare"],
         "febbre": ["febbre", "temperatura", "ipertermia"],
-        "dispnea": ["respiro", "dispnea", "respiratorio", "polmonare"],
+        "dispnea": ["dispnea", "respiro", "respiratorio", "polmonare"],
         "trauma": ["trauma", "ferita", "frattura", "contusione"],
+        "vertigini": ["vertigini", "capogiro", "equilibrio"],
+        "nausea": ["nausea", "vomito"],
+        "dolore al piede": ["piede", "tallone", "plantare"],
+        "dolore alla gamba": ["gamba", "polpaccio", "coscia"],
+        "dolore articolare": ["articolare", "ginocchio", "gomito", "spalla"],
+    }
+
+    # Symptom → category mapping for direct category search
+    SYMPTOM_CATEGORY_MAP = {
+        "cefalea": "cefalea",
+        "mal di testa": "cefalea",
+        "dolore toracico": "dolore_toracico",
+        "toracalgia": "dolore_toracico",
+        "dolore addominale": "dolore_addominale",
+        "mal di pancia": "dolore_addominale",
+        "lombalgia": "lombalgia",
+        "dolore alla schiena": "lombalgia",
+        "mal di schiena": "lombalgia",
+        "cervicalgia": "cervicalgia",
+        "dolore al collo": "cervicalgia",
+        "febbre": "febbre",
+        "dispnea": "dispnea",
+        "difficoltà respiratorie": "dispnea",
+        "trauma": "trauma",
+        "ferita": "trauma",
+        "taglio": "trauma",
+        "vertigini": "vertigini",
+        "capogiro": "vertigini",
+        "nausea": "nausea_vomito",
+        "vomito": "nausea_vomito",
+        "dolore al piede": "dolore_piede",
+        "dolore alla gamba": "dolore_gamba",
+        "dolore articolare": "dolore_articolare",
+        "gonalgia": "dolore_articolare",
     }
 
     def retrieve_context(
@@ -92,50 +136,53 @@ class RAGService:
         protocol_filter: Optional[str] = None
     ) -> List[Dict]:
         """
-        RAG with Supabase protocol_chunks + local KB fallback.
+        Retrieve clinical protocol chunks from Supabase.
         
         Strategy:
-        1. Supabase protocol_chunks — multi-keyword search
-        2. Local knowledge base (hardcoded per sintomi comuni)
-        3. Generic fallback protocol
-        
-        Returns:
-            List di dict con keys: content, source, page
+        1. Lazy reconnect if needed
+        2. Category-based search (exact match on symptom_category)
+        3. Keyword content search (ilike on content)
+        4. Minimal generic fallback
         """
         
-        # ═══ STRATEGIA 1: Supabase protocol_chunks ═══
-        if self.supabase:
-            supabase_results = self._search_supabase(query, k)
-            if supabase_results:
-                return supabase_results
+        # ═══ LAZY RECONNECT if first init failed ═══
+        self._ensure_connection()
+        
+        # ═══ STRATEGY 1: Supabase category + keyword search ═══
+        if self.supabase and self.connection_tested:
+            results = self._search_supabase(query, k)
+            if results:
+                logger.info(f"✅ RAG Supabase: {len(results)} chunks for '{query[:40]}'")
+                return results
+            else:
+                logger.info(f"⚠️ RAG Supabase: 0 chunks for '{query[:40]}', using generic fallback")
 
-        # ═══ STRATEGIA 2: Local knowledge base ═══
-        local_results = self._get_local_kb_chunks(query, k)
-        if local_results:
-            logger.info(f"✅ RAG Local KB: {len(local_results)} chunks per '{query[:30]}'")
-            return local_results
-
-        # ═══ STRATEGIA 3: Generic fallback ═══
-        logger.info("⚠️ RAG: Nessun risultato, uso protocollo generico")
+        # ═══ STRATEGY 2: Generic fallback (Supabase unavailable) ═══
+        logger.info("⚠️ RAG: Supabase non disponibile, uso fallback generico")
         return [{
-            "content": "Triage generico: valutare INTENSITÀ (scala 1-10), DURATA, SINTOMI ASSOCIATI, FATTORI SCATENANTI, storia patologica. Indagare sempre red flags.",
-            "source": "Protocollo Base Triage",
+            "content": "Triage generico: valutare INTENSITÀ (scala 1-10), DURATA (da quanto tempo), LOCALIZZAZIONE precisa, IRRADIAZIONE, SINTOMI ASSOCIATI, FATTORI SCATENANTI/PEGGIORATIVI, FARMACI IN CORSO, PATOLOGIE NOTE, storia patologica remota. Indagare sempre red flags per il sistema coinvolto.",
+            "source": "Protocollo Base Triage (fallback)",
             "page": "1"
         }]
 
     def _search_supabase(self, query: str, k: int) -> List[Dict]:
-        """Multi-keyword search on Supabase protocol_chunks table."""
-        # Build search terms from the query
-        search_terms = self._get_search_terms(query)
-        
+        """
+        Two-phase Supabase search:
+        1. Category match (exact) — most precise
+        2. Content keyword search — broader
+        """
+        query_lower = query.lower().strip()
         all_results = []
         seen_ids = set()
         
-        for term in search_terms:
+        # ═══ PHASE 1: Category-based search ═══
+        category = self._find_category(query_lower)
+        if category:
             try:
                 response = self.supabase.table("protocol_chunks")\
                     .select("*")\
-                    .ilike("content", f"%{term}%")\
+                    .eq("symptom_category", category)\
+                    .order("chunk_index")\
                     .limit(k)\
                     .execute()
                 
@@ -144,356 +191,152 @@ class RAGService:
                         chunk_id = chunk.get("id", id(chunk))
                         if chunk_id not in seen_ids:
                             seen_ids.add(chunk_id)
-                            # Normalize field names for downstream compatibility
-                            normalized = {
-                                "content": chunk.get("content", chunk.get("chunk_text", "")),
-                                "source": chunk.get("source", chunk.get("protocol_name", chunk.get("document_name", "Protocollo Clinico"))),
-                                "page": chunk.get("page", chunk.get("chunk_index", chunk.get("page_number", "?"))),
-                            }
-                            all_results.append(normalized)
+                            all_results.append(self._normalize_chunk(chunk))
+                    logger.info(f"  📂 Category '{category}': {len(response.data)} chunks")
             except Exception as e:
-                logger.debug(f"⚠️ Supabase search failed for '{term}': {e}")
-                continue
+                logger.debug(f"⚠️ Category search failed: {e}")
         
-        if all_results:
-            logger.info(f"✅ RAG Supabase: Trovati {len(all_results)} chunks per '{query[:30]}'")
-            return all_results[:k]
+        # ═══ PHASE 2: Content keyword search (supplement) ═══
+        if len(all_results) < k:
+            search_terms = self._get_search_terms(query_lower)
+            for term in search_terms[:3]:  # Max 3 keyword searches
+                try:
+                    response = self.supabase.table("protocol_chunks")\
+                        .select("*")\
+                        .ilike("content", f"%{term}%")\
+                        .limit(k - len(all_results))\
+                        .execute()
+                    
+                    if response.data:
+                        for chunk in response.data:
+                            chunk_id = chunk.get("id", id(chunk))
+                            if chunk_id not in seen_ids:
+                                seen_ids.add(chunk_id)
+                                all_results.append(self._normalize_chunk(chunk))
+                except Exception as e:
+                    logger.debug(f"⚠️ Keyword search '{term}' failed: {e}")
         
-        return []
+        # ═══ PHASE 3: Generic category fallback ═══
+        if not all_results:
+            try:
+                response = self.supabase.table("protocol_chunks")\
+                    .select("*")\
+                    .eq("symptom_category", "generico")\
+                    .limit(k)\
+                    .execute()
+                if response.data:
+                    for chunk in response.data:
+                        all_results.append(self._normalize_chunk(chunk))
+                    logger.info(f"  📂 Generic category: {len(response.data)} chunks")
+            except Exception as e:
+                logger.debug(f"⚠️ Generic search failed: {e}")
+        
+        return all_results[:k]
 
-    def _get_search_terms(self, query: str) -> List[str]:
-        """Generate multiple search terms from a symptom query."""
-        query_lower = query.lower().strip()
+    def _find_category(self, query_lower: str) -> Optional[str]:
+        """Find the best matching symptom_category for a query."""
+        # Direct match
+        if query_lower in self.SYMPTOM_CATEGORY_MAP:
+            return self.SYMPTOM_CATEGORY_MAP[query_lower]
+        
+        # Partial match
+        for symptom, category in self.SYMPTOM_CATEGORY_MAP.items():
+            if symptom in query_lower or query_lower in symptom:
+                return category
+        
+        # Word-level match
+        query_words = set(query_lower.split())
+        for symptom, category in self.SYMPTOM_CATEGORY_MAP.items():
+            symptom_words = set(symptom.split())
+            if query_words & symptom_words:  # Intersection
+                return category
+        
+        return None
+
+    def _get_search_terms(self, query_lower: str) -> List[str]:
+        """Generate search terms for keyword-based content search."""
         terms = []
         
-        # Check symptom mapping first
+        # Check symptom mapping
         for symptom, keywords in self.SYMPTOM_SEARCH_TERMS.items():
             if symptom in query_lower or any(kw in query_lower for kw in keywords):
                 terms.extend(keywords)
                 break
         
-        # Add individual words from the query (length > 3)
+        # Add query words (length > 3)
         for word in query_lower.split():
             clean = word.strip(".,;:!?")
             if len(clean) > 3 and clean not in terms:
                 terms.append(clean)
         
-        # If nothing found, use the full query
         if not terms:
             terms = [query_lower]
         
-        # Deduplicate and limit
+        # Deduplicate
         seen = set()
-        unique_terms = []
+        unique = []
         for t in terms:
             if t not in seen:
                 seen.add(t)
-                unique_terms.append(t)
-        
-        return unique_terms[:5]  # Max 5 search terms
+                unique.append(t)
+        return unique[:5]
     
-    def _get_local_kb_chunks(self, query: str, k: int) -> List[Dict]:
-        """
-        Knowledge base locale per sintomi comuni.
-        Usato come fallback se Supabase non disponibile.
-        """
-        symptom_lower = query.lower()
-        
-        # ✅ DATABASE LOCALE PROTOCOLLI
-        knowledge_base = {
-            "dolore addominale": [
-                {
-                    "content": "Dolore addominale: indagare LOCALIZZAZIONE (quadrante destro/sinistro, alto/basso), TIPO (crampiforme/continuo/colico), FATTORI SCATENANTI (pasti, movimento, posizione). Sintomi associati: nausea, vomito, febbre, diarrea, stipsi.",
-                    "source": "Protocollo Triage ER",
-                    "page": "45"
-                },
-                {
-                    "content": "Red flags addome: dolore intenso improvviso (possibile peritonite), addome rigido alla palpazione, ipotensione, febbre alta (>38.5°C), vomito ematico o melena, dolore migrante (appendicite).",
-                    "source": "Linee Guida Urgenza Addominale",
-                    "page": "67"
-                },
-                {
-                    "content": "Domande chiave: 1) Dove senti il dolore esattamente? 2) È peggiorato dopo i pasti? 3) Hai vomitato? 4) Hai febbre?",
-                    "source": "Checklist Triage Gastrointestinale",
-                    "page": "12"
-                }
-            ],
-            
-            "mal di pancia": [  # Alias
-                {
-                    "content": "Dolore addominale: indagare LOCALIZZAZIONE, TIPO, FATTORI SCATENANTI. Sintomi associati: nausea, vomito, febbre, diarrea.",
-                    "source": "Protocollo Triage ER",
-                    "page": "45"
-                }
-            ],
-            
-            "cefalea": [
-                {
-                    "content": "Cefalea: tipo (pulsante/tensiva/a grappolo), LOCALIZZAZIONE (unilaterale/bilaterale/frontale/occipitale), INSORGENZA (graduale/improvvisa a tuono), durata. Sintomi associati: fotofobia, nausea, aura visiva, rigidità nucale.",
-                    "source": "Protocollo Triage Neurologico",
-                    "page": "89"
-                },
-                {
-                    "content": "Red flags cefalea: 'peggior mal di testa della vita', insorgenza a tuono (possibile emorragia subaracnoidea), deficit neurologici focali, rigidità nucale + febbre (meningite), trauma recente.",
-                    "source": "Linee Guida Urgenza Neurologica",
-                    "page": "92"
-                }
-            ],
-            
-            "mal di testa": [  # Alias
-                {
-                    "content": "Cefalea: tipo (pulsante/tensiva), localizzazione, sintomi associati (fotofobia, nausea, aura).",
-                    "source": "Protocollo Triage",
-                    "page": "89"
-                }
-            ],
-            
-            "dolore toracico": [
-                {
-                    "content": "Dolore toracico: URGENZA ALTA. Indagare IRRADIAZIONE (braccio sx, mascella, spalle), CARATTERE (costrittivo/bruciante/trafittivo), DURATA, sintomi associati (dispnea, sudorazione profusa, nausea).",
-                    "source": "Protocollo Emergenza Cardiologica",
-                    "page": "12"
-                },
-                {
-                    "content": "Red flags toracico: dolore con irradiazione tipica, ECG alterato, dispnea severa, sincope, sudorazione profusa, pallore. ATTIVARE 118 IMMEDIATAMENTE se sospetto SCA (Sindrome Coronarica Acuta).",
-                    "source": "Protocollo ACS",
-                    "page": "15"
-                }
-            ],
-            
-            "febbre": [
-                {
-                    "content": "Febbre: temperatura rilevata, durata, andamento (continua/intermittente), sintomi associati (tosse, disuria, dolore addominale, rush cutaneo). Indagare focolaio infettivo: polmonare, urinario, addominale, meningeo.",
-                    "source": "Protocollo Infettivologia",
-                    "page": "34"
-                }
-            ],
-            
-            "trauma": [
-                {
-                    "content": "Trauma: dinamica dell'incidente, perdita di coscienza (anche momentanea), vomito post-trauma, cefalea intensa, amnesia retrograda. Valutare Glasgow Coma Scale se trauma cranico.",
-                    "source": "Protocollo Trauma",
-                    "page": "56"
-                }
-            ],
-            
-            # === TRAUMI ===
-            "taglio": [
-                {
-                    "content": "TAGLIO/FERITA: Valutare PROFONDITÀ (superficiale/profondo), ESTENSIONE (cm), SANGUINAMENTO (attivo/arrestato), LOCALIZZAZIONE anatomica. Se arteria coinvolta: compressione diretta + 118. Domande chiave: 1) Quanto è profondo? 2) Il sanguinamento si è fermato? 3) Riesci a muovere la parte? 4) Quando è avvenuto?",
-                    "source": "Protocollo Trauma Minore",
-                    "page": "23"
-                },
-                {
-                    "content": "Red flags tagli: sanguinamento arterioso pulsante, esposizione osso/tendini, deficit motorio/sensitivo (possibile lesione nervo), ferita da oggetto sporco (rischio tetano), localizzazione critica (viso, mani, genitali).",
-                    "source": "Linee Guida Ferite",
-                    "page": "25"
-                }
-            ],
-            
-            "ferita": [  # Alias taglio
-                {
-                    "content": "FERITA: Valutare profondità, estensione, sanguinamento, localizzazione. Domande: profondità, sanguinamento fermato, mobilità conservata, quando avvenuto.",
-                    "source": "Protocollo Trauma",
-                    "page": "23"
-                }
-            ],
+    def _normalize_chunk(self, chunk: Dict) -> Dict:
+        """Normalize Supabase row to standard chunk format."""
+        return {
+            "content": chunk.get("content", ""),
+            "source": chunk.get("source", "Protocollo Clinico"),
+            "page": str(chunk.get("page", chunk.get("chunk_index", "?"))),
+            "symptom_category": chunk.get("symptom_category", "generico"),
+            "severity": chunk.get("severity", "standard"),
         }
-        
-        # ✅ Match sintomo
-        matched_chunks = []
-        
-        for keyword, chunks in knowledge_base.items():
-            # Match esatto o parziale
-            if keyword in symptom_lower or any(word in symptom_lower for word in keyword.split()):
-                matched_chunks.extend(chunks)
-        
-        if matched_chunks:
-            logger.info(f"✅ RAG Local KB: Trovati {len(matched_chunks)} protocolli")
-            return matched_chunks[:k]
-        
-        # ✅ STRATEGIA 3: Protocollo generico
-        logger.info(f"✅ RAG Fallback: Uso protocollo generico")
-        return [
-            {
-                "content": "Triage generico: valutare INTENSITÀ del sintomo (scala 1-10), DURATA (da quanto tempo), SINTOMI ASSOCIATI, FATTORI SCATENANTI o peggiorativi, storia patologica remota. Indagare sempre red flags per il sistema coinvolto.",
-                "source": "Protocollo Base Triage",
-                "page": "1"
-            }
-        ]
-        
-        # ✅ CODICE ORIGINALE (commentato fino a fix database):
-        # if not self.supabase:
-        #     logger.warning("⚠️ Supabase non disponibile, RAG disabilitato")
-        #     return []
-        # 
-        # try:
-        #     # Nome tabella (DA VERIFICARE nel DB Supabase)
-        #     table_name = "protocol_chunks"  # ← Potrebbe essere 'protocols' o altro
-        #     
-        #     query_builder = self.supabase.table(table_name).select("*")
-        #     
-        #     # Filtro per keyword
-        #     search_terms = [term.lower() for term in query.split() if len(term) > 3][:3]
-        #     
-        #     if not search_terms:
-        #         return []
-        #     
-        #     for term in search_terms:
-        #         query_builder = query_builder.ilike("content", f"%{term}%")
-        #     
-        #     response = query_builder.limit(k).execute()
-        #     
-        #     if response.data:
-        #         logger.info(f"✅ RAG: {len(response.data)} chunk trovati")
-        #         return response.data
-        #     else:
-        #         logger.warning(f"⚠️ RAG: Nessun risultato")
-        #         return []
-        # 
-        # except Exception as e:
-        #     logger.error(f"❌ RAG error: {type(e).__name__} - {str(e)}")
-        #     return []
     
     def format_context_for_llm(
         self, 
         chunks: List[Dict],
-        phase: str = "FASE_4_TRIAGE"
+        phase: str = "clinical_triage"
     ) -> str:
-        """
-        Formatta chunks per prompt Groq.
-        
-        Args:
-            chunks: Chunks recuperati
-            phase: Fase corrente (per personalizzare istruzioni)
-            
-        Returns:
-            Context string formattato
-        """
+        """Format retrieved chunks for LLM prompt."""
         if not chunks:
             return self._get_fallback_context(phase)
         
-        # Header
-        context = "=== PROTOCOLLI CLINICI PERTINENTI ===\n\n"
-        context += "IMPORTANTE: Usa SOLO le informazioni seguenti per generare domande.\n\n"
+        context = "=== PROTOCOLLI CLINICI DA SUPABASE ===\n\n"
+        context += "USA queste informazioni per generare domande cliniche pertinenti.\n\n"
         
-        # Chunks
         for i, chunk in enumerate(chunks, 1):
             source = chunk.get('source', 'Unknown')
             page = chunk.get('page', '?')
             content = chunk.get('content', '')
+            severity = chunk.get('severity', 'standard')
             
-            context += f"[FONTE {i}] {source} (pagina {page})\n"
+            severity_icon = {"emergency": "🔴", "high": "🟠", "standard": "🟢"}.get(severity, "⚪")
+            context += f"[FONTE {i}] {severity_icon} {source} (p.{page})\n"
             context += f"{content}\n\n"
-            context += "─" * 80 + "\n\n"
         
-        # Footer con istruzioni specifiche per fase
-        context += "=== FINE PROTOCOLLI ===\n\n"
-        context += self._get_phase_instructions(phase)
-        
+        context += "=== FINE PROTOCOLLI ===\n"
         return context
     
     def _get_fallback_context(self, phase: str) -> str:
-        """Context di fallback quando RAG non trova nulla."""
-        if phase == "FAST_TRIAGE_A":
-            return (
-                "⚠️ ATTENZIONE: Nessun protocollo specifico trovato.\n"
-                "Procedi con domande generiche di fast-triage per emergenze:\n"
-                "- Quando è iniziato il sintomo?\n"
-                "- Il dolore si irradia?\n"
-                "- Ci sono difficoltà respiratorie?\n"
-            )
-        elif phase == "VALUTAZIONE_RISCHIO_B":
-            return (
-                "⚠️ ATTENZIONE: Nessun protocollo specifico trovato.\n"
-                "Procedi con valutazione rischio salute mentale:\n"
-                "- Presenza di pensieri autolesivi?\n"
-                "- Supporto sociale disponibile?\n"
-                "- Storia di trattamenti precedenti?\n"
-            )
-        else:
-            return (
-                "⚠️ ATTENZIONE: Nessun protocollo specifico trovato.\n"
-                "Procedi con domande generali di triage medico.\n"
-            )
-    
-    def _get_phase_instructions(self, phase: str) -> str:
-        """Istruzioni specifiche per fase."""
-        instructions = {
-            "FASE_4_TRIAGE": """
-**ISTRUZIONI FASE 4 - TRIAGE STANDARD (Percorso C):**
-
-Genera UNA SOLA domanda diagnostica basata sui protocolli sopra.
-
-**Formato obbligatorio:**
-Domanda + 3 opzioni (A, B, C)
-
-**Esempio:**
-"Per capire meglio la situazione, ho bisogno di sapere: il dolore è costante o intermittente?
-
-A) È costante, non si ferma mai
-B) Va e viene a ondate
-C) È presente solo in alcuni movimenti"
-
-**Range domande:** 5-7 domande totali per codice Green/Yellow.
-Se emergono nuovi sintomi gravi → passa a Percorso A.
-
-Genera ora la domanda più pertinente.
-""",
-            "FAST_TRIAGE_A": """
-**ISTRUZIONI FAST-TRIAGE (Percorso A - EMERGENZA):**
-
-Genera domande rapide per valutare gravità (3-4 domande totali).
-
-**Formato:** Domande chiuse (SI/NO) o scala numerica.
-
-**Esempio:**
-"Il dolore è iniziato improvvisamente o gradualmente?
-
-• IMPROVVISO (come un fulmine)
-• GRADUALE (è aumentato piano)"
-
-**Obiettivo:** Confermare/escludere Codice Rosso/Arancione.
-Sii diretto, professionale, veloce.
-
-Genera ora la domanda più critica.
-""",
-            "VALUTAZIONE_RISCHIO_B": """
-**ISTRUZIONI VALUTAZIONE RISCHIO (Percorso B - SALUTE MENTALE):**
-
-Genera domande delicate per valutare rischio.
-
-**Formato:** Domande aperte o chiuse, tono empatico.
-
-**Esempio:**
-"Per capire come supportarti al meglio, vorrei chiederti: in questo momento hai pensieri che ti spaventano o ti preoccupano?
-
-• SÌ, vorrei parlarne
-• NO, ma mi sento sopraffatto
-• Preferisco non rispondere"
-
-**Obiettivo:** Identificare urgenza (118 + hotline) o servizio territoriale (CSM).
-
-Genera ora una domanda sensibile ma necessaria.
-"""
-        }
-        
-        return instructions.get(phase, "Genera una domanda clinica appropriata.")
+        """Minimal fallback when no chunks found."""
+        return (
+            "⚠️ Nessun protocollo specifico trovato nel database.\n"
+            "Procedi con domande generali di triage:\n"
+            "- Da quanto tempo è presente il sintomo?\n"
+            "- Come è iniziato? (improvviso/graduale)\n"
+            "- Ci sono sintomi associati?\n"
+            "- Farmaci o patologie note?\n"
+        )
     
     def get_stats(self) -> Dict:
-        """Statistiche database."""
-        if not self.supabase:
+        """Database statistics."""
+        self._ensure_connection()
+        if not self.supabase or not self.connection_tested:
             return {"error": "Non connesso", "chunks": 0}
-        
-        try:
-            response = self.supabase.table("protocol_chunks").select("id", count="exact").execute()
-            return {
-                "total_chunks": response.count,
-                "backend": "Supabase Full-Text Search",
-                "embedding_model": "Nessuno (ricerca testuale)"
-            }
-        except Exception as e:
-            return {"error": str(e), "chunks": 0}
+        return {
+            "total_chunks": self.chunk_count,
+            "backend": "Supabase protocol_chunks",
+            "connected": True
+        }
 
 
 # Singleton
