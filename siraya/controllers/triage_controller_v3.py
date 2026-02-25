@@ -678,12 +678,76 @@ class QuestionGenerator:
         logger.error(f"❌ QuestionGenerator: unexpected phase {phase.value}")
         return {"text": "Puoi fornirmi maggiori dettagli sulla tua situazione?", "type": "open_text", "options": None}
 
-    # FIX 4: Phrases that indicate the LLM generated a closing/summary instead of a question
+    # Phrases that indicate the LLM generated a closing/summary instead of a question
     BLOCK_PHRASES = [
         "grazie per", "grazie delle", "informazioni fornite", "dati raccolti",
         "riepilogo", "in sintesi", "riassumendo", "sulla base di",
         "ti consiglio", "ti suggerisco", "il mio consiglio",
     ]
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CLINICAL DIMENSIONS — Ordered investigation topics per symptom category.
+    # Each question number maps to a SPECIFIC clinical dimension.
+    # This PREVENTS the LLM from repeating the same question.
+    # ═══════════════════════════════════════════════════════════════════════════
+    CLINICAL_DIMENSIONS = {
+        "dolore toracico": [
+            {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO dura il dolore e se è iniziato IMPROVVISAMENTE (come un colpo) o GRADUALMENTE (aumentato piano piano). Opzioni: A) Improvviso, meno di 1 ora fa B) Graduale, da alcune ore C) Da più di un giorno"},
+            {"topic": "IRRADIAZIONE DEL DOLORE", "instruction": "Chiedi se il dolore si IRRADIA verso altre parti del corpo: braccio sinistro, mascella, spalle, schiena. L'irradiazione al braccio sinistro/mascella è un red flag cardiaco. Opzioni: A) Sì, verso braccio sinistro o mascella B) Sì, verso schiena o spalle C) No, il dolore resta localizzato al petto"},
+            {"topic": "CARATTERE DEL DOLORE", "instruction": "Chiedi la QUALITÀ/TIPO del dolore: costrittivo/oppressivo (come un peso sul petto), bruciante, trafittivo/puntorio (come un ago). Opzioni: A) Oppressivo/costrittivo, come un peso B) Bruciante C) Trafittivo/puntorio, come una fitta"},
+            {"topic": "SINTOMI ASSOCIATI", "instruction": "Chiedi se ci sono SINTOMI ASSOCIATI: difficoltà a respirare (dispnea), sudorazione fredda, nausea/vomito, capogiri, palpitazioni. Opzioni: A) Sì, difficoltà a respirare B) Sì, sudorazione e/o nausea C) No, solo dolore toracico"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: farmaci attualmente in uso, patologie cardiache note (ipertensione, colesterolo alto), familiarità per malattie cardiache, fumo/diabete. Opzioni: A) Sì, ho patologie cardiache note o prendo farmaci B) No patologie note, ma ho fattori di rischio (fumo/diabete/familiarità) C) Nessuna patologia o fattore di rischio noto"},
+            {"topic": "POSIZIONE E FATTORI", "instruction": "Chiedi se il dolore CAMBIA con la posizione del corpo, la respirazione profonda, o la pressione sul torace. Questo aiuta a distinguere cause cardiache da muscoloscheletriche. Opzioni: A) Peggiora con il respiro profondo o i movimenti B) È costante, non cambia C) Peggiora sotto sforzo, migliora a riposo"},
+        ],
+        "cefalea": [
+            {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO dura il mal di testa e se è iniziato IMPROVVISAMENTE (a tuono) o gradualmente. Un'insorgenza improvvisa è un red flag. Opzioni: A) Improvviso, come un fulmine B) Graduale, da alcune ore C) Da più di un giorno"},
+            {"topic": "LOCALIZZAZIONE", "instruction": "Chiedi DOVE è localizzato il mal di testa: un solo lato (unilaterale), entrambi i lati, fronte, nuca/occipitale, o diffuso. Opzioni: A) Un solo lato della testa B) Fronte o zona degli occhi C) Nuca/dietro la testa o diffuso"},
+            {"topic": "CARATTERE DEL DOLORE", "instruction": "Chiedi il TIPO di dolore: pulsante/martellante, tensivo (come una fascia stretta), lancinante/a fitte. Opzioni: A) Pulsante/martellante B) Tensivo, come una morsa C) Lancinante, a fitte intense"},
+            {"topic": "SINTOMI ASSOCIATI", "instruction": "Chiedi SINTOMI ASSOCIATI: nausea/vomito, fastidio alla luce (fotofobia), disturbi visivi (aura), rigidità del collo, vertigini. Opzioni: A) Nausea o vomito B) Fastidio alla luce o disturbi visivi C) Rigidità al collo o vertigini"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: farmaci assunti, precedenti episodi simili, trauma cranico recente, ipertensione nota. Opzioni: A) Sì, soffro spesso di mal di testa B) Ho avuto un trauma recente alla testa C) Nessun precedente significativo"},
+        ],
+        "dolore addominale": [
+            {"topic": "LOCALIZZAZIONE ADDOMINALE", "instruction": "Chiedi DOVE esattamente è localizzato il dolore: quadrante superiore destro/sinistro, inferiore destro/sinistro, epigastrio (bocca dello stomaco), periombelicale, diffuso. Opzioni: A) Parte alta dell'addome (stomaco/costole) B) Parte bassa dell'addome C) Diffuso su tutto l'addome"},
+            {"topic": "CARATTERE DEL DOLORE", "instruction": "Chiedi il TIPO di dolore: crampiforme/colico (va e viene a ondate), continuo/costante, trafittivo/acuto. Opzioni: A) Crampiforme, va e viene a ondate B) Costante e continuo C) Acuto e improvviso"},
+            {"topic": "SINTOMI ASSOCIATI GI", "instruction": "Chiedi SINTOMI GASTROINTESTINALI associati: nausea, vomito, diarrea, stipsi (stitichezza), bruciore di stomaco. Opzioni: A) Nausea o vomito B) Diarrea o stipsi C) Nessun altro sintomo gastrointestinale"},
+            {"topic": "FATTORI SCATENANTI", "instruction": "Chiedi se il dolore è collegato a FATTORI SPECIFICI: pasti (peggiora dopo mangiato?), posizione del corpo, stress. Chiedi anche se c'è febbre. Opzioni: A) Peggiora dopo i pasti B) C'è anche febbre C) Non noto un fattore scatenante preciso"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: farmaci (FANS, antibiotici), interventi chirurgici addominali precedenti, patologie note (reflusso, calcoli, ulcera). Opzioni: A) Sì, ho patologie addominali note o prendo farmaci B) Ho avuto interventi chirurgici all'addome C) Nessuna patologia o intervento noto"},
+        ],
+        "lombalgia": [
+            {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO dura il dolore alla schiena e come è iniziato: dopo uno sforzo, gradualmente, improvvisamente. Opzioni: A) Dopo uno sforzo fisico o un movimento brusco B) Gradualmente, senza causa apparente C) Improvvisamente, da meno di un giorno"},
+            {"topic": "IRRADIAZIONE", "instruction": "Chiedi se il dolore si IRRADIA: verso la gamba (sciatica), gluteo, inguine. L'irradiazione alle gambe può indicare compressione nervosa. Opzioni: A) Sì, scende verso una gamba B) Sì, verso gluteo o inguine C) No, resta localizzato alla schiena"},
+            {"topic": "DEFICIT NEUROLOGICI", "instruction": "Chiedi se ci sono DEFICIT: intorpidimento/formicolio alle gambe, debolezza muscolare, difficoltà a controllare la vescica o l'intestino (red flags). Opzioni: A) Sì, formicolio o intorpidimento B) Sì, debolezza o difficoltà a camminare C) No, nessun deficit"},
+            {"topic": "FATTORI POSIZIONALI", "instruction": "Chiedi se il dolore CAMBIA con la posizione: peggiora stando seduti, in piedi, durante il movimento, migliora sdraiati. Opzioni: A) Peggiora stando seduto o in piedi a lungo B) Peggiora con i movimenti C) È costante, non cambia con la posizione"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI: episodi precedenti simili, interventi alla schiena, farmaci antidolorifici assunti, osteoporosi nota. Opzioni: A) Sì, ho avuto episodi simili in passato B) Prendo antidolorifici ma non migliorano C) È la prima volta"},
+        ],
+        "_default": [
+            {"topic": "INSORGENZA E DURATA", "instruction": "Chiedi da QUANTO TEMPO è presente il sintomo e come è iniziato (improvvisamente o gradualmente). Opzioni: A) Improvvisamente, da poche ore B) Gradualmente, da alcuni giorni C) Da più di una settimana"},
+            {"topic": "CARATTERISTICHE", "instruction": "Chiedi le CARATTERISTICHE del disturbo: è costante o intermittente? Peggiora o migliora? Opzioni: A) Costante, non migliora B) Va e viene C) Sta peggiorando nel tempo"},
+            {"topic": "SINTOMI ASSOCIATI", "instruction": "Chiedi se ci sono ALTRI SINTOMI associati: febbre, nausea, stanchezza, difficoltà respiratorie, altri dolori. Opzioni: A) Sì, ho anche febbre B) Sì, ho altri sintomi (nausea, stanchezza, ecc.) C) No, solo questo disturbo"},
+            {"topic": "FATTORI SCATENANTI", "instruction": "Chiedi se c'è un FATTORE SCATENANTE: trauma, sforzo fisico, stress, cibo, farmaco nuovo, contatto con malati. Opzioni: A) Sì, dopo un evento specifico B) Potrebbe essere legato a stress o fatica C) Nessun fattore evidente"},
+            {"topic": "FARMACI E PATOLOGIE", "instruction": "Chiedi ANAMNESI FARMACOLOGICA: farmaci in uso, allergie, patologie croniche note, episodi simili in passato. Opzioni: A) Sì, prendo farmaci regolarmente B) Ho avuto episodi simili in passato C) Nessun farmaco e nessuna patologia nota"},
+        ],
+    }
+
+    def _get_clinical_dimension(self, symptom: str, phase_q_count: int) -> Dict[str, str]:
+        """Get the clinical dimension to investigate based on symptom and question number."""
+        symptom_lower = symptom.lower()
+
+        # Match symptom to dimension set
+        dimensions = None
+        for key in self.CLINICAL_DIMENSIONS:
+            if key == "_default":
+                continue
+            if key in symptom_lower or any(word in symptom_lower for word in key.split()):
+                dimensions = self.CLINICAL_DIMENSIONS[key]
+                break
+
+        if not dimensions:
+            dimensions = self.CLINICAL_DIMENSIONS["_default"]
+
+        # Select dimension by index (cycle if more questions than dimensions)
+        idx = min(phase_q_count, len(dimensions) - 1)
+        return dimensions[idx]
 
     def _generate_clinical_question(self, phase, branch, data, phase_q_count):
         symptom = data.get("chief_complaint", "sintomo generico")
@@ -691,71 +755,97 @@ class QuestionGenerator:
         age = data.get("age", "N/D")
         onset = data.get("onset", "N/D")
 
-        rag_context = "(Nessun protocollo specifico, usa conoscenza medica generale)"
+        # ═══ Get the SPECIFIC clinical dimension for this question ═══
+        dimension = self._get_clinical_dimension(symptom, phase_q_count)
+        topic = dimension["topic"]
+        instruction = dimension["instruction"]
+        logger.info(f"🩺 Q{phase_q_count+1}: Dimensione clinica → {topic}")
+
+        # ═══ RAG context (supplements dimensions with protocol details) ═══
+        rag_context = ""
         try:
-            rag_chunks = self.rag.retrieve_context(symptom, k=3)
+            rag_chunks = self.rag.retrieve_context(symptom, k=2)
             if rag_chunks:
-                rag_context = "\n\n".join([
-                    f"[{c.get('source', 'Protocollo')}] {c.get('content', '')}" for c in rag_chunks
+                rag_context = "\n".join([
+                    f"  [{c.get('source', 'Protocollo')}] {c.get('content', '')}" for c in rag_chunks
                 ])
         except Exception as e:
             logger.error(f"❌ RAG error: {e}")
 
-        if phase == TriagePhase.FAST_TRIAGE:
-            branch_instr = "Domanda RAPIDA per emergenza. Formato: 2-3 opzioni SI/NO. Sii DIRETTO."
-        elif phase == TriagePhase.RISK_ASSESSMENT:
-            branch_instr = "Valutazione rischio salute mentale. Tono EMPATICO, NON giudicante."
-        else:
-            branch_instr = "Indagine clinica strutturata. Formato: multiple_choice con 3 opzioni A/B/C."
-
-        # ═══ Build conversation history for context ═══
+        # ═══ Conversation history (for context, NOT for preventing repeats) ═══
         chat_history = data.get("_chat_history", [])
-        history_text = ""
+        history_summary = ""
         if chat_history:
-            history_lines = []
-            for msg in chat_history:
+            # Only include last 6 messages (3 Q&A pairs) for conciseness
+            recent = chat_history[-6:]
+            lines = []
+            for msg in recent:
                 role = "Paziente" if msg.get("role") == "user" else "Medico"
-                content = msg.get("content", "")[:150]  # Truncate long messages
-                history_lines.append(f"  {role}: {content}")
-            history_text = "\n".join(history_lines)
+                lines.append(f"  {role}: {msg.get('content', '')[:120]}")
+            history_summary = "\n".join(lines)
 
-        # FIX: STRICT JSON-only prompt WITH conversation history
-        prompt = f"""Genera UNA domanda clinica per il triage. Rispondi ESCLUSIVAMENTE con JSON valido.
-NESSUN testo prima del JSON. NESSUN testo dopo il JSON. NESSUN commento. SOLO il JSON.
+        # ═══ Branch-specific format ═══
+        if phase == TriagePhase.FAST_TRIAGE:
+            format_instr = "Formato: multiple_choice con 2-3 opzioni BREVI. Tono urgente e diretto."
+        elif phase == TriagePhase.RISK_ASSESSMENT:
+            format_instr = "Formato: multiple_choice con 2-3 opzioni. Tono EMPATICO e non giudicante."
+        else:
+            format_instr = "Formato: multiple_choice con 3 opzioni A/B/C."
 
-DATI PAZIENTE: Sintomo={symptom}, Dolore={pain}/10, Età={age}, Insorgenza={onset}
-Domanda numero: {phase_q_count + 1} (target: 5-7 domande totali)
+        # ═══ STRICT prompt: topic is MANDATORY ═══
+        prompt = f"""Rispondi ESCLUSIVAMENTE con JSON valido. NESSUN testo prima o dopo.
 
-CONVERSAZIONE PRECEDENTE:
-{history_text if history_text else "(Prima domanda clinica)"}
+PAZIENTE: {symptom}, Dolore {pain}/10, Età {age}, Insorgenza {onset}
 
-PROTOCOLLI:
-{rag_context}
+ARGOMENTO OBBLIGATORIO PER QUESTA DOMANDA: **{topic}**
+{instruction}
 
-{branch_instr}
+{f"CONTESTO CONVERSAZIONE RECENTE:{chr(10)}{history_summary}" if history_summary else ""}
+{f"RIFERIMENTI CLINICI:{chr(10)}{rag_context}" if rag_context else ""}
 
-REGOLE CRITICHE:
-1) NON ripetere domande già fatte nella conversazione precedente
-2) Domanda SPECIFICA per il sintomo "{symptom}" — avanza l'indagine clinica
-3) Se la conversazione mostra già risposte su insorgenza/durata, chiedi ALTRO (es: sintomi associati, fattori scatenanti, farmaci, patologie pregresse, irradiazione)
-4) UNA SOLA domanda (NON fare riepiloghi, ringraziamenti o diagnosi)
-5) Il campo "text" DEVE contenere una DOMANDA (deve terminare con "?")
+{format_instr}
+La domanda DEVE riguardare {topic}. DEVE terminare con "?".
+NON fare riepiloghi, ringraziamenti o diagnosi. SOLO la domanda su {topic}.
 
-{{"text": "La tua domanda specifica qui?", "type": "multiple_choice", "options": ["A) Prima opzione", "B) Seconda opzione", "C) Terza opzione"]}}"""
+{{"text": "La domanda su {topic} qui?", "type": "multiple_choice", "options": ["A) Opzione 1", "B) Opzione 2", "C) Opzione 3"]}}"""
 
         try:
-            response = self.llm.generate_with_json_parse(prompt, temperature=0.3)
+            response = self.llm.generate_with_json_parse(prompt, temperature=0.4)
             if response and response.get("text"):
-                # FIX 4b: Detect "Grazie" / closing statements → skip
+                # Detect closing statements → skip
                 text_lower = response["text"].lower()
                 if any(bp in text_lower for bp in self.BLOCK_PHRASES):
-                    logger.warning(f"⚠️ LLM ha generato chiusura invece di domanda: '{response['text'][:60]}' → fallback")
+                    logger.warning(f"⚠️ LLM ha generato chiusura: '{response['text'][:60]}' → fallback")
                 else:
+                    logger.info(f"✅ Q{phase_q_count+1} ({topic}): {response['text'][:80]}...")
                     return response
         except Exception as e:
             logger.error(f"❌ Clinical question error: {e}")
 
-        return {"text": f"Riguardo al {symptom}, puoi descrivermi le caratteristiche del disturbo?", "type": "open_text", "options": None}
+        # Deterministic fallback: build question directly from dimension instruction
+        return {
+            "text": instruction.split("Opzioni:")[0].replace("Chiedi ", "").strip() + "?",
+            "type": "multiple_choice",
+            "options": self._extract_fallback_options(instruction)
+        }
+
+    @staticmethod
+    def _extract_fallback_options(instruction: str) -> list:
+        """Extract options from dimension instruction as fallback."""
+        if "Opzioni:" in instruction:
+            opts_text = instruction.split("Opzioni:")[1].strip()
+            options = [opt.strip() for opt in opts_text.split(" B)")]
+            if len(options) >= 2:
+                first = options[0]
+                rest = options[1:]
+                result = [first]
+                for i, opt in enumerate(rest):
+                    parts = opt.split(" C)")
+                    result.append(f"B) {parts[0].strip()}")
+                    if len(parts) > 1:
+                        result.append(f"C) {parts[1].strip()}")
+                return result[:3]
+        return ["A) Sì", "B) No", "C) Non saprei dire"]
 
 
 # ============================================================================
