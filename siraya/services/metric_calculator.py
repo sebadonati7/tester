@@ -178,22 +178,24 @@ class MetricCalculator:
             pl.count().alias('volume'),
         ])
         
-        # Calculate average volume per district
-        df_avg = df_clean.group_by('distretto').agg([
-            pl.count().alias('avg_distretto'),
+        # Calculate delta percentage vs average for that district
+        # First get monthly average per district
+        df_agg = df_agg.with_columns([
+            (pl.col('volume').cast(pl.Float64)).alias('volume_float')
         ])
         
-        # Join to get district averages
-        df_agg = df_agg.join(
-            df_avg,
-            on='distretto',
-            how='left'
-        )
+        # Calculate average by district across all months/specialties
+        df_district_avg = df_clean.group_by('distretto').agg([
+            (pl.count().cast(pl.Float64) / pl.col('mese').n_unique()).alias('avg_volume_per_month')
+        ])
+        
+        # Join averages
+        df_agg = df_agg.join(df_district_avg, on='distretto', how='left')
         
         # Calculate delta percentage
         df_agg = df_agg.with_columns([
-            ((pl.col('volume').cast(pl.Float64) / 
-              (pl.col('avg_distretto').cast(pl.Float64) / 12)) - 1) * 100
+            (((pl.col('volume_float') / pl.col('avg_volume_per_month')) - 1) * 100)
+            .fill_null(0)
             .alias('delta_percentuale')
         ])
         
