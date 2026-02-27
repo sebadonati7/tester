@@ -22,3 +22,5 @@ chromadb>=0.5.0          # Versione che supporta NumPy 2.0
 pypdf>=4.0.0
 sentence-transformers>=3.0.0
 faiss-cpu
+polars>=0.20.0
+pandas>=2.0.0
