@@ -211,9 +211,20 @@ class DataLoader:
         df = pl.DataFrame(rows)
         
         # Convert data types
+        # Handle timestamps - created_at column is a string like '2026-01-25 22:29:17.979328+00'
+        # We need to parse it carefully
         df = df.with_columns([
             pl.col('id').cast(pl.Utf8),
-            pl.col('created_at').str.to_datetime("%Y-%m-%d %H:%M:%S%.f%z", strict=False),
+            # Parse timestamp: remove timezone suffix and parse, then add timezone
+            pl.when(pl.col('created_at').is_not_null())
+              .then(
+                  pl.col('created_at')
+                    .str.replace(r'\+\d{2}$', '')  # Remove +00 suffix
+                    .str.strptime(pl.Datetime('us'), format='%Y-%m-%d %H:%M:%S%.f', strict=False)
+                    .dt.replace_time_zone('UTC')
+              )
+              .otherwise(None)
+              .alias('created_at'),
             pl.col('processing_time_ms').cast(pl.Int64, strict=False).fill_null(0),
             pl.col('tokens_used').cast(pl.Int64, strict=False).fill_null(0),
         ])

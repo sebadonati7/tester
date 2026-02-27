@@ -223,11 +223,24 @@ class DashboardUI:
         """
         filtered = df.clone()
         
-        # Filtro temporale
+        # Filtro temporale - handle timezone compatibility
         if 'timestamp_finale' in filtered.columns:
+            # Convert session state dates to UTC-aware datetimes to match column timezone
+            from datetime import timezone
+            
+            date_start = st.session_state.date_start
+            date_end = st.session_state.date_end
+            
+            # Make timezone-aware if not already
+            if date_start.tzinfo is None:
+                date_start = date_start.replace(tzinfo=timezone.utc)
+            if date_end.tzinfo is None:
+                date_end = date_end.replace(tzinfo=timezone.utc)
+            
+            # Filter with timezone-aware datetimes
             filtered = filtered.filter(
-                (pl.col('timestamp_finale') >= st.session_state.date_start) &
-                (pl.col('timestamp_finale') <= st.session_state.date_end)
+                (pl.col('timestamp_finale') >= date_start) &
+                (pl.col('timestamp_finale') <= date_end)
             )
         
         # Filtro AUSL → Distretti
