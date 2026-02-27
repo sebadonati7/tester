@@ -136,9 +136,43 @@ class DataLoader:
         # First, temporarily replace escaped quotes to avoid confusion
         values_section = values_section.replace("''", "<<<ESCAPED_QUOTE>>>")
         
-        # Find all tuples - pattern: (...)
-        tuple_pattern = r'\(([^)]+(?:\{[^}]+\}[^)]*)*)\)'
-        matches = re.findall(tuple_pattern, values_section)
+        # Split by finding balanced parentheses manually to avoid ReDoS
+        # This is safer than using complex regex with nested quantifiers
+        tuples = []
+        current_tuple = ""
+        paren_depth = 0
+        in_quotes = False
+        i = 0
+        
+        while i < len(values_section):
+            char = values_section[i]
+            
+            # Handle quotes
+            if char == "'" and (i == 0 or values_section[i-1] != '\\'):
+                in_quotes = not in_quotes
+                current_tuple += char
+            # Track parentheses only outside quotes
+            elif char == '(' and not in_quotes:
+                paren_depth += 1
+                if paren_depth == 1:
+                    current_tuple = ""  # Start new tuple
+                else:
+                    current_tuple += char
+            elif char == ')' and not in_quotes:
+                paren_depth -= 1
+                if paren_depth == 0:
+                    # Complete tuple found
+                    tuples.append(current_tuple)
+                    current_tuple = ""
+                else:
+                    current_tuple += char
+            elif paren_depth > 0:
+                # Inside a tuple
+                current_tuple += char
+            
+            i += 1
+        
+        matches = tuples
         
         rows = []
         for match in matches:
@@ -203,18 +237,23 @@ class DataLoader:
         brace_depth = 0
         i = 0
         
+        # Simple state machine to avoid ReDoS vulnerability
         while i < len(values_str):
             char = values_str[i]
             
+            # Handle quote toggling (check for escape)
             if char == "'" and (i == 0 or values_str[i-1] != '\\'):
                 in_quotes = not in_quotes
                 current += char
+            # Track brace depth only when inside quotes
             elif char == '{' and in_quotes:
                 brace_depth += 1
                 current += char
             elif char == '}' and in_quotes:
-                brace_depth -= 1
+                if brace_depth > 0:
+                    brace_depth -= 1
                 current += char
+            # Split on comma only when not in quotes and braces balanced
             elif char == ',' and not in_quotes and brace_depth == 0:
                 parts.append(current.strip())
                 current = ""
@@ -223,6 +262,7 @@ class DataLoader:
             
             i += 1
         
+        # Add final part
         if current.strip():
             parts.append(current.strip())
         
