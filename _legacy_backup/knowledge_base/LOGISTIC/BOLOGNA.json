@@ -1,0 +1,1951 @@
+[
+  {
+    "id": "BO_HUB_MAGGIORE_PS",
+    "tipologia": "Ospedale Hub (Emergenza)",
+    "nome": "Pronto Soccorso Generale - Ospedale Maggiore C.A. Pizzardi",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "frazione": "Porto-Saragozza",
+    "indirizzo": "Largo Bartolo Nigrisoli, 2, 40133 Bologna BO",
+    "contatti": {
+      "telefono": "051 6478111",
+      "web": "https://www.ausl.bologna.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "HUB TRAUMA CENTER E STROKE UNIT. Riferimento per incidenti maggiori, ictus, traumi."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Shock Room",
+      "Trauma Team",
+      "Rianimazione"
+    ]
+  },
+  {
+    "id": "BO_HUB_MAGGIORE_OST",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ostetrico-Ginecologico Maggiore",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Largo Bartolo Nigrisoli, 2, 40133 Bologna BO (Maternità)",
+    "contatti": {
+      "telefono": "051 6478111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Accesso diretto Maternità."
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Visita ginecologica urgente"
+    ]
+  },
+  {
+    "id": "BO_HUB_MAGGIORE_PED",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Pediatrico Maggiore",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Largo Bartolo Nigrisoli, 2, 40133 Bologna BO",
+    "contatti": {
+      "telefono": "051 6478111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Per traumi pediatrici e patologie acute."
+    },
+    "servizi_disponibili": [
+      "Pediatria d'urgenza",
+      "Osservazione pediatrica"
+    ]
+  },
+  {
+    "id": "BO_HUB_SANTORSOLA_PS",
+    "tipologia": "Ospedale Hub / Policlinico",
+    "nome": "Pronto Soccorso Generale - Policlinico Sant'Orsola-Malpighi",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Giuseppe Massarenti, 9, 40138 Bologna BO (Padiglione 5)",
+    "contatti": {
+      "telefono": "051 2141111",
+      "web": "https://www.aosp.bo.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "HUB REGIONALE. Riferimento per: Cardiochirurgia, Trapianti, Ematologia, Grandi Ustionati."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso Generale",
+      "Cardiochirurgia d'Urgenza",
+      "Centro Grandi Ustionati"
+    ]
+  },
+  {
+    "id": "BO_HUB_SANTORSOLA_PED",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Pediatrico Gozzadini (Sant'Orsola)",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Giuseppe Massarenti, 11, 40138 Bologna BO (Padiglione 13)",
+    "contatti": {
+      "telefono": "051 2141111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Hub Regionale Pediatrico per alta complessità."
+    },
+    "servizi_disponibili": [
+      "Pediatria Specialistica",
+      "Chirurgia Pediatrica",
+      "Oncoematologia Pediatrica"
+    ]
+  },
+  {
+    "id": "BO_HUB_SANTORSOLA_OST",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ostetrico Sant'Orsola",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Giuseppe Massarenti, 13, 40138 Bologna BO (Padiglione 4)",
+    "contatti": {
+      "telefono": "051 2141111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento gravidanze a rischio."
+    },
+    "servizi_disponibili": [
+      "Sala Parto",
+      "Terapia Intensiva Neonatale"
+    ]
+  },
+  {
+    "id": "BO_HUB_SANTORSOLA_OCU",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Oculistico Sant'Orsola",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Palagi, 9, 40138 Bologna BO (Padiglione 1)",
+    "contatti": {
+      "telefono": "051 2141111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Unico PS Oculistico H24 della città."
+    },
+    "servizi_disponibili": [
+      "Oculistica d'urgenza"
+    ]
+  },
+  {
+    "id": "BO_HUB_RIZZOLI",
+    "tipologia": "Pronto Soccorso Specialistico",
+    "nome": "Pronto Soccorso Ortopedico - Istituto Ortopedico Rizzoli",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Pupilli, 1, 40136 Bologna BO",
+    "contatti": {
+      "telefono": "051 6366111",
+      "web": "https://www.ior.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "SPECIALISTICO ORTOPEDICO. Non andare per patologie non ortopediche."
+    },
+    "servizi_disponibili": [
+      "Traumatologia scheletrica",
+      "Ortopedia d'urgenza"
+    ]
+  },
+  {
+    "id": "BO_CAU_MAGGIORE",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Bologna Ospedale Maggiore",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Largo Bartolo Nigrisoli, 2, 40133 Bologna BO (Edificio L, Piano terra)",
+    "contatti": {
+      "telefono": "051 6478111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Adiacente al PS. Per codici bianchi e verdi."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Piccola traumatologia"
+    ]
+  },
+  {
+    "id": "BO_CAU_NAVILE",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Navile - Casa della Comunità",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "frazione": "Navile",
+    "indirizzo": "Via Svampa, 8, 40129 Bologna BO",
+    "contatti": {
+      "telefono": "051 4191137"
+    },
+    "orari": {
+      "lunedi": "08:00-24:00",
+      "martedi": "08:00-24:00",
+      "mercoledi": "08:00-24:00",
+      "giovedi": "08:00-24:00",
+      "venerdi": "08:00-24:00",
+      "sabato": "08:00-24:00",
+      "domenica": "08:00-24:00",
+      "note": "Accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni",
+      "Terapia iniettiva"
+    ]
+  },
+  {
+    "id": "BO_CAU_PILASTRO",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Pilastro - Casa della Comunità San Donato",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "frazione": "Pilastro",
+    "indirizzo": "Via Pirandello, 6/3, 40127 Bologna BO",
+    "contatti": {
+      "telefono": "051 2869111"
+    },
+    "orari": {
+      "lunedi": "08:00-24:00",
+      "martedi": "08:00-24:00",
+      "mercoledi": "08:00-24:00",
+      "giovedi": "08:00-24:00",
+      "venerdi": "08:00-24:00",
+      "sabato": "08:00-24:00",
+      "domenica": "08:00-24:00",
+      "note": "Accesso diretto."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente"
+    ]
+  },
+  {
+    "id": "BO_CDC_BORGO_PANIGALE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Borgo Panigale-Reno",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "frazione": "Borgo Panigale",
+    "indirizzo": "Via Nani, 10, 40132 Bologna BO",
+    "contatti": {
+      "telefono": "051 6173711"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP",
+      "Consultorio",
+      "Neuropsichiatria Infantile"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_BORGO_PANIGALE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Borgo Panigale",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "frazione": "Borgo Panigale",
+    "indirizzo": "Via Nani, 10, Bologna BO",
+    "contatti": {
+      "telefono": "051 6173711"
+    },
+    "orari": {
+      "lunedi": "07:30-10:00",
+      "martedi": "07:30-10:00",
+      "mercoledi": "07:30-10:00",
+      "giovedi": "07:30-10:00",
+      "venerdi": "07:30-10:00",
+      "sabato": "07:30-10:00",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SARAGOZZA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Porto-Saragozza",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Sant'Isaia, 90, 40123 Bologna BO",
+    "contatti": {
+      "telefono": "051 6597111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Ex Roncati."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica",
+      "CUP"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_SARAGOZZA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Sant'Isaia",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Sant'Isaia, 90, Bologna BO",
+    "contatti": {
+      "telefono": "051 6597111"
+    },
+    "orari": {
+      "lunedi": "07:15-10:30",
+      "martedi": "07:15-10:30",
+      "mercoledi": "07:15-10:30",
+      "giovedi": "07:15-10:30",
+      "venerdi": "07:15-10:30",
+      "sabato": "07:15-10:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SAVENA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Savena-Santo Stefano",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Faenza, 18, 40139 Bologna BO",
+    "contatti": {
+      "telefono": "051 6226111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_SAVENA",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Via Faenza",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Faenza, 18, Bologna BO",
+    "contatti": {
+      "telefono": "051 6226111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CARPACCIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Carpaccio",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Carpaccio, 2, 40139 Bologna BO",
+    "contatti": {
+      "telefono": "051 6226111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:00",
+      "martedi": "07:30-09:00",
+      "mercoledi": "07:30-09:00",
+      "giovedi": "07:30-09:00",
+      "venerdi": "07:30-09:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Accesso su prenotazione."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_TIARINI",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Tiarini",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Tiarini, 10, 40129 Bologna BO",
+    "contatti": {
+      "telefono": "051 4191111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": "Quartiere Navile."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_MONTEBELLO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Montebello",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Montebello, 6, 40121 Bologna BO",
+    "contatti": {
+      "telefono": "051 2869111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": "Centro storico."
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_OSP_BENTIVOGLIO_PS",
+    "tipologia": "Ospedale Spoke (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale di Bentivoglio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Bentivoglio",
+    "indirizzo": "Via Marconi, 35, 40010 Bentivoglio BO",
+    "contatti": {
+      "telefono": "051 6644111",
+      "web": "https://www.ausl.bologna.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento per la Pianura Est."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Cardiologia",
+      "Chirurgia",
+      "Ortopedia"
+    ]
+  },
+  {
+    "id": "BO_OSP_BUDRIO_PS",
+    "tipologia": "Ospedale Spoke (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale di Budrio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Budrio",
+    "indirizzo": "Via Benni, 44, 40054 Budrio BO",
+    "contatti": {
+      "telefono": "051 809111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Spoke distrettuale."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina Interna"
+    ]
+  },
+  {
+    "id": "BO_CAU_BUDRIO",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Budrio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Budrio",
+    "indirizzo": "Via Benni, 44, 40054 Budrio BO",
+    "contatti": {
+      "telefono": "051 809111"
+    },
+    "orari": {
+      "lunedi": "08:00-24:00",
+      "martedi": "08:00-24:00",
+      "mercoledi": "08:00-24:00",
+      "giovedi": "08:00-24:00",
+      "venerdi": "08:00-24:00",
+      "sabato": "08:00-24:00",
+      "domenica": "08:00-24:00",
+      "note": "Presso l'Ospedale, percorso separato."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente"
+    ]
+  },
+  {
+    "id": "BO_CDC_BUDRIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Budrio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Budrio",
+    "indirizzo": "Via Benni, 44, 40054 Budrio BO",
+    "contatti": {
+      "telefono": "051 809111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_BUDRIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Budrio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Budrio",
+    "indirizzo": "Via Benni, 44, Budrio BO",
+    "contatti": {
+      "telefono": "051 809111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:30",
+      "martedi": "07:15-09:30",
+      "mercoledi": "07:15-09:30",
+      "giovedi": "07:15-09:30",
+      "venerdi": "07:15-09:30",
+      "sabato": "07:15-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_CASTEL_MAGGIORE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Castel Maggiore",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Castel Maggiore",
+    "indirizzo": "Piazza Loris Lolli, 5, 40013 Castel Maggiore BO",
+    "contatti": {
+      "telefono": "051 4192411"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CASTEL_MAGGIORE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Castel Maggiore",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Castel Maggiore",
+    "indirizzo": "Piazza Loris Lolli, 5, Castel Maggiore BO",
+    "contatti": {
+      "telefono": "051 4192411"
+    },
+    "orari": {
+      "lunedi": "07:15-09:15",
+      "martedi": "07:15-09:15",
+      "mercoledi": "07:15-09:15",
+      "giovedi": "07:15-09:15",
+      "venerdi": "07:15-09:15",
+      "sabato": "07:15-09:15",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_PIEVE_DI_CENTO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Pieve di Cento",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Pieve di Cento",
+    "indirizzo": "Via Luigi Campanini, 2, 40066 Pieve di Cento BO",
+    "contatti": {
+      "telefono": "051 6862511"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Servizio di confine con Ferrara."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_PIEVE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Pieve di Cento",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Pieve di Cento",
+    "indirizzo": "Via Campanini, 2, Pieve di Cento BO",
+    "contatti": {
+      "telefono": "051 6862511"
+    },
+    "orari": {
+      "lunedi": "07:15-09:00",
+      "martedi": "07:15-09:00",
+      "mercoledi": "07:15-09:00",
+      "giovedi": "07:15-09:00",
+      "venerdi": "07:15-09:00",
+      "sabato": "07:15-09:00",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SAN_PIETRO_IN_CASALE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Pietro in Casale",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "San Pietro in Casale",
+    "indirizzo": "Via Asia, 61, 40018 San Pietro in Casale BO",
+    "contatti": {
+      "telefono": "051 6662611"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Ospedale di Comunità (OSCO)"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_SAN_PIETRO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi San Pietro in Casale",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "San Pietro in Casale",
+    "indirizzo": "Via Asia, 61, San Pietro in Casale BO",
+    "contatti": {
+      "telefono": "051 6662611"
+    },
+    "orari": {
+      "lunedi": "07:15-09:30",
+      "martedi": "07:15-09:30",
+      "mercoledi": "07:15-09:30",
+      "giovedi": "07:15-09:30",
+      "venerdi": "07:15-09:30",
+      "sabato": "07:15-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_BARICELLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Baricella",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Baricella",
+    "indirizzo": "Via Europa, 15, 40052 Baricella BO",
+    "contatti": {
+      "telefono": "051 6622411"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MINERBIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Minerbio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Minerbio",
+    "indirizzo": "Via Don Zamboni, 1, 40061 Minerbio BO",
+    "contatti": {
+      "telefono": "051 6611211"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_CDC_GRANAROLO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Granarolo dell'Emilia",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Granarolo dell'Emilia",
+    "indirizzo": "Via San Donato, 74, 40057 Granarolo BO",
+    "contatti": {
+      "telefono": "051 6004111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MOLINELLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Molinella",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Molinella",
+    "indirizzo": "Via Provinciale Circonvallazione, 47, 40062 Molinella BO",
+    "contatti": {
+      "telefono": "051 6909111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "BO_OSP_PERSICETO_PS",
+    "tipologia": "Ospedale Spoke (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale San Giovanni in Persiceto",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "San Giovanni in Persiceto",
+    "indirizzo": "Via Palma, 1, 40017 San Giovanni in Persiceto BO",
+    "contatti": {
+      "telefono": "051 6813111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento Pianura Ovest."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina Interna",
+      "Chirurgia"
+    ]
+  },
+  {
+    "id": "BO_CDC_PERSICETO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Giovanni in Persiceto",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "San Giovanni in Persiceto",
+    "indirizzo": "Via Palma, 1, 40017 San Giovanni in Persiceto BO",
+    "contatti": {
+      "telefono": "051 6813111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_PERSICETO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Persiceto",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "San Giovanni in Persiceto",
+    "indirizzo": "Via Palma, 1, San Giovanni in Persiceto BO",
+    "contatti": {
+      "telefono": "051 6813111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:30",
+      "martedi": "07:15-09:30",
+      "mercoledi": "07:15-09:30",
+      "giovedi": "07:15-09:30",
+      "venerdi": "07:15-09:30",
+      "sabato": "07:15-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_CREVALCORE",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Crevalcore",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "Crevalcore",
+    "indirizzo": "Viale della Libertà, 171, 40014 Crevalcore BO",
+    "contatti": {
+      "telefono": "051 6803111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:00",
+      "martedi": "07:30-18:00",
+      "mercoledi": "07:30-18:00",
+      "giovedi": "07:30-18:00",
+      "venerdi": "07:30-18:00",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CREVALCORE",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Crevalcore",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "Crevalcore",
+    "indirizzo": "Viale della Libertà, 171, Crevalcore BO",
+    "contatti": {
+      "telefono": "051 6803111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:15",
+      "martedi": "07:15-09:15",
+      "mercoledi": "07:15-09:15",
+      "giovedi": "07:15-09:15",
+      "venerdi": "07:15-09:15",
+      "sabato": "07:15-09:15",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SANT_AGATA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Sant'Agata Bolognese",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "Sant'Agata Bolognese",
+    "indirizzo": "Via Circondaria Ovest, 24, 40019 Sant'Agata Bolognese BO",
+    "contatti": {
+      "telefono": "051 6813011"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_ANZOLA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Anzola dell'Emilia",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Ovest",
+    "comune": "Anzola dell'Emilia",
+    "indirizzo": "Via Goldoni, 5, 40011 Anzola dell'Emilia BO",
+    "contatti": {
+      "telefono": "051 6502111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_OSP_BAZZANO_PS",
+    "tipologia": "Ospedale Spoke (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale di Bazzano (Valsamoggia)",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Valsamoggia",
+    "frazione": "Bazzano",
+    "indirizzo": "Viale dei Martiri, 14, 40053 Valsamoggia BO",
+    "contatti": {
+      "telefono": "051 838111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento Valsamoggia."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina",
+      "Chirurgia day surgery"
+    ]
+  },
+  {
+    "id": "BO_CAU_CASALECCHIO",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Casalecchio di Reno",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Casalecchio di Reno",
+    "indirizzo": "Piazzale Rita Levi Montalcini, 5, 40033 Casalecchio di Reno BO",
+    "contatti": {
+      "telefono": "051 596611"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Presso Casa della Comunità."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni"
+    ]
+  },
+  {
+    "id": "BO_CDC_CASALECCHIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Casalecchio di Reno",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Casalecchio di Reno",
+    "indirizzo": "Piazzale Rita Levi Montalcini, 5, 40033 Casalecchio di Reno BO",
+    "contatti": {
+      "telefono": "051 596611"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Hub distrettuale."
+    },
+    "servizi_disponibili": [
+      "CAU",
+      "Punto Prelievi",
+      "Specialistica",
+      "Consultorio"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CASALECCHIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Casalecchio",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Casalecchio di Reno",
+    "indirizzo": "Piazzale Rita Levi Montalcini, 5, Casalecchio BO",
+    "contatti": {
+      "telefono": "051 596611"
+    },
+    "orari": {
+      "lunedi": "07:15-09:30",
+      "martedi": "07:15-09:30",
+      "mercoledi": "07:15-09:30",
+      "giovedi": "07:15-09:30",
+      "venerdi": "07:15-09:30",
+      "sabato": "07:15-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SASSO_MARCONI",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Sasso Marconi",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Sasso Marconi",
+    "indirizzo": "Via Emilia, 1, 40037 Sasso Marconi BO",
+    "contatti": {
+      "telefono": "051 842111"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_SASSO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Sasso Marconi",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Sasso Marconi",
+    "indirizzo": "Via Emilia, 1, Sasso Marconi BO",
+    "contatti": {
+      "telefono": "051 842111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:15",
+      "martedi": "07:15-09:15",
+      "mercoledi": "07:15-09:15",
+      "giovedi": "07:15-09:15",
+      "venerdi": "07:15-09:15",
+      "sabato": "07:15-09:15",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_ZOLA_PREDOSA",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Zola Predosa",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Zola Predosa",
+    "indirizzo": "Piazza Di Vittorio, 1, 40069 Zola Predosa BO",
+    "contatti": {
+      "telefono": "051 6162111"
+    },
+    "orari": {
+      "lunedi": "07:30-13:00",
+      "martedi": "07:30-13:00",
+      "mercoledi": "07:30-13:00",
+      "giovedi": "07:30-13:00",
+      "venerdi": "07:30-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MONTE_SAN_PIETRO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Monte San Pietro",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Monte San Pietro",
+    "frazione": "Calderino",
+    "indirizzo": "Via Lavino, 55, 40050 Monte San Pietro BO",
+    "contatti": {
+      "telefono": "051 6764111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_OSP_BELLARIA_H",
+    "tipologia": "Ospedale Specialistico",
+    "nome": "Ospedale Bellaria",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Bologna",
+    "indirizzo": "Via Altura, 3, 40139 Bologna BO",
+    "contatti": {
+      "telefono": "051 6225111",
+      "web": "https://www.ausl.bologna.it"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "NO PRONTO SOCCORSO GENERALE. Hub Neurochirurgico e Riabilitativo."
+    },
+    "servizi_disponibili": [
+      "Neurochirurgia",
+      "Neurologia",
+      "Riabilitazione"
+    ]
+  },
+  {
+    "id": "BO_OSP_LOIANO",
+    "tipologia": "Ospedale di Montagna",
+    "nome": "Ospedale Simiani di Loiano",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Loiano",
+    "indirizzo": "Via Roma, 8, 40050 Loiano BO",
+    "contatti": {
+      "telefono": "051 6543111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Punto di Primo Intervento Territoriale."
+    },
+    "servizi_disponibili": [
+      "Primo Intervento",
+      "Medicina Interna",
+      "Radiologia"
+    ]
+  },
+  {
+    "id": "BO_CAU_SAN_LAZZARO",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU San Lazzaro di Savena",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "San Lazzaro di Savena",
+    "indirizzo": "Via Repubblica, 11, 40068 San Lazzaro di Savena BO",
+    "contatti": {
+      "telefono": "051 6224111"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Presso Casa della Comunità."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente",
+      "Medicazioni"
+    ]
+  },
+  {
+    "id": "BO_CDC_SAN_LAZZARO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Lazzaro di Savena",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "San Lazzaro di Savena",
+    "indirizzo": "Via Repubblica, 11, 40068 San Lazzaro di Savena BO",
+    "contatti": {
+      "telefono": "051 6224111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": "Hub distrettuale."
+    },
+    "servizi_disponibili": [
+      "CAU",
+      "Punto Prelievi",
+      "Consultorio",
+      "CUP"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_SAN_LAZZARO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi San Lazzaro",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "San Lazzaro di Savena",
+    "indirizzo": "Via Repubblica, 11, San Lazzaro BO",
+    "contatti": {
+      "telefono": "051 6224111"
+    },
+    "orari": {
+      "lunedi": "07:15-09:15",
+      "martedi": "07:15-09:15",
+      "mercoledi": "07:15-09:15",
+      "giovedi": "07:15-09:15",
+      "venerdi": "07:15-09:15",
+      "sabato": "07:15-09:15",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_OZZANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Ozzano dell'Emilia",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Ozzano dell'Emilia",
+    "indirizzo": "Via Giovanni XXIII, 26, 40064 Ozzano dell'Emilia BO",
+    "contatti": {
+      "telefono": "051 791211"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Pediatria"
+    ]
+  },
+  {
+    "id": "BO_CDC_PIANORO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Pianoro",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Pianoro",
+    "indirizzo": "Via Risorgimento, 8, 40065 Pianoro BO",
+    "contatti": {
+      "telefono": "051 774111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MONTERENZIO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Monterenzio",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Monterenzio",
+    "indirizzo": "Via Idice, 222, 40050 Monterenzio BO",
+    "contatti": {
+      "telefono": "051 929111"
+    },
+    "orari": {
+      "lunedi": "08:00-12:00",
+      "martedi": "08:00-12:00",
+      "mercoledi": "08:00-12:00",
+      "giovedi": "08:00-12:00",
+      "venerdi": "08:00-12:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MONGHIDORO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Monghidoro",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Monghidoro",
+    "indirizzo": "Via Roma, 2, 40063 Monghidoro BO",
+    "contatti": {
+      "telefono": "051 6555111"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio montano."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_OSP_PORRETTA_PS",
+    "tipologia": "Ospedale di Montagna (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale Alto Reno (Porretta Terme)",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Alto Reno Terme",
+    "frazione": "Porretta Terme",
+    "indirizzo": "Via Mazzini, 15, 40046 Alto Reno Terme BO",
+    "contatti": {
+      "telefono": "0534 20711"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Riferimento Alto Reno."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina Interna",
+      "Chirurgia",
+      "Ortopedia"
+    ]
+  },
+  {
+    "id": "BO_OSP_VERGATO_PS",
+    "tipologia": "Ospedale di Montagna (Emergenza)",
+    "nome": "Pronto Soccorso - Ospedale di Vergato",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Vergato",
+    "indirizzo": "Via dell'Ospedale, 1, 40038 Vergato BO",
+    "contatti": {
+      "telefono": "051 6749111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Punto di Primo Intervento / PS."
+    },
+    "servizi_disponibili": [
+      "Pronto Soccorso",
+      "Medicina"
+    ]
+  },
+  {
+    "id": "BO_CAU_VERGATO",
+    "tipologia": "CAU - Centro Assistenza Urgenza",
+    "nome": "CAU Vergato",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Vergato",
+    "indirizzo": "Via dell'Ospedale, 1, 40038 Vergato BO",
+    "contatti": {
+      "telefono": "051 6749111"
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "08:00-20:00",
+      "note": "Presso l'Ospedale."
+    },
+    "servizi_disponibili": [
+      "Medicina di base urgente"
+    ]
+  },
+  {
+    "id": "BO_CDC_VERGATO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Vergato",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Vergato",
+    "indirizzo": "Via dell'Ospedale, 1, 40038 Vergato BO",
+    "contatti": {
+      "telefono": "051 6749111"
+    },
+    "orari": {
+      "lunedi": "07:30-18:30",
+      "martedi": "07:30-18:30",
+      "mercoledi": "07:30-18:30",
+      "giovedi": "07:30-18:30",
+      "venerdi": "07:30-18:30",
+      "sabato": "07:30-12:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "CUP"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_VERGATO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Vergato",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Vergato",
+    "indirizzo": "Via dell'Ospedale, 1, Vergato BO",
+    "contatti": {
+      "telefono": "051 6749111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_CASTIGLIONE_PEPOLI",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Castiglione dei Pepoli",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Castiglione dei Pepoli",
+    "indirizzo": "Via S. Lorenzo, 11, 40035 Castiglione dei Pepoli BO",
+    "contatti": {
+      "telefono": "0534 802111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Presidio sanitario principale per l'alta valle."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi",
+      "Specialistica"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_CASTIGLIONE_PEPOLI",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Castiglione dei Pepoli",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Castiglione dei Pepoli",
+    "indirizzo": "Via S. Lorenzo, 11, Castiglione dei Pepoli BO",
+    "contatti": {
+      "telefono": "0534 802111"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "07:30-09:30",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_SAN_BENEDETTO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità San Benedetto Val di Sambro",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "San Benedetto Val di Sambro",
+    "indirizzo": "Piazza del Popolo, 1, 40048 San Benedetto Val di Sambro BO",
+    "contatti": {
+      "telefono": "0534 67511"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": "Micro-nodo montano."
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_MARZABOTTO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Marzabotto",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Marzabotto",
+    "indirizzo": "Via Matteotti, 1, 40043 Marzabotto BO",
+    "contatti": {
+      "telefono": "051 6786111"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_CDC_GAGGIO_MONTANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Gaggio Montano",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Gaggio Montano",
+    "indirizzo": "Piazza Arnaldo Brasa, 1, 40041 Gaggio Montano BO",
+    "contatti": {
+      "telefono": "0534 37911"
+    },
+    "orari": {
+      "lunedi": "08:00-13:00",
+      "martedi": "08:00-13:00",
+      "mercoledi": "08:00-13:00",
+      "giovedi": "08:00-13:00",
+      "venerdi": "08:00-13:00",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_PRELIEVI_GAGGIO",
+    "tipologia": "Punto Prelievi",
+    "nome": "Punto Prelievi Gaggio Montano",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Gaggio Montano",
+    "indirizzo": "Piazza Arnaldo Brasa, 1, Gaggio Montano BO",
+    "contatti": {
+      "telefono": "0534 37911"
+    },
+    "orari": {
+      "lunedi": "07:30-09:30",
+      "martedi": "07:30-09:30",
+      "mercoledi": "07:30-09:30",
+      "giovedi": "07:30-09:30",
+      "venerdi": "07:30-09:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Prelievi ematici"
+    ]
+  },
+  {
+    "id": "BO_CDC_LIZZANO",
+    "tipologia": "Casa della Comunità",
+    "nome": "Casa della Comunità Lizzano in Belvedere",
+    "provincia": "BO",
+    "distretto": "Distretto Appennino Bolognese",
+    "comune": "Lizzano in Belvedere",
+    "indirizzo": "Via Roma, 22, 40042 Lizzano in Belvedere BO",
+    "contatti": {
+      "telefono": "0534 51311"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30",
+      "martedi": "08:30-12:30",
+      "mercoledi": "08:30-12:30",
+      "giovedi": "08:30-12:30",
+      "venerdi": "08:30-12:30",
+      "sabato": "Chiuso",
+      "domenica": "Chiuso",
+      "note": ""
+    },
+    "servizi_disponibili": [
+      "Punto Prelievi"
+    ]
+  },
+  {
+    "id": "BO_GM_CENTRALE",
+    "tipologia": "Guardia Medica",
+    "nome": "Continuità Assistenziale Bologna Città",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna Città",
+    "comune": "Bologna",
+    "indirizzo": "Via Altura, 3 (c/o Ospedale Bellaria - Sede centrale), Bologna BO",
+    "contatti": {
+      "telefono": "051 3131"
+    },
+    "orari": {
+      "lunedi": "20:00-08:00",
+      "martedi": "20:00-08:00",
+      "mercoledi": "20:00-08:00",
+      "giovedi": "20:00-08:00",
+      "venerdi": "20:00-08:00",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "NUMERO UNICO 051 3131 per tutta l'area metropolitana e provincia."
+    },
+    "servizi_disponibili": [
+      "Visite domiciliari",
+      "Consulti telefonici",
+      "Certificati malattia"
+    ]
+  },
+  {
+    "id": "BO_HOSPICE_BELLARIA",
+    "tipologia": "Hospice",
+    "nome": "Hospice Bellaria",
+    "provincia": "BO",
+    "distretto": "Distretto San Lazzaro di Savena",
+    "comune": "Bologna",
+    "indirizzo": "Via Altura, 3, 40139 Bologna BO",
+    "contatti": {
+      "telefono": "051 6225111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Cure palliative residenziali."
+    },
+    "servizi_disponibili": [
+      "Cure Palliative"
+    ]
+  },
+  {
+    "id": "BO_HOSPICE_BENTIVOGLIO",
+    "tipologia": "Hospice",
+    "nome": "Hospice Bentivoglio",
+    "provincia": "BO",
+    "distretto": "Distretto Pianura Est",
+    "comune": "Bentivoglio",
+    "indirizzo": "Via Marconi, 35, 40010 Bentivoglio BO",
+    "contatti": {
+      "telefono": "051 6644111"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Cure palliative residenziali."
+    },
+    "servizi_disponibili": [
+      "Cure Palliative"
+    ]
+  },
+  {
+    "id": "BO_HOSPICE_CASALECCHIO",
+    "tipologia": "Hospice",
+    "nome": "Hospice Casalecchio",
+    "provincia": "BO",
+    "distretto": "Distretto Reno, Lavino e Samoggia",
+    "comune": "Casalecchio di Reno",
+    "indirizzo": "Via Cavour, 9, 40033 Casalecchio di Reno BO",
+    "contatti": {
+      "telefono": "051 596611"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note": "Cure palliative."
+    },
+    "servizi_disponibili": [
+      "Cure Palliative"
+    ]
+  }
+]

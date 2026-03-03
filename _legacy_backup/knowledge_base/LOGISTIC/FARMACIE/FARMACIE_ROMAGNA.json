@@ -1,0 +1,308 @@
+[
+    {
+      "id": "PC_PIACENZA_CENTRALE",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Centrale",
+      "provincia": "PC",
+      "distretto": "Piacenza",
+      "comune": "Piacenza",
+      "frazione": null,
+      "indirizzo": "Piazza Cavalli, 1, 29121 Piacenza PC",
+      "contatti": {
+        "telephone": "0523-320743",
+        "email": "centrale.piacenza@comune.pc.it",
+        "whatsapp": null,
+        "fax": "0523-320744"
+      },
+      "orari": {
+        "lunedi": "H24",
+        "martedi": "H24",
+        "mercoledi": "H24",
+        "giovedi": "H24",
+        "venerdi": "H24",
+        "sabato": "H24",
+        "domenica": "H24",
+        "note_accesso": "Sempre aperta. Sportello notturno dopo le 22:00."
+      },
+      "servizi_disponibili": ["CUP", "Telemedicina", "Autoanalisi", "Tamponi", "Noleggio tiralatte"],
+      "logistica_chatbot": {
+        "parcheggio": "ZTL - Parcheggio pubblico a 200m",
+        "accessibilita_disabili": "Eccellente",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "3km da Ospedale Piacenza",
+        "consiglio_routing": "Prima scelta per urgenze notturne in centro."
+      }
+    },
+    {
+      "id": "PC_PIACENZA_FARNESIANA",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Farnesiana",
+      "provincia": "PC",
+      "distretto": "Piacenza",
+      "comune": "Piacenza",
+      "frazione": null,
+      "indirizzo": "Via Farnesiana, 12, 29122 Piacenza PC",
+      "contatti": {
+        "telephone": "0523-591011",
+        "email": "farnesiana@comune.pc.it",
+        "whatsapp": null,
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "08:30-20:00",
+        "martedi": "08:30-20:00",
+        "mercoledi": "08:30-20:00",
+        "giovedi": "08:30-20:00",
+        "venerdi": "08:30-20:00",
+        "sabato": "08:30-13:00",
+        "domenica": "Chiuso",
+        "note_accesso": "Orario continuato feriale."
+      },
+      "servizi_disponibili": ["CUP", "Dermocosmesi", "Autoanalisi"],
+      "logistica_chatbot": {
+        "parcheggio": "Ampio parcheggio gratuito",
+        "accessibilita_disabili": "Ottima",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Zona residenziale est",
+        "consiglio_routing": "Consigliata per utenti con difficoltà motorie grazie al parcheggio fronte ingresso."
+      }
+    },
+    {
+      "id": "PR_PARMA_MILLE",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Mille",
+      "provincia": "PR",
+      "distretto": "Parma",
+      "comune": "Parma",
+      "frazione": null,
+      "indirizzo": "Viale dei Mille, 44, 43125 Parma PR",
+      "contatti": {
+        "telephone": "0521-233512",
+        "email": "mille@comune.parma.it",
+        "whatsapp": "335-9876543",
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "08:00-22:00",
+        "martedi": "08:00-22:00",
+        "mercoledi": "08:00-22:00",
+        "giovedi": "08:00-22:00",
+        "venerdi": "08:00-22:00",
+        "sabato": "08:00-22:00",
+        "domenica": "09:00-13:00 (Turno variabile)",
+        "note_accesso": "Orario prolungato fino alle 22:00."
+      },
+      "servizi_disponibili": ["ECG", "Holter", "Prenotazioni specialistica", "Tamponi"],
+      "logistica_chatbot": {
+        "parcheggio": "Strisce blu adiacenti",
+        "accessibilita_disabili": "Buona",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Vicina all'Ospedale Maggiore",
+        "consiglio_routing": "Ideale per orari tardo-pomeridiani e pre-serali."
+      }
+    },
+    {
+      "id": "RE_REGGIOEMILIA_FCR_GRAMSCI",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale FCR Gramsci",
+      "provincia": "RE",
+      "distretto": "Reggio Emilia",
+      "comune": "Reggio Emilia",
+      "frazione": null,
+      "indirizzo": "Via Gramsci, 54, 42124 Reggio Emilia RE",
+      "contatti": {
+        "telephone": "0522-511332",
+        "email": "gramsci@fcr.re.it",
+        "whatsapp": "333-1234567",
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "08:30-13:00, 15:30-19:30",
+        "martedi": "08:30-13:00, 15:30-19:30",
+        "mercoledi": "08:30-13:00, 15:30-19:30",
+        "giovedi": "08:30-13:00, 15:30-19:30",
+        "venerdi": "08:30-13:00, 15:30-19:30",
+        "sabato": "08:30-13:00",
+        "domenica": "Chiuso",
+        "note_accesso": "Battenti aperti."
+      },
+      "servizi_disponibili": ["ECG", "Holter Cardiaco", "Analisi lipidi", "Distribuzione DPC"],
+      "logistica_chatbot": {
+        "parcheggio": "Riservato clienti",
+        "accessibilita_disabili": "Livello strada",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Zona Nord, vicino Stadio",
+        "consiglio_routing": "Ottima per analisi cardiologiche senza appuntamento."
+      }
+    },
+    {
+      "id": "MO_MODENA_COMUNALE_GIARDINI",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Giardini",
+      "provincia": "MO",
+      "distretto": "Modena",
+      "comune": "Modena",
+      "frazione": null,
+      "indirizzo": "Via Giardini, 256, 41124 Modena MO",
+      "contatti": {
+        "telephone": "059-351111",
+        "email": "giardini@comunali.it",
+        "whatsapp": null,
+        "fax": "059-351112"
+      },
+      "orari": {
+        "lunedi": "08:00-20:00",
+        "martedi": "08:00-20:00",
+        "mercoledi": "08:00-20:00",
+        "giovedi": "08:00-20:00",
+        "venerdi": "08:00-20:00",
+        "sabato": "08:00-20:00",
+        "domenica": "09:00-13:00",
+        "note_accesso": "Aperta sabato pomeriggio."
+      },
+      "servizi_disponibili": ["CUP", "Autoanalisi", "Veterinaria", "Omeopatia"],
+      "logistica_chatbot": {
+        "parcheggio": "Disponibile su via laterale",
+        "accessibilita_disabili": "Rampa presente",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Zona sud Modena",
+        "consiglio_routing": "Punto di riferimento per prodotti veterinari in città."
+      }
+    },
+    {
+      "id": "BO_BOLOGNA_COMUNALE_CENTRO",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Centro",
+      "provincia": "BO",
+      "distretto": "Bologna",
+      "comune": "Bologna",
+      "frazione": "Porto-Saragozza",
+      "indirizzo": "Via Ugo Bassi, 2, 40123 Bologna BO",
+      "contatti": {
+        "telephone": "051-235473",
+        "email": "comunale.centro@sfera.it",
+        "whatsapp": null,
+        "fax": "051-235474"
+      },
+      "orari": {
+        "lunedi": "H24",
+        "martedi": "H24",
+        "mercoledi": "H24",
+        "giovedi": "H24",
+        "venerdi": "H24",
+        "sabato": "H24",
+        "domenica": "H24",
+        "note_accesso": "Sempre aperta."
+      },
+      "servizi_disponibili": ["CUP", "Tamponi", "Autoanalisi", "Galenica"],
+      "logistica_chatbot": {
+        "parcheggio": "Area Pedonale",
+        "accessibilita_disabili": "Assistita",
+        "distributore_h24": false,
+        "prossimita_ospedaliera": "Centro storico",
+        "consiglio_routing": "Hub centrale per ogni urgenza notturna."
+      }
+    },
+    {
+      "id": "BO_BOLOGNA_AEROPORTO",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Aeroporto",
+      "provincia": "BO",
+      "distretto": "Bologna",
+      "comune": "Bologna",
+      "frazione": "Borgo Panigale",
+      "indirizzo": "Via Triumvirato, 84, 40132 Bologna BO",
+      "contatti": {
+        "telephone": "051-6411111",
+        "email": "aeroporto@sfera.it",
+        "whatsapp": null,
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "05:00-23:30",
+        "martedi": "05:00-23:30",
+        "mercoledi": "05:00-23:30",
+        "giovedi": "05:00-23:30",
+        "venerdi": "05:00-23:30",
+        "sabato": "05:00-23:30",
+        "domenica": "05:00-23:30",
+        "note_accesso": "Orario esteso per viaggiatori."
+      },
+      "servizi_disponibili": ["Pronto soccorso da viaggio", "Mascherine", "Tamponi rapidi"],
+      "logistica_chatbot": {
+        "parcheggio": "Parcheggio Aeroporto (P1/P2)",
+        "accessibilita_disabili": "Totale",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Interna all'Aeroporto Guglielmo Marconi",
+        "consiglio_routing": "Unica opzione attiva dalle 05:00 del mattino."
+      }
+    },
+    {
+      "id": "FE_FERRARA_AFM_STAZIONE",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale AFM Stazione",
+      "provincia": "FE",
+      "distretto": "Ferrara",
+      "comune": "Ferrara",
+      "frazione": null,
+      "indirizzo": "Viale della Costituzione, 5, 44122 Ferrara FE",
+      "contatti": {
+        "telephone": "0532-770388",
+        "email": "stazione@afmferrara.it",
+        "whatsapp": "345-6789012",
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "08:00-20:00",
+        "martedi": "08:00-20:00",
+        "mercoledi": "08:00-20:00",
+        "giovedi": "08:00-20:00",
+        "venerdi": "08:00-20:00",
+        "sabato": "08:00-14:00",
+        "domenica": "Chiuso",
+        "note_accesso": "Orario continuato."
+      },
+      "servizi_disponibili": ["CUP", "Domiciliare", "Dermocosmesi", "Veterinaria"],
+      "logistica_chatbot": {
+        "parcheggio": "Metropark Stazione",
+        "accessibilita_disabili": "Porta automatica",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Zona Stazione FS",
+        "consiglio_routing": "Ideale per ritiro farmaci pre-viaggio."
+      }
+    },
+    {
+      "id": "FE_FERRARA_PORTA_MARE",
+      "tipologia": "Farmacia Comunale",
+      "nome": "Farmacia Comunale Porta Mare",
+      "provincia": "FE",
+      "distretto": "Ferrara",
+      "comune": "Ferrara",
+      "frazione": null,
+      "indirizzo": "Corso Porta Mare, 122, 44121 Ferrara FE",
+      "contatti": {
+        "telephone": "0532-752119",
+        "email": "portamare@afmferrara.it",
+        "whatsapp": null,
+        "fax": null
+      },
+      "orari": {
+        "lunedi": "08:30-19:30",
+        "martedi": "08:30-19:30",
+        "mercoledi": "08:30-19:30",
+        "giovedi": "08:30-19:30",
+        "venerdi": "08:30-19:30",
+        "sabato": "08:30-13:00",
+        "domenica": "Chiuso",
+        "note_accesso": "Vicina al centro storico e mura estensi."
+      },
+      "servizi_disponibili": ["CUP", "Analisi urine", "Misurazione glicemia"],
+      "logistica_chatbot": {
+        "parcheggio": "Lungo il viale (strisce blu)",
+        "accessibilita_disabili": "Buona",
+        "distributore_h24": true,
+        "prossimita_ospedaliera": "Vicina all'ex Ospedale Sant'Anna",
+        "consiglio_routing": "Consigliata per utenti residenti in centro storico est."
+      }
+    }
+  ]

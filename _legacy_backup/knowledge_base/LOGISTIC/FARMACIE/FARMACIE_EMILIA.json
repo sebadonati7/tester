@@ -1,0 +1,508 @@
+[
+  {
+    "id": "PC_PIACENZA_COMUNALE_1",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale 1",
+    "provincia": "PC",
+    "distretto": "Distretto di Piacenza",
+    "comune": "Piacenza",
+    "frazione": null,
+    "indirizzo": "Via XXIV Maggio, 28, 29121 Piacenza (PC)",
+    "contatti": {
+      "telefono": "0523 452233",
+      "email": "comunale1@farmaciepiacenza.it",
+      "whatsapp": "+39 345 6789012",
+      "fax": "0523 452234"
+    },
+    "orari": {
+      "lunedi": "08:30-13:00, 15:00-19:30",
+      "martedi": "08:30-13:00, 15:00-19:30",
+      "mercoledi": "08:30-13:00, 15:00-19:30",
+      "giovedi": "08:30-13:00, 15:00-19:30",
+      "venerdi": "08:30-13:00, 15:00-19:30",
+      "sabato": "08:30-13:00",
+      "domenica": "Chiuso (Attiva solo se in turno di guardia)",
+      "note_accesso": "Battenti aperti in orario diurno; sportello notturno attivo per i turni di guardia."
+    },
+    "servizi_disponibili": [
+      "Prenotazioni CUP",
+      "Autoanalisi del sangue",
+      "Telemedicina",
+      "Test intolleranze alimentari",
+      "Elettrocardiogramma (ECG)"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Disponibile sul retro della struttura",
+      "accessibilita_disabili": "Accesso a raso con porte automatiche",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "500m dall'Ospedale Guglielmo da Saliceto",
+      "consiglio_routing": "Ideale per urgenze post-dimissione ospedaliera; ottima per servizi diagnostici rapidi."
+    }
+  },
+  {
+    "id": "PC_PIACENZA_COMUNALE_2",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale 2",
+    "provincia": "PC",
+    "distretto": "Distretto di Piacenza",
+    "comune": "Piacenza",
+    "frazione": "Quarto",
+    "indirizzo": "Via Emilia Pavese, 202, 29122 Piacenza (PC)",
+    "contatti": {
+      "telefono": "0523 480211",
+      "email": "comunale2@farmaciepiacenza.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:30-13:00, 15:00-19:30",
+      "martedi": "08:30-13:00, 15:00-19:30",
+      "mercoledi": "08:30-13:00, 15:00-19:30",
+      "giovedi": "08:30-13:00, 15:00-19:30",
+      "venerdi": "08:30-13:00, 15:00-19:30",
+      "sabato": "08:30-12:30",
+      "domenica": "Chiuso",
+      "note_accesso": "Battenti aperti."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Misurazione pressione",
+      "Foratura lobi"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Parcheggio pubblico fronte strada",
+      "accessibilita_disabili": "Accessibile",
+      "distributore_h24": false,
+      "prossimita_ospedaliera": "Lontana dal centro ospedaliero",
+      "consiglio_routing": "Consigliata per utenti residenti in zona Ovest/frazioni."
+    }
+  },
+  {
+    "id": "PC_CASTELSANGIOVANNI_COMUNALE",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Castel San Giovanni",
+    "provincia": "PC",
+    "distretto": "Distretto di Ponente",
+    "comune": "Castel San Giovanni",
+    "frazione": null,
+    "indirizzo": "Corso Matteotti, 50, 29015 Castel San Giovanni (PC)",
+    "contatti": {
+      "telefono": "0523 881234",
+      "email": "farmacia.csg@comune.csg.pc.it",
+      "whatsapp": "+39 331 1122334",
+      "fax": "0523 881235"
+    },
+    "orari": {
+      "lunedi": "08:30-12:30, 15:30-19:30",
+      "martedi": "08:30-12:30, 15:30-19:30",
+      "mercoledi": "08:30-12:30, 15:30-19:30",
+      "giovedi": "08:30-12:30, 15:30-19:30",
+      "venerdi": "08:30-12:30, 15:30-19:30",
+      "sabato": "08:30-12:30",
+      "domenica": "Turni di guardia",
+      "note_accesso": "Accesso standard."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Autoanalisi",
+      "Consegna farmaci domiciliare (anziani/cronici)",
+      "Ossigeno terapeutico"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Zona disco orario fronte ingresso",
+      "accessibilita_disabili": "Rampa esterna presente",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicinanza Ospedale di Castel San Giovanni",
+      "consiglio_routing": "Punto di riferimento essenziale per il Distretto di Ponente."
+    }
+  },
+  {
+    "id": "PR_PARMA_COMUNALE_MILLE",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Mille",
+    "provincia": "PR",
+    "distretto": "Distretto di Parma",
+    "comune": "Parma",
+    "frazione": null,
+    "indirizzo": "Viale dei Mille, 52, 43125 Parma (PR)",
+    "contatti": {
+      "telefono": "0521 234567",
+      "email": "mille@adducp.it",
+      "whatsapp": null,
+      "fax": "0521 234568"
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note_accesso": "Sempre aperta. Accesso notturno tramite sportello blindato con citofono."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Tamponi rapidi",
+      "Ossigeno",
+      "Distribuzione farmaci DPC",
+      "Bilancia pesa neonati"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Pochi posti su strada (Viale dei Mille)",
+      "accessibilita_disabili": "Accesso facilitato",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicina all'Ospedale Maggiore (ingresso Via Gramsci)",
+      "consiglio_routing": "Presidio fondamentale per emergenze notturne; consigliata se altre strutture sono chiuse."
+    }
+  },
+  {
+    "id": "PR_FIDENZA_COMUNALE_VAIO",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Vaio",
+    "provincia": "PR",
+    "distretto": "Distretto di Fidenza",
+    "comune": "Fidenza",
+    "frazione": "Vaio",
+    "indirizzo": "Via don Tincati, 5, 43036 Fidenza (PR)",
+    "contatti": {
+      "telefono": "0524 515678",
+      "email": "vaio@comune.fidenza.pr.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:30-13:00",
+      "domenica": "Chiuso",
+      "note_accesso": "Orario continuato diurno."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Fornitura alimenti aproteici",
+      "DPC",
+      "Consulenza dermocosmetica"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Ampio parcheggio dell'Ospedale di Vaio",
+      "accessibilita_disabili": "Senza barriere architettoniche",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Situata all'interno del polo ospedaliero di Vaio",
+      "consiglio_routing": "Ideale per pazienti che devono ritirare farmaci cronici o post-visita specialistica."
+    }
+  },
+  {
+    "id": "RE_REGGIOEMILIA_FCR_CENTRALE",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Centrale (FCR)",
+    "provincia": "RE",
+    "distretto": "Distretto di Reggio Emilia",
+    "comune": "Reggio nell'Emilia",
+    "frazione": "Centro Storico",
+    "indirizzo": "Piazza Prampolini, 2, 42121 Reggio Emilia (RE)",
+    "contatti": {
+      "telefono": "0522 431341",
+      "email": "centrale@fcr.re.it",
+      "whatsapp": "+39 333 1234567",
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "A turno",
+      "note_accesso": "Battenti aperti continuato."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Telemedicina",
+      "Autoanalisi",
+      "Foratura lobi",
+      "Preparazioni galeniche"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Inaccessibile in auto (ZTL); Park Piazza Vittoria a 300m",
+      "accessibilita_disabili": "Piana",
+      "distributore_h24": false,
+      "prossimita_ospedaliera": "Lontana dall'Arcispedale Santa Maria Nuova",
+      "consiglio_routing": "Consigliata per chi è già in centro storico a piedi; sconsigliata per carichi pesanti o urgenze motorizzate."
+    }
+  },
+  {
+    "id": "RE_SCANDIANO_FCR_ROCCA",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale della Rocca",
+    "provincia": "RE",
+    "distretto": "Distretto di Scandiano",
+    "comune": "Scandiano",
+    "frazione": null,
+    "indirizzo": "Via Venere, 1, 42019 Scandiano (RE)",
+    "contatti": {
+      "telefono": "0522 856722",
+      "email": "rocca@fcr.re.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:30-13:00, 15:30-19:30",
+      "martedi": "08:30-13:00, 15:30-19:30",
+      "mercoledi": "08:30-13:00, 15:30-19:30",
+      "giovedi": "08:30-13:00, 15:30-19:30",
+      "venerdi": "08:30-13:00, 15:30-19:30",
+      "sabato": "08:30-13:00",
+      "domenica": "Chiuso",
+      "note_accesso": "Orario spezzato."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Autoanalisi lipidica",
+      "Omeopatia"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Parcheggio dedicato",
+      "accessibilita_disabili": "Accessibile",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicina all'Ospedale Magati",
+      "consiglio_routing": "Punto principale per il distretto ceramico."
+    }
+  },
+  {
+    "id": "MO_MODENA_COMUNALE_GIARDINI",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Giardini",
+    "provincia": "MO",
+    "distretto": "Distretto di Modena",
+    "comune": "Modena",
+    "frazione": null,
+    "indirizzo": "Via Giardini, 466, 41124 Modena (MO)",
+    "contatti": {
+      "telefono": "059 344332",
+      "email": "giardini@farmaciecomunali.mo.it",
+      "whatsapp": null,
+      "fax": "059 344333"
+    },
+    "orari": {
+      "lunedi": "08:00-22:00",
+      "martedi": "08:00-22:00",
+      "mercoledi": "08:00-22:00",
+      "giovedi": "08:00-22:00",
+      "venerdi": "08:00-22:00",
+      "sabato": "08:00-22:00",
+      "domenica": "08:30-13:30",
+      "note_accesso": "Orario prolungato serale (chiusura ore 22:00)."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Prodotti per celiachia (vasto assortimento)",
+      "Noleggio bilance e tiralatte",
+      "Holter cardiaco"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Ampio piazzale adiacente",
+      "accessibilita_disabili": "Piena accessibilità",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Situata sulla direttrice per l'Ospedale di Baggiovara",
+      "consiglio_routing": "Ideale per celiaci e per necessità in fascia serale (fino alle 22:00)."
+    }
+  },
+  {
+    "id": "MO_CARPI_COMUNALE_1",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale 1 - Carpi",
+    "provincia": "MO",
+    "distretto": "Distretto di Carpi",
+    "comune": "Carpi",
+    "frazione": null,
+    "indirizzo": "Via Peruzzi, 9, 41012 Carpi (MO)",
+    "contatti": {
+      "telefono": "059 692345",
+      "email": "comunale1@comune.carpi.mo.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:30-13:00, 15:30-19:30",
+      "martedi": "08:30-13:00, 15:30-19:30",
+      "mercoledi": "08:30-13:00, 15:30-19:30",
+      "giovedi": "08:30-13:00, 15:30-19:30",
+      "venerdi": "08:30-13:00, 15:30-19:30",
+      "sabato": "08:30-13:00",
+      "domenica": "Chiuso",
+      "note_accesso": "Fronte stazione."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Autoanalisi",
+      "Misurazione pressione"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Piazzale Peruzzi (ampio)",
+      "accessibilita_disabili": "Livello strada",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicina all'Ospedale Ramazzini",
+      "consiglio_routing": "Ottima per pendolari e vicinanza Ospedale Carpi."
+    }
+  },
+  {
+    "id": "BO_BOLOGNA_SFERA_PONTE_VECCHIO",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Ponte Vecchio (SFERA)",
+    "provincia": "BO",
+    "distretto": "Distretto di Bologna",
+    "comune": "Bologna",
+    "frazione": "Mazzini-Savena",
+    "indirizzo": "Via Mazzini, 151, 40139 Bologna (BO)",
+    "contatti": {
+      "telefono": "051 542245",
+      "email": "pontevecchio@sferafarmacie.it",
+      "whatsapp": "+39 334 9876543",
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "H24",
+      "martedi": "H24",
+      "mercoledi": "H24",
+      "giovedi": "H24",
+      "venerdi": "H24",
+      "sabato": "H24",
+      "domenica": "H24",
+      "note_accesso": "Sempre aperta. Nelle ore notturne utilizzare il citofono esterno."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Holter cardiaco e pressorio",
+      "Tamponi rapidi",
+      "Noleggio ausili ortopedici",
+      "Dispositivi per stomie"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Molto limitato (strisce blu su Via Mazzini)",
+      "accessibilita_disabili": "Pedana mobile su richiesta",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Percorso strategico verso Policlinico Sant'Orsola",
+      "consiglio_routing": "Punto di riferimento H24 per Bologna Est; consigliata per esami strumentali (Holter)."
+    }
+  },
+  {
+    "id": "BO_IMOLA_SFERA_STAZIONE",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Stazione (SFERA)",
+    "provincia": "BO",
+    "distretto": "Distretto di Imola",
+    "comune": "Imola",
+    "frazione": null,
+    "indirizzo": "Viale Baccarini, 27, 40026 Imola (BO)",
+    "contatti": {
+      "telefono": "0542 34567",
+      "email": "stazione@sferafarmacie.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:00-20:00",
+      "martedi": "08:00-20:00",
+      "mercoledi": "08:00-20:00",
+      "giovedi": "08:00-20:00",
+      "venerdi": "08:00-20:00",
+      "sabato": "08:00-20:00",
+      "domenica": "A turno",
+      "note_accesso": "Orario continuato."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Veterinaria",
+      "Autoanalisi"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Ampio parcheggio stazione ferroviaria",
+      "accessibilita_disabili": "Accessibile",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicina Ospedale Vecchio di Imola",
+      "consiglio_routing": "Comoda per chi rientra dal lavoro via treno."
+    }
+  },
+  {
+    "id": "FE_FERRARA_AFM_PORTA_MARE",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale Porta Mare (AFM)",
+    "provincia": "FE",
+    "distretto": "Distretto di Ferrara",
+    "comune": "Ferrara",
+    "frazione": null,
+    "indirizzo": "Corso Porta Mare, 12, 44121 Ferrara (FE)",
+    "contatti": {
+      "telefono": "0532 205634",
+      "email": "portamare@afmferrara.it",
+      "whatsapp": null,
+      "fax": "0532 205635"
+    },
+    "orari": {
+      "lunedi": "08:30-19:30",
+      "martedi": "08:30-19:30",
+      "mercoledi": "08:30-19:30",
+      "giovedi": "08:30-19:30",
+      "venerdi": "08:30-19:30",
+      "sabato": "08:30-13:00",
+      "domenica": "Chiuso",
+      "note_accesso": "Battenti aperti."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Laboratorio galenico (specializzazione)",
+      "Prodotti veterinari",
+      "Omeopatia"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Disponibile su Corso Porta Mare",
+      "accessibilita_disabili": "Ingresso a livello",
+      "distributore_h24": false,
+      "prossimita_ospedaliera": "Centro storico",
+      "consiglio_routing": "Eccellenza per preparazioni farmaceutiche personalizzate (galenica)."
+    }
+  },
+  {
+    "id": "FE_CENTO_COMUNALE_1",
+    "tipologia": "Farmacia Comunale",
+    "nome": "Farmacia Comunale 1 - Cento",
+    "provincia": "FE",
+    "distretto": "Distretto di Cento",
+    "comune": "Cento",
+    "frazione": null,
+    "indirizzo": "Via della Libertà, 12, 44042 Cento (FE)",
+    "contatti": {
+      "telefono": "051 6831122",
+      "email": "comunale1@comune.cento.fe.it",
+      "whatsapp": null,
+      "fax": null
+    },
+    "orari": {
+      "lunedi": "08:30-12:30, 15:30-19:30",
+      "martedi": "08:30-12:30, 15:30-19:30",
+      "mercoledi": "08:30-12:30, 15:30-19:30",
+      "giovedi": "08:30-12:30, 15:30-19:30",
+      "venerdi": "08:30-12:30, 15:30-19:30",
+      "sabato": "08:30-12:30",
+      "domenica": "Chiuso",
+      "note_accesso": "Standard."
+    },
+    "servizi_disponibili": [
+      "CUP",
+      "Noleggio ausili",
+      "Autoanalisi"
+    ],
+    "logistica_chatbot": {
+      "parcheggio": "Presente",
+      "accessibilita_disabili": "Accessibile",
+      "distributore_h24": true,
+      "prossimita_ospedaliera": "Vicina Ospedale di Cento",
+      "consiglio_routing": "Riferimento per il basso ferrarese."
+    }
+  }
+]

@@ -1,0 +1,129 @@
+{
+  "AUSL_Bologna": {
+    "Bologna_Citta": [
+      "bologna", "granarolo dell'emilia", "castenaso", "zola predosa",
+      "calderara di reno", "sala bolognese", "ansola dell'emilia"
+    ],
+    "San_Lazzaro_Savena": [
+      "san lazzaro di savena", "san lazzaro savena", "pianoro", "monzuno"
+    ],
+    "Pianura_Est": [
+      "molinella", "budrio", "baricella", "argelato", "bentivoglio", "malalbergo", "minerbio"
+    ],
+    "Pianura_Ovest": [
+      "san giovanni in persiceto", "crevalcore", "persiceto", "sant'agata bolognese"
+    ],
+    "Reno_Lavino_Samoggia": [
+      "casalecchio di reno", "casalecchio", "sasso marconi", "marzabotto", "vergato"
+    ],
+    "Appennino_Bolognese": [
+      "alto reno terme", "lizzano in belvedere", "camugnano", "castiglione dei pepoli",
+      "san benedetto val di sambro", "grizzana morandi", "porretta terme"
+    ],
+    "Imola": [
+      "imola", "castel san pietro terme", "castel san pietro", "medicina", "dozza",
+      "casalfiumanese", "fontanelice", "borgo tossignano"
+    ]
+  },
+  "AUSL_Imola": {
+    "Imola": [
+      "imola", "castel san pietro terme", "medicina", "dozza", "casalfiumanese"
+    ]
+  },
+  "AUSL_Ferrara": {
+    "Ferrara": [
+      "ferrara", "copparo", "portomaggiore", "voghiera", "masi torello", "formignana"
+    ],
+    "Cento": [
+      "cento", "sant'agostino", "bondeno", "poggio renatico", "vigarano mainarda"
+    ],
+    "Sud_Est": [
+      "comacchio", "lagosanto", "codigoro", "goro", "mesola", "fiscaglia", "jolanda di savoia"
+    ]
+  },
+  "AUSL_Modena": {
+    "Modena": [
+      "modena", "formigine", "sassuolo", "fiorano modenese", "maranello", "castelnuovo rangone"
+    ],
+    "Carpi": [
+      "carpi", "novi di modena", "soliera", "campogalliano", "correggio", "rio saliceto"
+    ],
+    "Sassuolo": [
+      "sassuolo", "fiorano modenese", "maranello", "formigine", "serramazzoni"
+    ],
+    "Castelfranco": [
+      "castelfranco emilia", "nonantola", "bastiglia", "bomporto", "ravarino", "san felice sul panaro"
+    ],
+    "Vignola": [
+      "vignola", "spilamberto", "savignano sul panaro", "marano sul panaro", "guiglia", "zocca"
+    ],
+    "Pavullo": [
+      "pavullo nel frignano", "serramazzoni", "sestola", "fanano", "fiumalbo", "montecreto", "pievepelago"
+    ],
+    "Mirandola": [
+      "mirandola", "san felice sul panaro", "finale emilia", "medolla", "san possidonio", "cavezzo"
+    ]
+  },
+  "AUSL_Reggio_Emilia": {
+    "Reggio_Citta": [
+      "reggio emilia", "reggio nell'emilia", "cavriago", "rubiera", "quattro castella", "albinea"
+    ],
+    "Scandiano": [
+      "scandiano", "casalgrande", "castellarano", "viano", "baiso", "toano"
+    ],
+    "Castelnovo_Monti": [
+      "castelnovo ne' monti", "villa minozzo", "casina", "carpineti", "ligonchio", "ventasso"
+    ],
+    "Montecchio": [
+      "montecchio emilia", "bibbiano", "sant'ilario d'enza", "campegine", "gattatico"
+    ],
+    "Correggio": [
+      "correggio", "rio saliceto", "san martino in rio", "campagnola emilia", "rolo"
+    ],
+    "Guastalla": [
+      "guastalla", "luzzara", "novellara", "reggiolo", "brescello", "boretto", "gualtieri"
+    ]
+  },
+  "AUSL_Parma": {
+    "Parma": [
+      "parma", "colorno", "sorbolo mezzani", "torrile", "fontevivo", "san secondo parmense"
+    ],
+    "Fidenza": [
+      "fidenza", "salsomaggiore terme", "fontanellato", "soragna", "busseto", "polesine zibello"
+    ],
+    "Valli_Taro_Ceno": [
+      "borgotaro", "albareto", "bedonia", "bardi", "bore", "compiano", "tornolo", "varano de' melegari"
+    ],
+    "Sud_Est": [
+      "langhirano", "traversetolo", "lesignano de' bagni", "neviano degli arduini", "tizzano val parma", "corniglio"
+    ]
+  },
+  "AUSL_Piacenza": {
+    "Piacenza": [
+      "piacenza", "podenzano", "san giorgio piacentino", "calendasco", "gragnano trebbiense", "gossolengo"
+    ],
+    "Ponente": [
+      "fiorenzuola d'arda", "alseno", "cortemaggiore", "cadeo", "pontenure", "caorso"
+    ],
+    "Levante": [
+      "castel san giovanni", "rottofreno", "sarmato", "borgonovo val tidone", "ziano piacentino"
+    ],
+    "Valli": [
+      "bobbio", "coli", "cerignale", "ottone", "zerba", "corte brugnatella", "pecorara"
+    ]
+  },
+  "AUSL_Romagna": {
+    "Ravenna": [
+      "ravenna", "cervia", "russi", "lugo", "faenza", "bagnacavallo", "alfonsine", "fusignano"
+    ],
+    "Forli": [
+      "forlì", "forli", "castrocaro terme", "predappio", "bertinoro", "meldola", "galeata"
+    ],
+    "Cesena": [
+      "cesena", "cesenatico", "savignano sul rubicone", "gambettola", "longiano", "sarsina"
+    ],
+    "Rimini": [
+      "rimini", "riccione", "cattolica", "santarcangelo di romagna", "misano adriatico", "coriano"
+    ]
+  }
+}

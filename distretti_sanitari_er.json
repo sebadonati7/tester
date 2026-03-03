@@ -1,0 +1,117 @@
+{
+    "health_districts": [
+      {
+        "ausl": "AUSL ROMAGNA",
+        "districts": [
+          {"name": "Ravenna", "code": "ROM-RAV"},
+          {"name": "Faenza", "code": "ROM-FAE"},
+          {"name": "Lugo", "code": "ROM-LUG"},
+          {"name": "Forlì", "code": "ROM-FOR"},
+          {"name": "Cesena - Valle Savio", "code": "ROM-CES"},
+          {"name": "Rubicone", "code": "ROM-RUB"},
+          {"name": "Rimini", "code": "ROM-RIM"},
+          {"name": "Riccione", "code": "ROM-RIC"}
+        ]
+      },
+      {
+        "ausl": "AUSL BOLOGNA",
+        "districts": [
+          {"name": "Bologna Città", "code": "BOL-CIT"},
+          {"name": "Pianura Est", "code": "BOL-PIE"},
+          {"name": "Pianura Ovest", "code": "BOL-PIO"},
+          {"name": "Reno, Lavino e Samoggia", "code": "BOL-RLS"},
+          {"name": "San Lazzaro di Savena", "code": "BOL-SLS"},
+          {"name": "Appennino Bolognese", "code": "BOL-APB"}
+        ]
+      },
+      {
+        "ausl": "AUSL IMOLA",
+        "districts": [
+          {"name": "Imola", "code": "IMO-IMO"}
+        ]
+      },
+      {
+        "ausl": "AUSL FERRARA",
+        "districts": [
+          {"name": "Centro-Nord", "code": "FER-CEN"},
+          {"name": "Sud-Est", "code": "FER-SUD"},
+          {"name": "Ovest", "code": "FER-OVE"}
+        ]
+      },
+      {
+        "ausl": "AUSL MODENA",
+        "districts": [
+          {"name": "Modena", "code": "MOD-MOD"},
+          {"name": "Carpi", "code": "MOD-CAR"},
+          {"name": "Mirandola", "code": "MOD-MIR"},
+          {"name": "Sassuolo", "code": "MOD-SAS"},
+          {"name": "Pavullo nel Frignano", "code": "MOD-PAV"},
+          {"name": "Vignola", "code": "MOD-VIG"},
+          {"name": "Castelfranco Emilia", "code": "MOD-CAS"}
+        ]
+      },
+      {
+        "ausl": "AUSL REGGIO EMILIA",
+        "districts": [
+          {"name": "Reggio Emilia", "code": "REG-REG"},
+          {"name": "Guastalla", "code": "REG-GUA"},
+          {"name": "Correggio", "code": "REG-COR"},
+          {"name": "Montecchio", "code": "REG-MON"},
+          {"name": "Scandiano", "code": "REG-SCA"},
+          {"name": "Castelnovo ne' Monti", "code": "REG-CNM"}
+        ]
+      },
+      {
+        "ausl": "AUSL PARMA",
+        "districts": [
+          {"name": "Parma", "code": "PAR-PAR"},
+          {"name": "Fidenza", "code": "PAR-FID"},
+          {"name": "Sud-Est", "code": "PAR-SUD"},
+          {"name": "Valli Taro e Ceno", "code": "PAR-VTC"}
+        ]
+      },
+      {
+        "ausl": "AUSL PIACENZA",
+        "districts": [
+          {"name": "Città di Piacenza", "code": "PIA-CIT"},
+          {"name": "Levante", "code": "PIA-LEV"},
+          {"name": "Ponente", "code": "PIA-PON"}
+        ]
+      }
+    ],
+    "comune_to_district_mapping": {
+      "ravenna": "ROM-RAV",
+      "faenza": "ROM-FAE",
+      "lugo": "ROM-LUG",
+      "forli": "ROM-FOR",
+      "forlì": "ROM-FOR",
+      "cesena": "ROM-CES",
+      "cesenatico": "ROM-RUB",
+      "rimini": "ROM-RIM",
+      "riccione": "ROM-RIC",
+      "bologna": "BOL-CIT",
+      "casalecchio": "BOL-PIO",
+      "san lazzaro": "BOL-SLS",
+      "imola": "IMO-IMO",
+      "ferrara": "FER-CEN",
+      "cento": "FER-SUD",
+      "comacchio": "FER-OVE",
+      "modena": "MOD-MOD",
+      "carpi": "MOD-CAR",
+      "mirandola": "MOD-MIR",
+      "sassuolo": "MOD-SAS",
+      "pavullo": "MOD-PAV",
+      "vignola": "MOD-VIG",
+      "castelfranco emilia": "MOD-CAS",
+      "reggio emilia": "REG-REG",
+      "reggio nell'emilia": "REG-REG",
+      "guastalla": "REG-GUA",
+      "correggio": "REG-COR",
+      "montecchio": "REG-MON",
+      "scandiano": "REG-SCA",
+      "castelnovo ne' monti": "REG-CNM",
+      "parma": "PAR-PAR",
+      "fidenza": "PAR-FID",
+      "piacenza": "PIA-CIT"
+    }
+  }
