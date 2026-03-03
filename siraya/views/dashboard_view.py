@@ -16,8 +16,6 @@ from collections import Counter
 
 from ..core.authentication import get_auth_manager, render_admin_login
 from ..services.analytics_service import get_analytics_service
-from ..services.rag_kpi_calculator import RAGKPICalculator
-from ..services.excel_reporter import get_excel_reporter
 
 
 # ============================================================================
@@ -365,7 +363,6 @@ def render() -> None:
     col1, col2 = st.columns(2)
     
     with col1:
-        # Prevalenza Red Flags (usa KPI da analytics_service - resilient a metadata inconsistenti)
         red_flags_rate = kpi_completo.get('prevalenza_red_flags', 0)
         st.metric("Prevalenza Red Flags", f"{red_flags_rate:.1f}%")
         
@@ -475,61 +472,10 @@ def render() -> None:
     
     with col2:
         render_geographic_chart(kpi_completo)
-
-    # === SECTION 5: KPI CLINICI ON-DEMAND (RAG) ===
-    st.header("🩺 KPI Clinici Avanzati (AI-Powered)")
-    col_btns = st.columns(3)
-    with col_btns[0]:
-        analyze_red_flags = st.button("🚨 Analizza Red Flags con AI", use_container_width=True)
-    with col_btns[1]:
-        export_excel = st.button("📊 Esporta Report Excel", use_container_width=True)
-
-    if analyze_red_flags:
-        records, sessions = analytics.get_enriched_records()
-        conversations = [
-            {
-                "session_id": sid,
-                "messages": [
-                    {"role": "user" if i % 2 == 0 else "assistant", "content": r.get("user_input", "") or r.get("bot_response", "")}
-                    for i, r in enumerate(sess)
-                    if (r.get("user_input") or r.get("bot_response"))
-                ],
-            }
-            for sid, sess in list(sessions.items())[:30]
-            if sess
-        ]
-        with st.spinner("🤖 AI sta analizzando red flags..."):
-            try:
-                rag = RAGKPICalculator()
-                red_flags_data = rag.analyze_clinical_conversations(conversations, "red_flags")
-                rf_with = [r for r in red_flags_data if r.get("red_flags_detected")]
-                st.success(f"✅ Analisi completata: {len(rf_with)} sessioni con red flags")
-                for r in rf_with[:10]:
-                    st.markdown(f"**Sessione** `{r.get('session_id', '')[:8]}...` | "
-                               f"Urgenza: {r.get('urgency_code', '')} | "
-                               f"Red flags: {', '.join(r.get('red_flags_detected', []))}")
-            except Exception as e:
-                st.error(f"Errore analisi AI: {e}")
-
-    if export_excel:
-        try:
-            buffer = get_excel_reporter().generate_professional_report(
-                kpi_data=kpi_completo,
-                filters={"period": "Ultimi 30 gg", "districts": ["Tutti"]},
-            )
-            st.download_button(
-                "⬇️ Download Report Excel",
-                data=buffer,
-                file_name=f"SIRAYA_Analytics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="dl_excel",
-            )
-        except Exception as e:
-            st.error(f"Errore generazione Excel: {e}")
-
+    
     # === FOOTER ===
     st.divider()
-    st.caption("SIRAYA Health Navigator V2.0 | Analytics Engine | RAG-Enhanced | Supabase-Powered")
+    st.caption("SIRAYA Health Navigator V2.0 | Analytics Engine | Supabase-Powered")
 
 
 # ============================================================================

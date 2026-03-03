@@ -15,8 +15,6 @@ from datetime import datetime, timedelta
 from collections import Counter, defaultdict
 
 from ..config.settings import SupabaseConfig, ClinicalMappings
-from .metadata_parser import parse_metadata_enhanced
-from .geographic_mapper import map_comune_to_district
 
 
 # ============================================================================
@@ -90,9 +88,7 @@ class AnalyticsService:
                 if not response.data:
                     break
                 
-                for item in response.data:
-                    if isinstance(item, dict):
-                        all_records.append(item)
+                all_records.extend(response.data)
                 
                 if len(response.data) < page_size:
                     break
@@ -153,10 +149,8 @@ class AnalyticsService:
         raw_logs = self.get_all_logs()
         records = []
         sessions = defaultdict(list)
-
+        
         for log in raw_logs:
-            if not isinstance(log, dict):
-                continue
             record = self._enrich_record(log)
             records.append(record)
             
@@ -173,20 +167,18 @@ class AnalyticsService:
         """
         Enrich a single log record with computed fields.
         
-        Uses metadata_parser for robust JSON parsing and geographic_mapper for location.
-        
         Args:
             log: Raw log from Supabase
             
         Returns:
             Enriched record
         """
-        record = log.copy() if isinstance(log, dict) else {}
-
+        record = log.copy()
+        
         # Parse timestamp
-        timestamp_str = log.get("created_at") or log.get("timestamp") if isinstance(log, dict) else None
+        timestamp_str = log.get("created_at") or log.get("timestamp")
         dt = self._parse_timestamp(timestamp_str)
-
+        
         if dt:
             record["datetime"] = dt
             record["date"] = dt.date()
@@ -204,41 +196,37 @@ class AnalyticsService:
             record["week"] = now.isocalendar()[1]
             record["day_of_week"] = now.weekday()
             record["hour"] = now.hour
-
+        
         # NLP enrichment
-        user_input = str(log.get("user_input", "") or "").lower()
-        bot_response = str(log.get("bot_response", "") or "").lower()
+        user_input = str(log.get("user_input", "")).lower()
+        bot_response = str(log.get("bot_response", "")).lower()
         combined_text = user_input + " " + bot_response
-
-        # Metadata parsing (robust multi-format)
-        metadata_parsed = parse_metadata_enhanced(log.get("metadata") if isinstance(log, dict) else None)
-        record["metadata_parsed"] = metadata_parsed
-
-        # Urgency from metadata (fallback 3)
-        urgency = metadata_parsed.get("urgenza", 3)
-        record["urgenza"] = max(1, min(5, int(urgency)))
-
-        # Red flags: merge metadata + NLP keywords
-        rf_metadata = set(metadata_parsed.get("red_flags", []) or [])
-        rf_nlp = [kw for kw in ClinicalMappings.RED_FLAGS_KEYWORDS if kw in combined_text]
-        record["red_flags"] = list(rf_metadata) + rf_nlp
+        
+        # Red flags detection
+        record["red_flags"] = [
+            kw for kw in ClinicalMappings.RED_FLAGS_KEYWORDS
+            if kw in combined_text
+        ]
         record["has_red_flag"] = len(record["red_flags"]) > 0
-
-        # Symptoms: merge metadata + NLP
-        sintomi_meta = metadata_parsed.get("sintomi", []) or []
-        sintomi_nlp = [s for s in ClinicalMappings.SINTOMI_COMUNI if s in combined_text]
-        record["sintomi_rilevati"] = list(sintomi_meta) + sintomi_nlp
-
-        # Specializzazione da metadata
-        record["specializzazione"] = metadata_parsed.get("specializzazione", "Generale")
-
-        # Geographic mapping (comune -> distretto AUSL)
-        comune = metadata_parsed.get("comune") or log.get("comune") or log.get("location") or ""
-        if comune:
-            geo = map_comune_to_district(comune)
-            record["distretto"] = geo.get("distretto", "UNKNOWN")
-            record["ausl"] = geo.get("ausl", "UNKNOWN")
-
+        
+        # Symptoms detection
+        record["sintomi_rilevati"] = [
+            s for s in ClinicalMappings.SINTOMI_COMUNI
+            if s in combined_text
+        ]
+        
+        # Extract urgency from metadata
+        urgency = 3  # default
+        metadata_str = log.get("metadata", "{}")
+        try:
+            metadata = json.loads(metadata_str) if isinstance(metadata_str, str) else metadata_str
+            urgency = metadata.get("urgency") or metadata.get("urgenza", 3)
+        except:
+            pass
+        
+        record["urgenza"] = urgency
+        record["metadata_parsed"] = metadata if isinstance(metadata_str, str) else metadata_str
+        
         return record
     
     def _parse_timestamp(self, timestamp_str: str) -> Optional[datetime]:
@@ -684,21 +672,7 @@ class AnalyticsService:
             "distretti_attivi": len([d for d in districts_count.values() if d > 0]),
             "distribuzione_distretti": dict(districts_count.most_common(10))
         }
-
-        # Clinical KPIs (prevalenza red flags + dettaglio)
-        red_flags_count = sum(1 for r in records if r.get("has_red_flag", False))
-        kpi["prevalenza_red_flags"] = (red_flags_count / len(records) * 100) if records else 0
-        all_red_flags = []
-        for r in records:
-            all_red_flags.extend(r.get("red_flags", []))
-        kpi["red_flags_dettaglio"] = dict(Counter(all_red_flags))
-
-        # Merge context-aware KPIs
-        context_kpi = self.calculate_kpi_context_aware(records)
-        kpi["tasso_deviazione_ps"] = context_kpi.get("tasso_deviazione_ps", 0)
-        kpi["tasso_deviazione_territoriale"] = context_kpi.get("tasso_deviazione_territoriale", 0)
-        kpi["urgenza_media_per_spec"] = context_kpi.get("urgenza_media_per_spec", {})
-
+        
         return kpi
     
     # ========================================================================
