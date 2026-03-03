@@ -363,9 +363,7 @@ def render() -> None:
     col1, col2 = st.columns(2)
     
     with col1:
-        # Prevalenza Red Flags
-        red_flags_count = sum(1 for log in logs if log.get('metadata', {}).get('red_flags'))
-        red_flags_rate = (red_flags_count / len(logs) * 100) if logs else 0
+        red_flags_rate = kpi_completo.get('prevalenza_red_flags', 0)
         st.metric("Prevalenza Red Flags", f"{red_flags_rate:.1f}%")
         
         # Red Flags Detail
