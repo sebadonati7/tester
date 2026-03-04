@@ -39,10 +39,18 @@ def _default_metadata() -> Dict[str, Any]:
 
 
 # Chiavi alternative per normalizzazione
-URGENCY_KEYS = ["urgency", "urgenza", "triage_code", "codice_urgenza"]
+URGENCY_KEYS = ["urgency", "urgenza", "urgency_level", "triage_code", "codice_urgenza"]
 RED_FLAGS_KEYS = ["red_flags", "flags", "alert_symptoms", "red_flags_detected"]
 SINTOMI_KEYS = ["symptoms", "sintomi", "complaints", "sintomi_rilevati"]
-COMUNE_KEYS = ["location", "comune", "city", "distretto", "municipio"]
+COMUNE_KEYS = [
+    "location",           # v2.0 standard
+    "comune",             # Generico italiano
+    "city",               # Alias internazionale
+    "distretto",          # AUSL diretta
+    "municipio",          # Alias regionale
+    "current_location",   # v4.0 collected_data
+    "LOCATION",           # v2.0 uppercase
+]
 SPECIALIZZAZIONE_KEYS = ["specialization", "department", "specialty", "specializzazione"]
 
 
@@ -99,22 +107,33 @@ def _flatten_nested(obj: Any, depth: int = 0, max_depth: int = 5) -> Dict:
     """
     Appiattisce oggetto nested cercando chiavi note.
     Es: {"metadata": {"triage": {"urgency": 4}}} -> {"urgency": 4}
+    ENHANCED: Gestisce anche collected_data di v4.0
     """
     if depth > max_depth:
         return {}
     if isinstance(obj, dict):
         flat = {}
+
+        # Estrazione prioritaria da collected_data (v4.0)
+        if "collected_data" in obj and isinstance(obj["collected_data"], dict):
+            collected = obj["collected_data"]
+            for k, v in collected.items():
+                key_normalized = k.lower()
+                flat[key_normalized] = v
+
         for k, v in obj.items():
-            if isinstance(v, dict):
+            if isinstance(v, dict) and k != "collected_data":
                 nested = _flatten_nested(v, depth + 1, max_depth)
-                flat.update(nested)
-            else:
+                for nk, nv in nested.items():
+                    if nk not in flat:
+                        flat[nk] = nv
+            elif k != "collected_data" and k not in flat:
                 flat[k] = v
         return flat
     return {}
 
 
-def _try_json_parse(s: str) -> Optional[Dict]:
+def _try_json_parse(s: str):
     """Tenta parsing JSON con varianti (apici singoli, ecc.)."""
     if not s or not isinstance(s, str):
         return None
@@ -232,3 +251,14 @@ def get_parsing_success_rate(records: List[Dict], metadata_key: str = "metadata"
         elif raw and raw not in (None, "", "{}", "null"):
             success += 1
     return success / len(records) if records else 0.0
+
+
+if __name__ == "__main__":
+    test_cases = [
+        '{"urgenza": 2, "LOCATION": "Ravenna", "red_flags": ["fever"]}',
+        '{"collected_data": {"current_location": "Bologna", "chief_complaint": "Dolore"}}',
+        '{"location": "Ferrara", "urgency": 3}',
+    ]
+    for tc in test_cases:
+        result = parse_metadata_enhanced(tc)
+        print(f"Location: {result['comune']}, Urgenza: {result['urgenza']}")
