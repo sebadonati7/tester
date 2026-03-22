@@ -58,45 +58,45 @@ class SupabaseConfig:
     TABLE_FACILITIES: str = "facilities"
     TABLE_SESSIONS: str = "sessions"
 
-@staticmethod
-def get_url() -> str:
-    """Get Supabase URL — tries env first, then secrets."""
-    # Try environment variable FIRST
-    env_url = os.environ.get("SUPABASE_URL", "")
-    if env_url:
-        return env_url
-    
-    # Then try streamlit secrets
-    try:
-        return st.secrets["supabase"]["url"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    try:
-        return st.secrets["SUPABASE_URL"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    
-    return ""
+    @staticmethod
+    def get_url() -> str:
+        """Get Supabase URL — tries env first, then secrets."""
+        # Try environment variable FIRST
+        env_url = os.environ.get("SUPABASE_URL", "")
+        if env_url:
+            return env_url
+        
+        # Then try streamlit secrets
+        try:
+            return st.secrets["supabase"]["url"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["SUPABASE_URL"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        
+        return ""
 
-@staticmethod
-def get_key() -> str:
-    """Get Supabase key — tries env first, then secrets."""
-    # Try environment variable FIRST
-    env_key = os.environ.get("SUPABASE_KEY", "")
-    if env_key:
-        return env_key
-    
-    # Then try streamlit secrets
-    try:
-        return st.secrets["supabase"]["key"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    try:
-        return st.secrets["SUPABASE_KEY"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    
-    return ""
+    @staticmethod
+    def get_key() -> str:
+        """Get Supabase key — tries env first, then secrets."""
+        # Try environment variable FIRST
+        env_key = os.environ.get("SUPABASE_KEY", "")
+        if env_key:
+            return env_key
+        
+        # Then try streamlit secrets
+        try:
+            return st.secrets["supabase"]["key"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["SUPABASE_KEY"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        
+        return ""
 
     @staticmethod
     def is_configured() -> bool:
@@ -125,15 +125,14 @@ class APIConfig:
     API_TIMEOUT_SECONDS: int = 60
 
     @staticmethod
-    @staticmethod
     def get_groq_key() -> str:
-    """Get Groq API key — tries env first, then secrets."""
-    # Try environment variable FIRST
-    env_key = os.environ.get("GROQ_API_KEY", "")
+        """Get Groq API key — tries env first, then secrets."""
+        # Try environment variable FIRST
+        env_key = os.environ.get("GROQ_API_KEY", "")
         if env_key:
             return env_key
-    
-    # Then try streamlit secrets
+        
+        # Then try streamlit secrets
         try:
             return st.secrets["groq"]["api_key"]
         except (KeyError, TypeError, AttributeError):
@@ -142,27 +141,28 @@ class APIConfig:
             return st.secrets["GROQ_API_KEY"]
         except (KeyError, TypeError, AttributeError):
             pass
-    
+        
         return ""
+
     @staticmethod
-def get_gemini_key() -> str:
-    """Get Gemini API key — tries env first, then secrets."""
-    # Try environment variable FIRST
-    env_key = os.environ.get("GEMINI_API_KEY", "")
-    if env_key:
-        return env_key
-    
-    # Then try streamlit secrets
-    try:
-        return st.secrets["gemini"]["api_key"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    try:
-        return st.secrets["GEMINI_API_KEY"]
-    except (KeyError, TypeError, AttributeError):
-        pass
-    
-    return ""
+    def get_gemini_key() -> str:
+        """Get Gemini API key — tries env first, then secrets."""
+        # Try environment variable FIRST
+        env_key = os.environ.get("GEMINI_API_KEY", "")
+        if env_key:
+            return env_key
+        
+        # Then try streamlit secrets
+        try:
+            return st.secrets["gemini"]["api_key"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        try:
+            return st.secrets["GEMINI_API_KEY"]
+        except (KeyError, TypeError, AttributeError):
+            pass
+        
+        return ""
 
 
 # ============================================================================
@@ -434,6 +434,8 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     
     return R * c
+
+
 class UI_THEME:
     """Configurazione tema dell'interfaccia utente - Medical Blue Palette"""
     
