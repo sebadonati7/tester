@@ -58,29 +58,25 @@ class SupabaseConfig:
     TABLE_FACILITIES: str = "facilities"
     TABLE_SESSIONS: str = "sessions"
 
-    @staticmethod
-    def get_url() -> str:
-        """
-        Get Supabase URL — tries multiple formats.
-        Priority: [supabase].url → SUPABASE_URL (flat) → env.
-        """
-        # Try nested format first (like [gemini] and [groq])
-        try:
-            return st.secrets["supabase"]["url"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Try flat format
-        try:
-            return st.secrets["SUPABASE_URL"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Try alternative nested format
-        try:
-            return st.secrets.get("supabase", {}).get("url", "")
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Fallback to environment variable
-        return os.environ.get("SUPABASE_URL", "")
+@staticmethod
+def get_url() -> str:
+    """Get Supabase URL — tries env first, then secrets."""
+    # Try environment variable FIRST
+    env_url = os.environ.get("SUPABASE_URL", "")
+    if env_url:
+        return env_url
+    
+    # Then try streamlit secrets
+    try:
+        return st.secrets["supabase"]["url"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    try:
+        return st.secrets["SUPABASE_URL"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    
+    return ""
 
     @staticmethod
     def get_key() -> str:
