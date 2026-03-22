@@ -125,8 +125,15 @@ class APIConfig:
     API_TIMEOUT_SECONDS: int = 60
 
     @staticmethod
+    @staticmethod
     def get_groq_key() -> str:
-        """Get Groq API key — tries [groq].api_key → flat GROQ_API_KEY → env."""
+    """Get Groq API key — tries env first, then secrets."""
+    # Try environment variable FIRST
+    env_key = os.environ.get("GROQ_API_KEY", "")
+        if env_key:
+            return env_key
+    
+    # Then try streamlit secrets
         try:
             return st.secrets["groq"]["api_key"]
         except (KeyError, TypeError, AttributeError):
@@ -135,20 +142,27 @@ class APIConfig:
             return st.secrets["GROQ_API_KEY"]
         except (KeyError, TypeError, AttributeError):
             pass
-        return os.environ.get("GROQ_API_KEY", "")
-
+    
+        return ""
     @staticmethod
-    def get_gemini_key() -> str:
-        """Get Gemini API key — tries [gemini].api_key → flat GEMINI_API_KEY → env."""
-        try:
-            return st.secrets["gemini"]["api_key"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        try:
-            return st.secrets["GEMINI_API_KEY"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        return os.environ.get("GEMINI_API_KEY", "")
+def get_gemini_key() -> str:
+    """Get Gemini API key — tries env first, then secrets."""
+    # Try environment variable FIRST
+    env_key = os.environ.get("GEMINI_API_KEY", "")
+    if env_key:
+        return env_key
+    
+    # Then try streamlit secrets
+    try:
+        return st.secrets["gemini"]["api_key"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    try:
+        return st.secrets["GEMINI_API_KEY"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    
+    return ""
 
 
 # ============================================================================
