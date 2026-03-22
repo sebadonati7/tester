@@ -78,29 +78,25 @@ def get_url() -> str:
     
     return ""
 
-    @staticmethod
-    def get_key() -> str:
-        """
-        Get Supabase key — tries multiple formats.
-        Priority: [supabase].key → SUPABASE_KEY (flat) → env.
-        """
-        # Try nested format first (like [gemini] and [groq])
-        try:
-            return st.secrets["supabase"]["key"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Try flat format
-        try:
-            return st.secrets["SUPABASE_KEY"]
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Try alternative nested format
-        try:
-            return st.secrets.get("supabase", {}).get("key", "")
-        except (KeyError, TypeError, AttributeError):
-            pass
-        # Fallback to environment variable
-        return os.environ.get("SUPABASE_KEY", "")
+@staticmethod
+def get_key() -> str:
+    """Get Supabase key — tries env first, then secrets."""
+    # Try environment variable FIRST
+    env_key = os.environ.get("SUPABASE_KEY", "")
+    if env_key:
+        return env_key
+    
+    # Then try streamlit secrets
+    try:
+        return st.secrets["supabase"]["key"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    try:
+        return st.secrets["SUPABASE_KEY"]
+    except (KeyError, TypeError, AttributeError):
+        pass
+    
+    return ""
 
     @staticmethod
     def is_configured() -> bool:
