@@ -398,10 +398,13 @@ class UnifiedSlotFiller:
 
         # ═══ PAIN SCALE (regex — it's a number/selection) ═══
         if current_phase == "pain_scale" or ("dolore" in user_lower and cls.KEYS["pain"] not in current_data):
+            
             pain_patterns = [
+                r'^\s*(10|[1-9])\s*$',
                 r'(\d{1,2})\s*-\s*(\d{1,2}):\s*',
                 r'(\d{1,2})\s*/\s*10',
                 r'(\d{1,2})\s+su\s+10',
+
             ]
             for pattern in pain_patterns:
                 match = re.search(pattern, user_lower)
