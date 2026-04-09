@@ -5,6 +5,7 @@ import copy
 from pathlib import Path
 from threading import Lock
 from typing import Dict, Optional, Tuple
+from dotenv import load_dotenv
 
 
 # Allow running this file directly: python .\whatsapp-bot\bot.py
@@ -13,6 +14,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Load workspace .env when running directly (python .\whatsapp-bot\bot.py)
+load_dotenv(PROJECT_ROOT / ".env", override=True)
+
 from siraya.controllers.triage_controller_v3 import TriageControllerV3
 from siraya.core.state_manager import DEFAULT_STATE, StateKeys
 
@@ -20,6 +24,11 @@ import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
+
+class MissingEnvironmentVariable(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
 
 app = FastAPI(title="WhatsApp Bot Webhook", version="1.0.0")
 
@@ -33,10 +42,24 @@ logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").set
 
 # --- CONFIGURAZIONE ---
 # Per produzione usa variabili d'ambiente, non hardcoded secrets.
-VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "mercugay")
-WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "EAAbdb5uZBcWwBRB91ZCBz7xRyqmHuspkpHa6WXWH4hZBzk8fhbagek4YGdouZAi5SUivCiJR0wgiEkBsnUtNcOT76byjbeCwYQHg9azlpNHITAY9OGZAzc5JwgYMZB72v7n1nlhjW8QrKBcjw53Mo1fpCsbptbITmlAyimpLEpCYnyAGuFHvzyrFNpR0b5B358Efpg0uFi2jvpEwbJqArBkhOgFiQ4kmjn1qWn20FoodhTSZCyQN1LnNqFz4InaG3mut7US7nRiZBuHO4GhNZC6qFTrzp")
-PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "1017002461499460")
+def _get_env_clean(name: str) -> Optional[str]:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        value = value[1:-1]
+    return value or None
+
+
+VERIFY_TOKEN = _get_env_clean("WHATSAPP_VERIFY_TOKEN")
+WHATSAPP_TOKEN = _get_env_clean("WHATSAPP_TOKEN")
+PHONE_NUMBER_ID = _get_env_clean("WHATSAPP_PHONE_NUMBER_ID")
 PORT = int(os.getenv("PORT", "5000"))
+
+if not VERIFY_TOKEN or not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
+    logger.error(f"ERRORE GRAVE, NON TROVATI TOKEN O ID NUMERO:\nVERIFY_TOKEN:{VERIFY_TOKEN}\nWHATSAPP_TOKEN:{WHATSAPP_TOKEN}\nPHONE_NUMBER_ID:{PHONE_NUMBER_ID}")
+    raise MissingEnvironmentVariable()
 
 controllers: Dict[str, TriageControllerV3] = {}
 controllers_lock = Lock()
@@ -110,7 +133,7 @@ def send_reply(to_number: str, text: str) -> None:
         logger.error("Configurazione mancante: WHATSAPP_TOKEN o WHATSAPP_PHONE_NUMBER_ID")
         raise HTTPException(status_code=500, detail="Missing WhatsApp API configuration")
 
-    url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
+    url = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
         "Content-Type": "application/json",
@@ -123,7 +146,24 @@ def send_reply(to_number: str, text: str) -> None:
 
     response = requests.post(url, headers=headers, json=data, timeout=15)
     if response.status_code >= 400:
+        error_code = None
+        error_subcode = None
+        try:
+            payload = response.json()
+            error_obj = payload.get("error", {})
+            error_code = error_obj.get("code")
+            error_subcode = error_obj.get("error_subcode")
+        except Exception:
+            payload = None
+
         logger.error("Errore invio messaggio WhatsApp: %s", response.text)
+
+        if error_code == 190:
+            logger.error(
+                "Token WhatsApp non valido/scaduto (code=190, subcode=%s). "
+                "Verifica che il token sia quello Cloud API corrente, associato allo stesso Business/Phone Number ID.",
+                error_subcode,
+            )
         raise HTTPException(status_code=502, detail="Failed to send WhatsApp message")
 
 
@@ -165,10 +205,17 @@ async def handle_messages(request: Request) -> dict:
             send_reply(phone_number, assistant_text)
         except Exception as exc:
             logger.exception("❌ Error while processing message for %s: %s", phone_number, exc)
-            send_reply(
-                phone_number,
-                "Si è verificato un problema temporaneo. Riprova tra qualche secondo.",
-            )
+            try:
+                send_reply(
+                    phone_number,
+                    "Si è verificato un problema temporaneo. Riprova tra qualche secondo.",
+                )
+            except Exception as fallback_exc:
+                logger.exception(
+                    "❌ Fallback send failed for %s: %s",
+                    phone_number,
+                    fallback_exc,
+                )
 
     return {"status": "ok"}
 
