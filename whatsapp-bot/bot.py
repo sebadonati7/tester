@@ -4,6 +4,10 @@ import sys
 from pathlib import Path
 from typing import Optional, Tuple
 from dotenv import load_dotenv
+from typing import Any, List, Optional, Tuple
+import json
+import re
+from urllib.parse import quote_plus
 
 
 # Allow running this file directly: python .\whatsapp-bot\bot.py
@@ -92,6 +96,65 @@ def extract_text_message(body: dict) -> Tuple[Optional[str], Optional[str]]:
     _, phone_number, text = extract_message_event(body)
     return phone_number, text
 
+def _markdown_to_whatsapp(text: str) -> str:
+    """
+    Adatta Markdown generico a uno stile più compatibile con WhatsApp.
+    Nota: è una conversione 'best effort'.
+    """
+    t = text.strip()
+
+    # Bold markdown **x** -> WhatsApp *x*
+    t = re.sub(r"\*\*(.+?)\*\*", r"*\1*", t)
+
+    # Heading markdown (#, ##) -> linea normale
+    t = re.sub(r"^\s{0,3}#{1,6}\s*", "", t, flags=re.MULTILINE)
+
+    # Liste markdown "- item" o "* item" -> "• item"
+    t = re.sub(r"^\s*[-*]\s+", "• ", t, flags=re.MULTILINE)
+
+    # Link markdown [txt](url) -> "txt (url)"
+    t = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", t)
+
+    return t
+
+
+def _append_google_maps_link(text: str) -> str:
+    """
+    Se rileva un indirizzo nella risposta, aggiunge un link Google Maps cliccabile
+    per avviare rapidamente la navigazione.
+    """
+    if not text:
+        return text
+
+    if re.search(r"https?://(?:www\.)?google\.[^\s]*/maps", text, flags=re.IGNORECASE):
+        return text
+
+    lines = [line.strip() for line in text.splitlines()]
+    address_candidate = None
+
+    for idx, line in enumerate(lines):
+        if line.startswith("📍"):
+            for next_idx in range(idx + 1, min(idx + 4, len(lines))):
+                candidate = lines[next_idx]
+                if not candidate:
+                    continue
+                if candidate.startswith("📞"):
+                    continue
+                if re.match(r"https?://", candidate, flags=re.IGNORECASE):
+                    continue
+                # euristica: indirizzo contiene numero civico e virgola
+                if re.search(r"\d", candidate) and "," in candidate:
+                    address_candidate = candidate
+                    break
+        if address_candidate:
+            break
+
+    if not address_candidate:
+        return text
+
+    maps_url = f"https://www.google.com/maps/search/?api=1&query={quote_plus(address_candidate)}"
+    return f"{text.rstrip()}\n\n🗺️ Avvia navigazione: {maps_url}"
+
 
 def send_reply(to_number: str, text: str) -> None:
     """Invia risposta usando WhatsApp Cloud API."""
@@ -107,7 +170,7 @@ def send_reply(to_number: str, text: str) -> None:
     data = {
         "messaging_product": "whatsapp",
         "to": to_number,
-        "text": {"body": text},
+        "text": {"body": _append_google_maps_link(_markdown_to_whatsapp(text))},
     }
 
     response = requests.post(url, headers=headers, json=data, timeout=15)
@@ -153,7 +216,6 @@ def verify_webhook(
 
     raise HTTPException(status_code=403, detail="Forbidden")
 
-# 2) Ricezione messaggi WhatsApp (POST)
 @app.post("/webhook")
 async def handle_messages(request: Request, background_tasks: BackgroundTasks) -> dict:
     try:
