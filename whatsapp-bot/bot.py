@@ -1,11 +1,8 @@
 import logging
 import os
 import sys
-import copy
-import time
 from pathlib import Path
-from threading import Lock
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 from dotenv import load_dotenv
 
 
@@ -19,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env", override=True)
 
 from siraya.controllers.triage_controller_v3 import TriageControllerV3
-from siraya.core.state_manager import DEFAULT_STATE, StateKeys
+from siraya.webhooks.conversation_runtime import ConversationRuntime
 
 import requests
 import uvicorn
@@ -62,132 +59,7 @@ if not VERIFY_TOKEN or not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
     logger.error(f"ERRORE GRAVE, NON TROVATI TOKEN O ID NUMERO:\nVERIFY_TOKEN:{VERIFY_TOKEN}\nWHATSAPP_TOKEN:{WHATSAPP_TOKEN}\nPHONE_NUMBER_ID:{PHONE_NUMBER_ID}")
     raise MissingEnvironmentVariable()
 
-controllers: Dict[str, TriageControllerV3] = {}
-controllers_lock = Lock()
-conversation_states: Dict[str, dict] = {}
-conversation_locks: Dict[str, Lock] = {}
-
-
-class InMemoryConversationState:
-    """State adapter compatible with StateManager API, isolated per conversation."""
-
-    def __init__(self):
-        self._data: Dict[str, Any] = {}
-
-    def init(self) -> None:
-        for key, default_value in DEFAULT_STATE.items():
-            if key not in self._data:
-                if isinstance(default_value, (list, dict)):
-                    self._data[key] = copy.deepcopy(default_value)
-                else:
-                    self._data[key] = default_value
-
-    def get(self, key: str, default: Any = None) -> Any:
-        return self._data.get(key, default)
-
-    def set(self, key: str, value: Any) -> None:
-        self._data[key] = value
-
-    def update(self, updates: Dict[str, Any]) -> None:
-        for key, value in updates.items():
-            self._data[key] = value
-
-
-class InMemoryTTLMessageDeduplicator:
-    """Thread-safe webhook deduplication by message_id with TTL cleanup."""
-
-    def __init__(self, ttl_seconds: int = 20 * 60, max_entries: int = 50_000):
-        self.ttl_seconds = ttl_seconds
-        self.max_entries = max_entries
-        self._lock = Lock()
-        self._seen_at: Dict[str, float] = {}
-
-    def _cleanup_locked(self, now: float) -> None:
-        expired_before = now - self.ttl_seconds
-        expired_keys = [mid for mid, ts in self._seen_at.items() if ts < expired_before]
-        for mid in expired_keys:
-            self._seen_at.pop(mid, None)
-
-        # Safety cap in case of abnormal traffic
-        if len(self._seen_at) > self.max_entries:
-            oldest = sorted(self._seen_at.items(), key=lambda item: item[1])
-            to_remove = len(self._seen_at) - self.max_entries
-            for mid, _ in oldest[:to_remove]:
-                self._seen_at.pop(mid, None)
-
-    def seen_or_mark(self, message_id: str) -> bool:
-        """Return True if already seen in TTL window; otherwise mark and return False."""
-        now = time.monotonic()
-        with self._lock:
-            self._cleanup_locked(now)
-            if message_id in self._seen_at:
-                return True
-            self._seen_at[message_id] = now
-            return False
-
-
-deduplicator = InMemoryTTLMessageDeduplicator(ttl_seconds=20 * 60)
-
-
-def get_or_create_controller(conversation_key: str) -> TriageControllerV3:
-    """One controller instance per WhatsApp conversation/user."""
-    with controllers_lock:
-        if conversation_key not in controllers:
-            controller = TriageControllerV3()
-            # IMPORTANT: isolate state from Streamlit singleton to prevent cross-talk.
-            isolated_state = InMemoryConversationState()
-            isolated_state.init()
-            controller.state = isolated_state
-            if hasattr(controller, "fsm") and hasattr(controller.fsm, "state"):
-                controller.fsm.state = isolated_state
-            controllers[conversation_key] = controller
-            logger.info("🆕 New controller created for conversation=%s", conversation_key)
-        return controllers[conversation_key]
-
-
-def get_or_create_conversation_lock(conversation_key: str) -> Lock:
-    """One mutex per conversation to serialize load→process→save and reply."""
-    with controllers_lock:
-        lock = conversation_locks.get(conversation_key)
-        if lock is None:
-            lock = Lock()
-            conversation_locks[conversation_key] = lock
-        return lock
-
-
-def _load_conversation_state(conversation_key: str, controller: TriageControllerV3) -> None:
-    """Restore saved state snapshot into controller state before processing."""
-    state = controller.state
-    try:
-        state.init()
-    except Exception:
-        pass
-
-    with controllers_lock:
-        snapshot = conversation_states.get(conversation_key)
-
-    if snapshot is None:
-        return
-
-    for key, value in snapshot.items():
-        state.set(key, copy.deepcopy(value))
-
-
-def _save_conversation_state(conversation_key: str, controller: TriageControllerV3) -> None:
-    """Persist current controller state snapshot for this conversation."""
-    state = controller.state
-
-    snapshot = {}
-    for key in DEFAULT_STATE.keys():
-        snapshot[key] = copy.deepcopy(state.get(key, DEFAULT_STATE[key]))
-
-    # Keep a stable session id per WhatsApp number
-    existing_session_id = snapshot.get(StateKeys.SESSION_ID)
-    if not existing_session_id:
-        snapshot[StateKeys.SESSION_ID] = f"wa-{conversation_key}"
-
-    with controllers_lock:
-        conversation_states[conversation_key] = snapshot
+runtime = ConversationRuntime(dedup_ttl_seconds=20 * 60)
 
 def extract_message_event(body: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """Extract (message_id, phone_number, text) from Meta payload for text messages only."""
@@ -219,45 +91,6 @@ def extract_text_message(body: dict) -> Tuple[Optional[str], Optional[str]]:
     """Backward-compatible wrapper: returns only (phone_number, text)."""
     _, phone_number, text = extract_message_event(body)
     return phone_number, text
-
-
-def _process_incoming_message(phone_number: str, text: str, message_id: str) -> None:
-    """Background worker: process one WhatsApp message atomically for one conversation."""
-    logger.info("start_processing message_id=%s phone_number=%s", message_id, phone_number)
-    conversation_lock = get_or_create_conversation_lock(phone_number)
-
-    with conversation_lock:
-        try:
-            controller = get_or_create_controller(phone_number)
-            _load_conversation_state(phone_number, controller)
-            reply = controller.process_user_input(text)
-            _save_conversation_state(phone_number, controller)
-
-            assistant_text = (reply or {}).get("assistant_response", "")
-            if not assistant_text:
-                assistant_text = "Grazie, ho ricevuto il tuo messaggio. Puoi darmi qualche dettaglio in più?"
-
-            send_reply(phone_number, assistant_text)
-            logger.info("end_processing message_id=%s phone_number=%s status=ok", message_id, phone_number)
-        except Exception as exc:
-            logger.exception(
-                "processing_error message_id=%s phone_number=%s error=%s",
-                message_id,
-                phone_number,
-                exc,
-            )
-            try:
-                send_reply(
-                    phone_number,
-                    "Si è verificato un problema temporaneo. Riprova tra qualche secondo.",
-                )
-            except Exception as fallback_exc:
-                logger.exception(
-                    "fallback_send_failed message_id=%s phone_number=%s error=%s",
-                    message_id,
-                    phone_number,
-                    fallback_exc,
-                )
 
 
 def send_reply(to_number: str, text: str) -> None:
@@ -334,7 +167,7 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
         logger.info("ignore_event reason=non_text_or_incomplete")
         return {"status": "ok"}
 
-    is_duplicate = deduplicator.seen_or_mark(message_id)
+    is_duplicate = runtime.seen_or_mark_message(message_id)
     logger.info(
         "webhook_received message_id=%s phone_number=%s dedup=%s",
         message_id,
@@ -346,9 +179,12 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
         return {"status": "ok"}
 
     logger.info("enqueue_processing message_id=%s phone_number=%s", message_id, phone_number)
-    background_tasks.add_task(_process_incoming_message, phone_number, text, message_id)
+    background_tasks.add_task(runtime.process_message, phone_number, text, message_id, send_reply)
     return {"status": "ok"}
 
+@app.get("/ping", response_class=PlainTextResponse)
+async def keepalive():
+    return "UP"
 
 if __name__ == "__main__":
     uvicorn.run("bot:app", host="0.0.0.0", port=PORT, reload=False)

@@ -6,6 +6,8 @@ import time
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from siraya.core.state_manager import StateKeys
+from siraya.webhooks.conversation_runtime import InMemoryConversationState
 
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -54,10 +56,10 @@ def test_duplicate_delivery_same_message_id_processed_once(monkeypatch):
 
     processed = []
 
-    def fake_process(phone_number: str, text: str, message_id: str):
+    def fake_process(phone_number: str, text: str, message_id: str, send_reply):
         processed.append((message_id, phone_number, text))
 
-    monkeypatch.setattr(bot, "_process_incoming_message", fake_process)
+    monkeypatch.setattr(bot.runtime, "process_message", fake_process)
 
     client = TestClient(bot.app)
     payload = _build_text_payload("wamid.dup-1", "393330001111", "Ciao")
@@ -74,13 +76,13 @@ def test_duplicate_delivery_same_message_id_processed_once(monkeypatch):
 def test_two_users_have_isolated_state():
     bot = _load_bot_module("wa_bot_test_isolation")
 
-    c1 = bot.get_or_create_controller("393330001111")
-    c2 = bot.get_or_create_controller("393330002222")
+    c1 = bot.runtime._get_or_create_controller("393330001111")
+    c2 = bot.runtime._get_or_create_controller("393330002222")
 
     assert c1 is not c2
 
-    c1.state.set(bot.StateKeys.CURRENT_PHASE, "phase-user-1")
-    assert c2.state.get(bot.StateKeys.CURRENT_PHASE) != "phase-user-1"
+    c1.state.set(StateKeys.CURRENT_PHASE, "phase-user-1")
+    assert c2.state.get(StateKeys.CURRENT_PHASE) != "phase-user-1"
 
 
 def test_same_user_parallel_messages_are_serialized(monkeypatch):
@@ -91,7 +93,7 @@ def test_same_user_parallel_messages_are_serialized(monkeypatch):
 
     class DummyController:
         def __init__(self):
-            self.state = bot.InMemoryConversationState()
+            self.state = InMemoryConversationState()
             self.state.init()
 
         def process_user_input(self, text: str):
@@ -104,11 +106,10 @@ def test_same_user_parallel_messages_are_serialized(monkeypatch):
 
     dummy_controller = DummyController()
 
-    monkeypatch.setattr(bot, "get_or_create_controller", lambda _: dummy_controller)
-    monkeypatch.setattr(bot, "send_reply", lambda to_number, text: sent.append((to_number, text)))
+    monkeypatch.setattr(bot.runtime, "_get_or_create_controller", lambda _: dummy_controller)
 
-    t1 = threading.Thread(target=bot._process_incoming_message, args=("393330003333", "msg-1", "wamid-1"))
-    t2 = threading.Thread(target=bot._process_incoming_message, args=("393330003333", "msg-2", "wamid-2"))
+    t1 = threading.Thread(target=bot.runtime.process_message, args=("393330003333", "msg-1", "wamid-1", lambda to_number, text: sent.append((to_number, text))))
+    t2 = threading.Thread(target=bot.runtime.process_message, args=("393330003333", "msg-2", "wamid-2", lambda to_number, text: sent.append((to_number, text))))
 
     t1.start()
     t2.start()
