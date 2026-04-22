@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import threading
 from pathlib import Path
 from typing import Optional, Tuple
 from dotenv import load_dotenv
@@ -64,6 +65,8 @@ if not VERIFY_TOKEN or not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
     raise MissingEnvironmentVariable()
 
 runtime = ConversationRuntime(dedup_ttl_seconds=20 * 60)
+PAYLOAD_LOG_PATH = PROJECT_ROOT / "Payload_risposte.json"
+PAYLOAD_LOG_LOCK = threading.Lock()
 
 def extract_message_event(body: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """Extract (message_id, phone_number, text) from Meta payload for text messages only."""
@@ -216,6 +219,9 @@ def verify_webhook(
 
     raise HTTPException(status_code=403, detail="Forbidden")
 
+import datetime
+
+
 @app.post("/webhook")
 async def handle_messages(request: Request, background_tasks: BackgroundTasks) -> dict:
     try:
@@ -223,6 +229,35 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
     except Exception:
         logger.warning("invalid_json_payload")
         return {"status": "ok"}
+
+    # Best-effort payload logging (non deve bloccare il webhook)
+    try:
+        now = datetime.datetime.now().isoformat()
+        log_entry = {
+            "datetime": now,
+            "payload": body,
+        }
+
+        with PAYLOAD_LOG_LOCK:
+            payload_items = []
+
+            if PAYLOAD_LOG_PATH.exists():
+                try:
+                    raw_content = PAYLOAD_LOG_PATH.read_text(encoding="utf-8").strip()
+                    if raw_content:
+                        parsed = json.loads(raw_content)
+                        if isinstance(parsed, list):
+                            payload_items = parsed
+                except Exception:
+                    payload_items = []
+
+            payload_items.append(log_entry)
+            PAYLOAD_LOG_PATH.write_text(
+                json.dumps(payload_items, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+    except Exception as exc:
+        logger.warning("payload_file_log_failed error=%s", exc)
 
     message_id, phone_number, text = extract_message_event(body)
     if not message_id or not phone_number or not text:
