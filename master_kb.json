@@ -2386,7 +2386,6 @@
                 "Ambulatorio Cronicità",
                 "Pediatra di Libera Scelta",
                 "CUP"
-                "Consultorio Familiare"
             ]
         },
         {
@@ -2834,6 +2833,36 @@
             ]
         },
         {
+            "id": "FE_CDC_SANBARTOLOMEO",
+            "tipologia": "Casa della Comunità",
+            "nome": "Casa della Comunità San Bartolomeo in Bosco",
+            "provincia": "FE",
+            "distretto": "Distretto Centro-Nord",
+            "comune": "Ferrara",
+            "frazione": "San Bartolomeo in Bosco",
+            "indirizzo": "Via dei Gerani, 2",
+            "contatti": {
+                "telefono": "0532 725111",
+                "web": "https://www.ausl.fe.it"
+            },
+            "orari": {
+                "lunedi": "07:30-13:00",
+                "martedi": "07:30-13:00",
+                "mercoledi": "07:30-13:00",
+                "giovedi": "07:30-13:00",
+                "venerdi": "07:30-13:00",
+                "sabato": "Chiuso",
+                "domenica": "Chiuso",
+                "note": "Presidio territoriale zona sud Ferrara"
+            },
+            "servizi_disponibili": [
+                "Punto Prelievi",
+                "CUP",
+                "Ambulatorio Infermieristico",
+                "Assistenza Domiciliare Integrata"
+            ]
+        },
+        {
             "id": "FE_CAU_COPPARO",
             "tipologia": "CAU",
             "nome": "CAU Copparo (Casa della Comunità Terre e Fiumi)",
@@ -2865,39 +2894,34 @@
             ]
         },
         {
-            "id": "FE_CDC_COPPARO",
-            "tipologia": "Casa della Comunità",
-            "nome": "Casa della Comunità Terre e Fiumi di Copparo",
+            "id": "FE_OSCO_COPPARO",
+            "tipologia": "Ospedale di Comunità",
+            "nome": "Ospedale di Comunità Copparo",
             "provincia": "FE",
             "distretto": "Distretto Centro-Nord",
             "comune": "Copparo",
-            "indirizzo": "Via Roma 18, 44034 Copparo FE",
+            "frazione": "",
+            "indirizzo": "Via Roma, 18",
             "contatti": {
-                "telefono": "0532 235111",
-                "web": "https://www.ausl.fe.it/strutture/ambulatori-e-poliambulatori/casa-della-comunita-terre-e-fiumi-di-copparo"
+                "telefono": "0532 879111",
+                "web": "https://www.ausl.fe.it"
             },
             "orari": {
-                "lunedi": "08:00-18:00",
-                "martedi": "08:00-18:00",
-                "mercoledi": "08:00-18:00",
-                "giovedi": "08:00-18:00",
-                "venerdi": "08:00-18:00",
-                "sabato": "Chiuso",
-                "domenica": "Chiuso",
-                "note": "Orari d'apertura generali della struttura. Il CAU (Centro Assistenza Urgenza) è aperto tutti i giorni (lun-dom) dalle 08:00 alle 20:00 ad accesso libero. L'Ospedale di Comunità (OSCO) interno garantisce assistenza infermieristica H24 per i degenti."
+                "lunedi": "H24",
+                "martedi": "H24",
+                "mercoledi": "H24",
+                "giovedi": "H24",
+                "venerdi": "H24",
+                "sabato": "H24",
+                "domenica": "H24",
+                "note": "Struttura di degenza territoriale per cure intermedie."
             },
             "servizi_disponibili": [
-                "Centro di Assistenza e Urgenza (CAU)",
-                "Ospedale di Comunità (OSCO)",
-                "Punto Unico di Accesso (PUA)",
-                "Infermieri di Famiglia e di Comunità (IFEC)",
-                "Psicologia di Comunità",
-                "Fisioterapia Territoriale",
-                "Ambulatori Specialistici",
-                "Assistenza Domiciliare (ADI)",
-                "Vaccinazioni"
+                "Degenza post-acuta",
+                "Assistenza infermieristica H24",
+                "Riabilitazione estensiva"
             ]
-        }
+        },
         {
             "id": "FE_CDC_BERRA",
             "tipologia": "Casa della Comunità",
@@ -4087,7 +4111,9 @@
                 "note": "Numero unico gratuito. Accesso ambulatoriale diretto possibile Sab/Dom 8-20 (previa chiamata)."
             },
             "servizi_disponibili": [
-                "Guardia Medica"
+                "Visite domiciliari",
+                "Consulti telefonici",
+                "Certificati malattia"
             ]
         },
         {
@@ -4113,7 +4139,8 @@
                 "note": "Riferimento per Medicina e Castel Guelfo."
             },
             "servizi_disponibili": [
-                "Guardia Medica"
+                "Visite domiciliari",
+                "Ambulatorio festivo"
             ]
         },
         {
@@ -4139,7 +4166,8 @@
                 "note": "Riferimento per Borgo Tossignano, Fontanelice, Casalfiumanese, Castel del Rio."
             },
             "servizi_disponibili": [
-                "Guardia Medica"
+                "Visite domiciliari",
+                "Ambulatorio festivo"
             ]
         },
         {
@@ -6235,29 +6263,25 @@
             "provincia": "PR",
             "distretto": "Distretto di Parma",
             "comune": "Parma",
-            "indirizzo": "Via Bocchi 1, angolo via Savani, 43126 Parma PR",
+            "indirizzo": "Viale Piacenza, 24, 43126 Parma PR",
             "contatti": {
                 "telefono": "0521 393111"
             },
             "orari": {
-                "lunedi": "Variabile",
-                "martedi": "Variabile",
-                "mercoledi": "Variabile",
-                "giovedi": "Variabile",
-                "venerdi": "Variabile",
+                "lunedi": "08:00-18:00",
+                "martedi": "08:00-18:00",
+                "mercoledi": "08:00-18:00",
+                "giovedi": "08:00-18:00",
+                "venerdi": "08:00-18:00",
                 "sabato": "Chiuso",
                 "domenica": "Chiuso",
-                "note": "Verificare gli orari di ogni singolo servizio. Ambulatorio infermieristico e ritiro referti: lun-ven 12:30-13:30. Segreteria Medicina di Gruppo: 0521 995013. Info punto prelievi: 0521 393895."
+                "note": "Servizio Medicina dello Sport."
             },
             "servizi_disponibili": [
-                "Medicina di Gruppo",
-                "Servizio Infermieristico Domiciliare",
-                "Ambulatorio Infermieristico",
-                "Ambulatorio per la Cronicità",
-                "Ambulatori Specialistici",
-                "Punto Prelievi"
+                "Medicina dello Sport",
+                "Ambulatori Specialistici"
             ]
-        }
+        },
         {
             "id": "PR_CDS_COLORNO",
             "tipologia": "Casa della Comunità",
@@ -9018,7 +9042,6 @@
                 "Punto Prelievi",
                 "Pediatria",
                 "Ambulatorio Vaccinale"
-            
             ]
         },
         {
