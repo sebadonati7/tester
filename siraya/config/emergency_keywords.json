@@ -1,0 +1,62 @@
+{
+  "emergency_keywords": [
+    "dolore petto",
+    "dolore toracico",
+    "infarto",
+    "cuore",
+    "non respiro",
+    "soffoco",
+    "ictus",
+    "paralisi",
+    "emorragia",
+    "sangue abbondante",
+    "svenuto",
+    "convulsioni",
+    "trauma cranico",
+    "incosciente",
+    "arresto cardiaco",
+    "overdose",
+    "avvelenamento",
+    "ustione grave",
+    "frattura esposta",
+    "ferita profonda"
+  ],
+  "mental_health_keywords": [
+    "depresso",
+    "ansia",
+    "panico",
+    "suicidio",
+    "farmi del male",
+    "non ce la faccio",
+    "voglio morire",
+    "autolesionismo",
+    "attacco di panico",
+    "crisi"
+  ],
+  "info_keywords": [
+    "orari",
+    "dove si trova",
+    "come prenot",
+    "numero",
+    "indirizzo",
+    "costo",
+    "ticket",
+    "prelievi"
+  ],
+  "escalation_keywords": [
+    "peggiorato",
+    "peggiora",
+    "non passa",
+    "sempre più forte",
+    "non riesco a muovermi",
+    "vedo doppio",
+    "perdo sangue",
+    "febbre altissima",
+    "svengo",
+    "confuso",
+    "non respiro bene",
+    "sta peggiorando",
+    "mi sento svenire",
+    "non mi reggo in piedi"
+  ]
+}

@@ -109,7 +109,7 @@ class SmartRouter:
         durante un percorso C attivo → dovrebbe diventare A.
 
         Ritorna True se il punteggio complessivo (keyword escalation +
-        keyword emergenza) è ≥ 2, oppure se c'è una keyword emergenza diretta.
+        keyword emergenza) è ≥ 1 (single-keyword escalation).
 
         Returns:
             True se escalation necessaria
@@ -125,7 +125,7 @@ class SmartRouter:
             if keyword in msg_lower:
                 score += 2  # le keyword emergenza pesano di più
 
-        return score >= 2
+        return score >= 1
 
     @classmethod
     def extract_location(cls, user_message: str) -> str:

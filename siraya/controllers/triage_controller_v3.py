@@ -374,13 +374,15 @@ class UnifiedSlotFiller:
                 )
                 logger.info("⚠️ Sintomo GENERICO (LLM): richiesto approfondimento")
 
-            # LLM may also extract location/age in the same pass
-            if judgment.get("extracted_location") and "location" not in current_data:
-                extracted[cls.KEYS["location"]] = str(judgment["extracted_location"]).title()
-            if judgment.get("extracted_age") and "age" not in current_data:
-                age_val = judgment["extracted_age"]
-                if isinstance(age_val, (int, float)) and 0 < age_val < 120:
-                    extracted[cls.KEYS["age"]] = int(age_val)
+            # LLM may also extract location/age — route via DataAcquisitionManager
+            # to prevent hallucination (user-explicit → collected, LLM-inferred → pending_validation)
+            from ..controllers.data_acquisition_manager import DataAcquisitionManager
+            _dam = DataAcquisitionManager()
+            _dam_result = _dam.extract_and_validate(user_input, current_data, judgment)
+            extracted.update(_dam_result["confirmed"])
+            if _dam_result["pending_validation"]:
+                extracted["_pending_validation"] = _dam_result["pending_validation"]
+                extracted["_validation_required"] = _dam_result["validation_required"]
 
         # ═══ SYMPTOM DETAILS (cumulative, keyword-based — fine as regex) ═══
         detail_keywords = {
@@ -993,8 +995,8 @@ REGOLE urgency_code: dolore>=8 o emergenza="rosso"/"arancione", dolore 5-7="gial
             return self._generate_hotline_response()
 
         # ═══ Find facility (with Directive 2 pre-filter) ═══
-        location = data.get("location", "Bologna")
-        pain = data.get("pain_scale", 5)
+        location = data.get("location", None)
+        pain = data.get("pain_scale", None)
         age = data.get("age")
         patient_age = int(age) if age and str(age).isdigit() else None
 
@@ -1007,7 +1009,7 @@ REGOLE urgency_code: dolore>=8 o emergenza="rosso"/"arancione", dolore 5-7="gial
         else:
             facility_type = "Medico di Base"
 
-        facility = self.kb.find_healthcare_facility(location, facility_type, patient_age=patient_age)
+        facility = self.kb.find_healthcare_facility(location or "Bologna", facility_type, patient_age=patient_age)
 
         f_name = facility.get("nome", "N/D") if facility else f"{facility_type} {location}"
         f_addr = facility.get("indirizzo", "Contatta CUP per informazioni") if facility else "N/D"
@@ -1018,8 +1020,15 @@ REGOLE urgency_code: dolore>=8 o emergenza="rosso"/"arancione", dolore 5-7="gial
         symptom = data.get("chief_complaint", "Non specificato")
         details = ", ".join(data.get("symptom_details", [])) or "Nessun dettaglio aggiuntivo"
 
+        # Mark unconfirmed data in SBAR
+        pending = data.get("_pending_validation", {})
+        pain_display = f"{pain}/10" if pain is not None else "Non confermato"
+        location_display = location or "Non confermato"
+        if "location" in pending:
+            location_display += " (non confermato)"
+
         prompt = self.SBAR_PROMPT.format(
-            symptom=symptom, pain=pain, age=age or "N/D", location=location,
+            symptom=symptom, pain=pain_display, age=age or "N/D", location=location_display,
             details=details, facility_name=f_name, facility_addr=f_addr, facility_phone=f_phone
         )
 
@@ -1201,25 +1210,23 @@ class TriageControllerV3:
             collected["_generic_symptom"] = False
             logger.info(f"🛡️ Defensive: forced _generic_symptom=False (chief_complaint='{collected['chief_complaint']}')")
 
-        # 3. Classify branch (first time) — use LLM Judge hint + SmartRouter safety net
+        # 3. Classify branch (first time) — use RouteArbitrator (LLMJudge + SmartRouter)
         if not current_branch:
-            urgency_override = extracted.get("_urgency_override")
-
-            if urgency_override == "emergency":
-                current_branch = TriageBranch.EMERGENCY
-            elif urgency_override == "mental_health":
-                current_branch = TriageBranch.MENTAL_HEALTH
-            elif urgency_override == "info":
-                current_branch = TriageBranch.INFO
-            else:
-                # SmartRouter as safety net
-                from ..controllers.smart_router import SmartRouter
-                path, _ = SmartRouter.route(user_input)
-                branch_map = {"A": TriageBranch.EMERGENCY, "B": TriageBranch.MENTAL_HEALTH,
-                              "C": TriageBranch.STANDARD, "INFO": TriageBranch.INFO}
-                current_branch = branch_map.get(path, TriageBranch.STANDARD)
-
+            from ..controllers.route_arbitrator import RouteArbitrator
+            from ..controllers.smart_router import SmartRouter
+            arbitrator = RouteArbitrator(SmartRouter)
+            llm_judgment = extracted.get("_llm_judgment")
+            path, urgency, confidence = arbitrator.route(
+                user_input, collected, None, current_phase, llm_judgment
+            )
+            branch_map = {"A": TriageBranch.EMERGENCY, "B": TriageBranch.MENTAL_HEALTH,
+                          "C": TriageBranch.STANDARD, "INFO": TriageBranch.INFO}
+            current_branch = branch_map.get(path, TriageBranch.STANDARD)
             self.state.set(StateKeys.TRIAGE_BRANCH, current_branch.value)
+            logger.info(
+                f"✅ RouteArbitrator: branch={current_branch.value}, "
+                f"urgency={urgency}, confidence={confidence:.2f}"
+            )
             # FIX: Sync TRIAGE_PATH for chat_view.py's _render_disposition_summary
             self.state.set(StateKeys.TRIAGE_PATH, current_branch.value)
             logger.info(f"✅ Branch classified: {current_branch.value}")
@@ -1240,8 +1247,98 @@ class TriageControllerV3:
             collected.pop(key, None)
         self.state.set(StateKeys.COLLECTED_DATA, collected)
 
+        # ─────────────────────────────────────────────────────────────────────
+        # 5a. PATH BLACK — ProtocolDrivenExecutor
+        # Sostituisce il vecchio FSM Path B con protocolli validati da Supabase
+        # ─────────────────────────────────────────────────────────────────────
+        if current_branch == TriageBranch.MENTAL_HEALTH:
+            from ..controllers.protocol_driven_executor import ProtocolDrivenExecutor
+
+            supabase_client = getattr(self.rag, "supabase", None)
+            executor = ProtocolDrivenExecutor(self.rag, self.llm, supabase_client)
+
+            # Identifica concern type al primo turno
+            if "concern_type" not in collected:
+                concern = executor.identify_concern_type(
+                    user_input, collected.get("chief_complaint", "")
+                )
+                collected["concern_type"] = concern
+                self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+            # Carica protocollo
+            protocol = executor.load_protocol_from_supabase(collected["concern_type"])
+
+            # Aggiorna conversazione protocollo
+            protocol_conversation = collected.get("_protocol_conversation", [])
+            if user_input.strip():
+                protocol_conversation.append({"role": "user", "content": user_input})
+
+            # Esegui protocollo
+            result = executor.execute_protocol(protocol, protocol_conversation)
+            collected["_protocol_conversation"] = result.get("protocol_conversation", [])
+            self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+            # Protocollo completato → stratifica rischio e genera outcome
+            if result.get("completed"):
+                risk = executor.stratify_risk(
+                    protocol,
+                    result.get("protocol_conversation", []),
+                    collected["concern_type"],
+                )
+                response = self._generate_mental_health_outcome(collected, risk, protocol)
+                self.state.set(StateKeys.CURRENT_PHASE, TriagePhase.OUTCOME.value)
+            else:
+                # Prossima domanda del protocollo
+                next_q = result.get("next_question", "Puoi raccontarmi come ti senti?")
+                progress = result.get("protocol_progress", 0.0)
+                response = {
+                    "text": next_q,
+                    "type": "open_text",
+                    "options": None,
+                    "metadata": {
+                        "branch": "BLACK",
+                        "protocol": collected.get("concern_type", "general_mental_health"),
+                        "progress": progress,
+                    },
+                }
+
+            self._log_interaction(user_input, response, current_branch, TriagePhase.RISK_ASSESSMENT, 0, start_time)
+            return self._format_response(response, start_time)
+
+        # ─────────────────────────────────────────────────────────────────────
+        # 5b. PATH INFO — InfoResponseGenerator (conversazionale, no SBAR)
+        # ─────────────────────────────────────────────────────────────────────
+        if current_branch == TriageBranch.INFO:
+            from ..controllers.info_response_generator import InfoResponseGenerator
+
+            info_gen = InfoResponseGenerator(self.rag, self.llm)
+            location = collected.get("location", None)
+            conversation_history = collected.get("_conversation_history", [])
+
+            info_response = info_gen.generate_info_response(
+                user_query=user_input,
+                location=location,
+                conversation_history=conversation_history,
+            )
+
+            # Mantieni contesto conversazionale
+            if "_conversation_history" not in collected:
+                collected["_conversation_history"] = []
+            collected["_conversation_history"].append({"role": "user", "content": user_input})
+            collected["_conversation_history"].append({"role": "assistant", "content": info_response})
+            self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+            response = {
+                "text": info_response,
+                "type": "open_text",
+                "options": [],
+                "metadata": {"branch": "INFO"},
+            }
+            self._log_interaction(user_input, response, current_branch, TriagePhase.OUTCOME, 0, start_time)
+            return self._format_response(response, start_time)
+
         # ═══════════════════════════════════════════════════════════
-        # 5. DIRECTIVE 3: Auto-outcome check
+        # 5c. DIRECTIVE 3: Auto-outcome check (branch A e C)
         # If ALL mandatory slots filled AND clinical phase complete,
         # generate outcome IMMEDIATELY (no "Grazie" dead-end)
         # ═══════════════════════════════════════════════════════════
@@ -1355,6 +1452,78 @@ class TriageControllerV3:
             "options": response.get("options"),
             "metadata": response.get("metadata", {}),
             "processing_time_ms": processing_time
+        }
+
+    def _generate_mental_health_outcome(self, data: Dict, risk: Dict, protocol: Dict) -> Dict:
+        """
+        Genera outcome per Path BLACK basato su risk stratification del ProtocolDrivenExecutor.
+
+        Args:
+            data: Dati raccolti nella sessione
+            risk: Output di ProtocolDrivenExecutor.stratify_risk()
+            protocol: Protocollo usato
+
+        Returns:
+            dict compatibile con _format_response()
+        """
+        risk_level = risk.get("risk_level", "moderate")
+        facility = risk.get("recommended_facility", "CSM")
+        rationale = risk.get("rationale", "Valutazione psicologica consigliata")
+        urgent = risk.get("urgent_action", False)
+        actions = risk.get("recommended_actions", [])
+        protocol_name = protocol.get("protocol_name", "Protocollo salute mentale")
+
+        # Emoji livello rischio
+        emoji_map = {"immediate": "🔴", "high": "🟠", "moderate": "🟡", "low": "🟢"}
+        urgency_emoji = emoji_map.get(risk_level, "🟡")
+
+        # Messaggio principale empatico
+        if urgent:
+            dialog = (
+                f"Grazie per aver condiviso con me questa situazione così difficile. "
+                f"Quello che mi hai descritto richiede attenzione immediata. "
+                f"Ti chiedo di contattare subito il {', '.join(actions)} o di recarti al {facility}."
+            )
+        else:
+            dialog = (
+                f"Grazie per aver condiviso con me come ti senti. "
+                f"In base a quello che mi hai raccontato, ti consiglio di rivolgerti a {facility}. "
+                f"Ricorda che chiedere aiuto è un atto di coraggio."
+            )
+
+        outcome_text = f"""{dialog}
+
+{urgency_emoji} **Livello di urgenza:** {risk_level.upper()}
+📍 **Struttura consigliata:** {facility}
+
+📞 **Numeri utili:**
+• 118 — Emergenza sanitaria (24/7)
+• Telefono Amico: 02 2327 2327
+• Telefono Azzurro: 19696 (minori, 24/7)"""
+
+        if urgent:
+            outcome_text += "\n\n🚨 **Se sei in pericolo immediato, chiama il 118 adesso.**"
+
+        sbar_note = f"""REPORT SALUTE MENTALE — {protocol_name}
+Livello rischio: {risk_level}
+Struttura: {facility}
+Razionale: {rationale}"""
+
+        logger.info(
+            f"✅ Mental health outcome: risk={risk_level}, facility={facility}, urgent={urgent}"
+        )
+
+        return {
+            "text": outcome_text,
+            "type": "outcome",
+            "options": None,
+            "metadata": {
+                "branch": "BLACK",
+                "risk_level": risk_level,
+                "facility": facility,
+                "urgent": urgent,
+                "sbar_full": sbar_note,
+            },
         }
 
     def _log_interaction(self, user_input, response, branch, phase, phase_q, start_time):

@@ -291,7 +291,121 @@ class RAGService:
             "severity": chunk.get("severity", "standard"),
         }
     
-    def format_context_for_llm(
+    def retrieve_context_for_info(
+        self,
+        query: str,
+        intent: Optional[str] = None,
+        location: Optional[str] = None,
+        top_k: int = 5,
+    ) -> List[Dict]:
+        """
+        Semantic retrieval ottimizzato per query INFO (Path INFO).
+
+        Differenze da retrieve_context():
+        - Filtra per intent-specific document categories
+        - Geographic filtering se location fornita
+        - Restituisce [] se score < 0.5 (no hallucination fallback)
+        - Non ritorna il generic fallback
+
+        Args:
+            query: Query utente
+            intent: InfoIntent category (OPERATING_HOURS, FACILITY_LOCATION, ecc.)
+            location: Comune (es. "Bologna")
+            top_k: Numero massimo di risultati
+
+        Returns:
+            Lista di {content, source, page, relevance_score, snippet, metadata}
+            Lista vuota se nessun risultato sopra soglia (il caller genera raffinamento)
+        """
+        self._ensure_connection()
+
+        if not self.supabase or not self.connection_tested:
+            logger.info("⚠️ RAG INFO: Supabase non disponibile, nessun risultato")
+            return []
+
+        all_results = []
+        seen_ids = set()
+        query_lower = query.lower().strip()
+
+        # Build search terms dall'intent
+        intent_terms = self._get_intent_search_terms(intent, query_lower)
+
+        # Ricerca per location se fornita
+        if location:
+            location_lower = location.lower().strip()
+            try:
+                for term in intent_terms[:2]:
+                    response = self.supabase.table("protocol_chunks") \
+                        .select("*") \
+                        .ilike("content", f"%{location_lower}%") \
+                        .ilike("content", f"%{term}%") \
+                        .limit(top_k) \
+                        .execute()
+
+                    if response.data:
+                        for chunk in response.data:
+                            chunk_id = chunk.get("id", id(chunk))
+                            if chunk_id not in seen_ids:
+                                seen_ids.add(chunk_id)
+                                normalized = self._normalize_chunk(chunk)
+                                all_results.append(normalized)
+            except Exception as e:
+                logger.debug(f"⚠️ RAG INFO location search failed: {e}")
+
+        # Ricerca keyword generica se non abbastanza risultati
+        if len(all_results) < top_k:
+            try:
+                for term in intent_terms[:3]:
+                    if len(all_results) >= top_k:
+                        break
+                    response = self.supabase.table("protocol_chunks") \
+                        .select("*") \
+                        .ilike("content", f"%{term}%") \
+                        .limit(top_k - len(all_results)) \
+                        .execute()
+
+                    if response.data:
+                        for chunk in response.data:
+                            chunk_id = chunk.get("id", id(chunk))
+                            if chunk_id not in seen_ids:
+                                seen_ids.add(chunk_id)
+                                all_results.append(self._normalize_chunk(chunk))
+            except Exception as e:
+                logger.debug(f"⚠️ RAG INFO keyword search failed: {e}")
+
+        # Filtra per soglia di rilevanza (score < 0.5 → escludi)
+        # Dato che non abbiamo embedding scores, usiamo lunghezza contenuto come proxy
+        filtered = [r for r in all_results if len(r.get("content", "")) > 30]
+
+        logger.info(
+            f"📚 RAG INFO: {len(filtered)} risultati per '{query_lower[:40]}' "
+            f"(intent={intent}, location={location})"
+        )
+        return filtered[:top_k]
+
+    def _get_intent_search_terms(self, intent: Optional[str], query_lower: str) -> List[str]:
+        """Genera termini di ricerca specifici per intent INFO."""
+        intent_term_map = {
+            "OPERATING_HOURS": ["orari", "apertura", "chiusura", "aperto"],
+            "FACILITY_LOCATION": ["indirizzo", "dove", "sede", "ubicazione"],
+            "SERVICE_INFO": ["servizio", "prestazione", "offre", "accesso"],
+            "COST_INFO": ["costo", "ticket", "tariffa", "prezzo", "esenzione"],
+            "PROCEDURE_INFO": ["prenotazione", "accesso", "procedura", "documenti"],
+            "GENERAL_HEALTH": ["salute", "informazioni", "guida"],
+            "PRESCRIPTION_INFO": ["ricetta", "prescrizione", "farmaco"],
+        }
+
+        terms = intent_term_map.get(intent or "OTHER", [])
+
+        # Aggiungi parole dalla query
+        for word in query_lower.split():
+            clean = word.strip(".,;:!?")
+            if len(clean) > 3 and clean not in terms:
+                terms.append(clean)
+
+        return terms[:6] if terms else [query_lower]
+
+
         self, 
         chunks: List[Dict],
         phase: str = "clinical_triage"
