@@ -229,7 +229,7 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
     except Exception:
         logger.warning("invalid_json_payload")
         return {"status": "ok"}
-
+    """ 
     # Best-effort payload logging (non deve bloccare il webhook)
     try:
         now = datetime.datetime.now().isoformat()
@@ -258,7 +258,7 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
             )
     except Exception as exc:
         logger.warning("payload_file_log_failed error=%s", exc)
-
+    """
     message_id, phone_number, text = extract_message_event(body)
     if not message_id or not phone_number or not text:
         logger.info("ignore_event reason=non_text_or_incomplete")
