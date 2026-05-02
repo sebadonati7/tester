@@ -8,6 +8,8 @@ Architecture:
 - TriageFSM: Tabular state machine (dict lookup, unchanged)
 - QuestionGenerator: RAG-driven clinical questions
 - OutcomeGenerator: Structured SBAR via LLM JSON Schema
+- RouteArbitrator: Dynamic routing with INFO switch at any turn
+- InfoProcessor: LLM + RAG for INFO queries
 """
 
 import re
@@ -19,6 +21,8 @@ from datetime import datetime
 from enum import Enum
 
 from ..core.state_manager import StateKeys
+from .route_arbitrator import RouteArbitrator
+from .info_processor import InfoProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -536,9 +540,6 @@ class TriageFSM:
             (TriageBranch.MENTAL_HEALTH, TriagePhase.DEMOGRAPHICS): self._mh_from_demographics,
             (TriageBranch.MENTAL_HEALTH, TriagePhase.RISK_ASSESSMENT): self._mh_from_risk,
             (TriageBranch.MENTAL_HEALTH, TriagePhase.OUTCOME): lambda d, q: TriagePhase.OUTCOME,
-
-            (TriageBranch.INFO, TriagePhase.INTAKE): self._info_from_intake,
-            (TriageBranch.INFO, TriagePhase.OUTCOME): lambda d, q: TriagePhase.OUTCOME,
         }
 
     def next_phase(self, branch, current, data, phase_q_count):
@@ -643,10 +644,6 @@ class TriageFSM:
 
     def _mh_from_risk(self, data, phase_q_count):
         return TriagePhase.OUTCOME if phase_q_count >= 4 else TriagePhase.RISK_ASSESSMENT
-
-    # === INFO ===
-    def _info_from_intake(self, data, q):
-        return TriagePhase.OUTCOME
 
 
 # ============================================================================
@@ -986,9 +983,6 @@ REGOLE urgency_code: dolore>=8 o emergenza="rosso"/"arancione", dolore 5-7="gial
         self.kb = data_loader
 
     def generate(self, branch: TriageBranch, data: Dict) -> Dict:
-        if branch == TriageBranch.INFO:
-            return self._generate_info_response(data)
-
         if branch == TriageBranch.MENTAL_HEALTH and data.get("consent") == "no":
             return self._generate_hotline_response()
 
@@ -1118,22 +1112,6 @@ Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}
             "metadata": {"sbar_full": sbar_full, "facility": f_name}
         }
 
-    def _generate_info_response(self, data):
-        query = data.get("chief_complaint", data.get("_raw_symptom", data.get("_last_user_input", "informazioni")))
-        location = data.get("location", "")
-        results = self.kb.find_facilities_smart(query, location, limit=3)
-
-        if results:
-            facilities_text = "\n\n".join([
-                f"📍 **{f.get('nome', 'N/A')}**\n   📫 {f.get('indirizzo', 'N/A')}\n"
-                f"   📞 {f.get('contatti', {}).get('telefono', 'N/D') if isinstance(f.get('contatti'), dict) else 'N/D'}\n"
-                f"   🕐 {f.get('orari', 'N/D')}"
-                for f in results
-            ])
-            return {"text": f"Ecco le informazioni:\n\n{facilities_text}\n\nPosso aiutarti con altro?", "type": "open_text", "options": None, "metadata": {}}
-
-        return {"text": "Non ho trovato risultati. Puoi dirmi quale servizio cerchi e in quale comune?", "type": "open_text", "options": None, "metadata": {}}
-
     def _generate_hotline_response(self):
         return {
             "text": "Capisco e rispetto la tua scelta. Ricorda che puoi contattare:\n\n📞 **118** — Emergenza sanitaria (24/7)\n📞 **1522** — Antiviolenza (24/7)\n📞 **Telefono Amico** — 02 2327 2327\n📞 **Telefono Azzurro** — 19696 (minori, 24/7)",
@@ -1201,44 +1179,43 @@ class TriageControllerV3:
             collected["_generic_symptom"] = False
             logger.info(f"🛡️ Defensive: forced _generic_symptom=False (chief_complaint='{collected['chief_complaint']}')")
 
-        # 3. Classify branch (first time) — use LLM Judge hint + SmartRouter safety net
-        if not current_branch:
-            urgency_override = extracted.get("_urgency_override")
+        # 3. Classify/re-route branch via RouteArbitrator
+        # RouteArbitrator handles: first-turn classification, dynamic INFO switch, escalation C→A
+        arbitrator = RouteArbitrator(self.llm, LLMJudge)
+        new_branch_str, urgency, confidence = arbitrator.route(
+            user_input=user_input,
+            current_data=collected,
+            current_branch=current_branch,
+            current_phase=current_phase,
+            urgency_override=extracted.get("_urgency_override"),
+        )
 
-            if urgency_override == "emergency":
-                current_branch = TriageBranch.EMERGENCY
-            elif urgency_override == "mental_health":
-                current_branch = TriageBranch.MENTAL_HEALTH
-            elif urgency_override == "info":
-                current_branch = TriageBranch.INFO
+        branch_map = {
+            "A": TriageBranch.EMERGENCY,
+            "B": TriageBranch.MENTAL_HEALTH,
+            "C": TriageBranch.STANDARD,
+            "INFO": TriageBranch.INFO,
+        }
+        new_branch = branch_map.get(new_branch_str, TriageBranch.STANDARD)
+
+        if current_branch is None or new_branch.value != current_branch:
+            if current_branch is not None and new_branch.value != current_branch:
+                logger.info(f"Branch switch: {current_branch} → {new_branch.value} (confidence={confidence:.2f})")
             else:
-                # SmartRouter as safety net
-                from ..controllers.smart_router import SmartRouter
-                path, _ = SmartRouter.route(user_input)
-                branch_map = {"A": TriageBranch.EMERGENCY, "B": TriageBranch.MENTAL_HEALTH,
-                              "C": TriageBranch.STANDARD, "INFO": TriageBranch.INFO}
-                current_branch = branch_map.get(path, TriageBranch.STANDARD)
+                logger.info(f"✅ Branch classified: {new_branch.value}")
+            self.state.set(StateKeys.TRIAGE_BRANCH, new_branch.value)
+            self.state.set(StateKeys.TRIAGE_PATH, new_branch.value)
 
-            self.state.set(StateKeys.TRIAGE_BRANCH, current_branch.value)
-            # FIX: Sync TRIAGE_PATH for chat_view.py's _render_disposition_summary
-            self.state.set(StateKeys.TRIAGE_PATH, current_branch.value)
-            logger.info(f"✅ Branch classified: {current_branch.value}")
-        else:
-            current_branch = TriageBranch(current_branch)
+        current_branch = new_branch
 
-        # 4. Escalation C → A (check during standard triage)
-        if current_branch == TriageBranch.STANDARD:
-            from ..controllers.smart_router import SmartRouter
-            if SmartRouter.check_escalation(user_input):
-                current_branch = TriageBranch.EMERGENCY
-                self.state.set(StateKeys.TRIAGE_BRANCH, "A")
-                self.state.set(StateKeys.TRIAGE_PATH, "A")
-                logger.warning(f"⚠️ ESCALATION C→A: '{user_input[:50]}'")
-
-        # Clean up helper keys before saving
+        # Clean up helper keys before saving (done once, before both INFO and non-INFO paths)
         for key in ["_current_phase", "_llm_judgment"]:
             collected.pop(key, None)
         self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+        # 4. INFO branch: dispatch immediately (bypasses FSM)
+        if current_branch == TriageBranch.INFO:
+            return self._process_info_branch(user_input, collected, start_time)
 
         # ═══════════════════════════════════════════════════════════
         # 5. DIRECTIVE 3: Auto-outcome check
@@ -1345,6 +1322,48 @@ class TriageControllerV3:
         # 10. Log
         self._log_interaction(user_input, response, current_branch, next_phase, phase_q_count, start_time)
 
+        return self._format_response(response, start_time)
+
+    def _process_info_branch(self, user_input: str, collected: Dict, start_time: float) -> Dict:
+        """
+        Processa PATH INFO con LLM + RAG.
+
+        Usa InfoProcessor per estrarre location, recuperare documenti rilevanti
+        e generare una risposta conversazionale. Aggiorna la conversation history
+        in collected["_conversation_history"].
+        """
+        processor = InfoProcessor(self.rag, self.llm)
+
+        location = collected.get("location")
+        conversation_history = collected.get("_conversation_history", [])
+
+        result = processor.process_info_query(
+            user_query=user_input,
+            location=location,
+            conversation_history=conversation_history,
+        )
+
+        # Aggiorna conversation history
+        history = collected.setdefault("_conversation_history", [])
+        history.append({"role": "user", "content": user_input})
+        history.append({"role": "assistant", "content": result["response"]})
+        self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+        logger.info(f"INFO response generated (docs_used={result['docs_used']})")
+
+        response = {
+            "text": result["response"],
+            "type": "info",
+            "options": None,
+            "metadata": {
+                "branch": "INFO",
+                "docs_used": result["docs_used"],
+            },
+        }
+
+        self._log_interaction(
+            user_input, response, TriageBranch.INFO, TriagePhase.OUTCOME, 0, start_time
+        )
         return self._format_response(response, start_time)
 
     def _format_response(self, response, start_time):

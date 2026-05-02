@@ -327,6 +327,142 @@ class RAGService:
             "- Farmaci o patologie note?\n"
         )
     
+    def retrieve_info_documents(
+        self,
+        query: str,
+        location: Optional[str] = None,
+        top_k: int = 3,
+    ) -> List[Dict]:
+        """
+        Retrieval semantico per query INFO (strutture sanitarie).
+
+        Utilizza la tabella 'documents' con embedding vettoriale via RPC
+        'search_documents_semantic'. Se la tabella non è ancora disponibile
+        o l'embedding non è configurato, restituisce lista vuota.
+
+        Args:
+            query: Testo della domanda utente.
+            location: Comune da usare come filtro (es. "Ravenna").
+            top_k: Numero massimo di documenti da restituire.
+
+        Returns:
+            Lista di dict con chiavi: id, title, content, doc_type, location, similarity.
+        """
+        self._ensure_connection()
+
+        if not self.supabase:
+            logger.warning("⚠️ RAG INFO: Supabase non disponibile")
+            return []
+
+        # Step 1: embedding della query
+        query_embedding = self._embed_text(query)
+        if not query_embedding:
+            logger.warning("⚠️ RAG INFO: embedding non disponibile, uso keyword fallback")
+            return self._keyword_fallback_info(query, location, top_k)
+
+        # Step 2: semantic search via RPC
+        try:
+            results = self.supabase.rpc(
+                "search_documents_semantic",
+                {
+                    "query_embedding": query_embedding,
+                    "location": location,
+                    "top_k": top_k,
+                    "threshold": 0.2,
+                },
+            ).execute()
+
+            docs = results.data if results.data else []
+            logger.info(f"✅ RAG INFO: {len(docs)} documenti (semantic) per '{query[:40]}'")
+            return docs
+
+        except Exception as e:
+            logger.warning(f"⚠️ RAG INFO semantic search fallito ({e}), uso keyword fallback")
+            return self._keyword_fallback_info(query, location, top_k)
+
+    def _keyword_fallback_info(
+        self, query: str, location: Optional[str], top_k: int
+    ) -> List[Dict]:
+        """
+        Fallback keyword-based sulla tabella 'documents' quando l'embedding
+        non è disponibile o la RPC non è configurata.
+
+        Filtra prima per location (se disponibile), poi cerca contenuto
+        per parole chiave significative della query in ordine di specificità
+        (parole più lunghe prima, più probabilmente termini specifici).
+        """
+        if not self.supabase:
+            return []
+
+        try:
+            req = self.supabase.table("documents").select(
+                "id, title, content, doc_type, location"
+            )
+
+            if location:
+                req = req.ilike("location", f"%{location}%")
+
+            # Estrai keyword significative (> 3 caratteri), ordinate per lunghezza
+            # discendente (parole più lunghe tendono a essere più specifiche)
+            stopwords = {"orari", "dove", "sono", "cosa", "come", "qual", "quali", "degli", "delle"}
+            keywords = sorted(
+                [
+                    w.strip(".,;:!?")
+                    for w in query.lower().split()
+                    if len(w.strip(".,;:!?")) > 3 and w.strip(".,;:!?") not in stopwords
+                ],
+                key=len,
+                reverse=True,
+            )
+
+            # Applica filtro sul keyword più specifico disponibile
+            if keywords:
+                req = req.ilike("content", f"%{keywords[0]}%")
+
+            response = req.limit(top_k).execute()
+            docs = response.data if response.data else []
+            logger.info(f"✅ RAG INFO: {len(docs)} documenti (keyword) per '{query[:40]}'")
+            return docs
+
+        except Exception as e:
+            logger.error(f"❌ RAG INFO keyword fallback fallito: {e}")
+            return []
+
+    def _embed_text(self, text: str) -> Optional[List[float]]:
+        """
+        Genera embedding OpenAI per il testo fornito.
+
+        Usa 'text-embedding-3-small'. Restituisce None se OpenAI non è
+        configurato o si verifica un errore.
+        """
+        try:
+            import openai
+            from ..config.settings import APIConfig
+
+            openai_key = getattr(APIConfig, "get_openai_key", lambda: None)()
+            if not openai_key:
+                # Prova anche da env/secrets standard
+                import os
+                openai_key = os.environ.get("OPENAI_API_KEY")
+
+            if not openai_key:
+                logger.debug("⚠️ _embed_text: OPENAI_API_KEY non configurato")
+                return None
+
+            client = openai.OpenAI(api_key=openai_key)
+            response = client.embeddings.create(
+                input=text,
+                model="text-embedding-3-small",
+            )
+            return response.data[0].embedding
+
+        except ImportError:
+            logger.debug("⚠️ _embed_text: libreria openai non installata")
+            return None
+        except Exception as e:
+            logger.error(f"❌ _embed_text error: {type(e).__name__} - {e}")
+            return None
+
     def get_stats(self) -> Dict:
         """Database statistics."""
         self._ensure_connection()
