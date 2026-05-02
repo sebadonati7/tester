@@ -1208,17 +1208,14 @@ class TriageControllerV3:
 
         current_branch = new_branch
 
-        # 4. INFO branch: dispatch immediately (bypasses FSM)
-        if current_branch == TriageBranch.INFO:
-            for key in ["_current_phase", "_llm_judgment"]:
-                collected.pop(key, None)
-            self.state.set(StateKeys.COLLECTED_DATA, collected)
-            return self._process_info_branch(user_input, collected, start_time)
-
-        # Clean up helper keys before saving
+        # Clean up helper keys before saving (done once, before both INFO and non-INFO paths)
         for key in ["_current_phase", "_llm_judgment"]:
             collected.pop(key, None)
         self.state.set(StateKeys.COLLECTED_DATA, collected)
+
+        # 4. INFO branch: dispatch immediately (bypasses FSM)
+        if current_branch == TriageBranch.INFO:
+            return self._process_info_branch(user_input, collected, start_time)
 
         # ═══════════════════════════════════════════════════════════
         # 5. DIRECTIVE 3: Auto-outcome check

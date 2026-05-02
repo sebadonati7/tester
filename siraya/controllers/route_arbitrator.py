@@ -23,18 +23,18 @@ class RouteArbitrator:
     """
 
     INFO_PATTERNS = [
-        r"orari\s+(di|del|della|delle)",
-        r"quando\s+(apre|chiude|è\s+aperto)",
-        r"(numero|telefono|email)\s+(di|del|della)",
-        r"contatti\s+(di|del)",
-        r"(indirizzo|dove|ubicazione)\s+(di|del|della)",
-        r"dove\s+(si\s+trova|posso\s+trovare)",
-        r"cosa\s+offre",
-        r"quali\s+servizi",
-        r"informazioni\s+su",
-        r"info\s+su",
-        r"come\s+(prenot|prenotar|registr)",
-        r"prenotazione",
+        r"\borari\s+(di|del|della|delle)\b",
+        r"\bquando\s+(apre|chiude|è\s+aperto)\b",
+        r"\b(numero|telefono|email)\s+(di|del|della)\b",
+        r"\bcontatti\s+(di|del)\b",
+        r"\b(indirizzo|dove|ubicazione)\s+(di|del|della)\b",
+        r"\bdove\s+(si\s+trova|posso\s+trovare)\b",
+        r"\bcosa\s+offre\b",
+        r"\bquali\s+servizi\b",
+        r"\binformazioni\s+su\b",
+        r"\binfo\s+su\b",
+        r"\bcome\s+(prenot\w*|registr\w*)\b",
+        r"\bprenotazione\b",
     ]
 
     EMERGENCY_KEYWORDS = [

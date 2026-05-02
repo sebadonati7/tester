@@ -91,16 +91,25 @@ class InfoProcessor:
         """
         Estrae location da query naturale.
         Es: "orari del CAU di Ravenna" → "Ravenna"
+            "numero consultorio a San Giovanni in Persiceto" → "San Giovanni in Persiceto"
         """
-        # Pattern: "di/a/presso/c/o <CittàConMaiuscola>"
+        # Pattern: preposizione seguita da nome città (supporta nomi composti)
         patterns = [
-            r"(?:di|a|presso|c/o)\s+([A-Z][a-zà-ù]+(?:\s+[a-zà-ù]+)*)",
-            r"(?:a|in)\s+([A-Z][a-zà-ù]+(?:\s+[a-zà-ù]+)*)\b",
+            r"(?:di|a|presso|c/o)\s+([A-Z][a-zà-ù]+(?:\s+(?:di\s+)?[A-Za-zà-ù]+)*)",
+            r"(?:a|in)\s+([A-Z][a-zà-ù]+(?:\s+(?:di\s+)?[A-Za-zà-ù]+)*)\b",
         ]
         for pattern in patterns:
             match = re.search(pattern, query)
             if match:
-                return match.group(1).strip()
+                # Pulisci stopwords finali che potrebbero essere aggiunte per errore
+                location = match.group(1).strip()
+                # Rimuovi parole finali che sono preposizioni/articoli italiani
+                stopwords = {"di", "del", "della", "dei", "delle", "il", "la", "i", "le", "gli"}
+                parts = location.split()
+                while parts and parts[-1].lower() in stopwords:
+                    parts.pop()
+                if parts:
+                    return " ".join(parts)
         return None
 
     def _build_prompt(

@@ -386,6 +386,10 @@ class RAGService:
         """
         Fallback keyword-based sulla tabella 'documents' quando l'embedding
         non è disponibile o la RPC non è configurata.
+
+        Filtra prima per location (se disponibile), poi cerca contenuto
+        per parole chiave significative della query in ordine di specificità
+        (parole più lunghe prima, più probabilmente termini specifici).
         """
         if not self.supabase:
             return []
@@ -398,12 +402,20 @@ class RAGService:
             if location:
                 req = req.ilike("location", f"%{location}%")
 
-            # Estrai keyword significative dalla query (> 3 caratteri)
-            keywords = [
-                w.strip(".,;:!?")
-                for w in query.lower().split()
-                if len(w.strip(".,;:!?")) > 3
-            ]
+            # Estrai keyword significative (> 3 caratteri), ordinate per lunghezza
+            # discendente (parole più lunghe tendono a essere più specifiche)
+            stopwords = {"orari", "dove", "sono", "cosa", "come", "qual", "quali", "degli", "delle"}
+            keywords = sorted(
+                [
+                    w.strip(".,;:!?")
+                    for w in query.lower().split()
+                    if len(w.strip(".,;:!?")) > 3 and w.strip(".,;:!?") not in stopwords
+                ],
+                key=len,
+                reverse=True,
+            )
+
+            # Applica filtro sul keyword più specifico disponibile
             if keywords:
                 req = req.ilike("content", f"%{keywords[0]}%")
 

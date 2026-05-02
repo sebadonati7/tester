@@ -85,8 +85,12 @@ def get_env(key: str) -> str:
 
 def embed_text(client, text: str) -> list:
     """Genera embedding OpenAI text-embedding-3-small."""
-    response = client.embeddings.create(input=text, model="text-embedding-3-small")
-    return response.data[0].embedding
+    try:
+        response = client.embeddings.create(input=text, model="text-embedding-3-small")
+        return response.data[0].embedding
+    except Exception as e:
+        logger.error(f"❌ embed_text fallito: {type(e).__name__} - {e}")
+        raise
 
 
 def format_orari(orari_dict: dict) -> str:
