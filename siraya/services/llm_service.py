@@ -189,6 +189,46 @@ class LLMService:
             return {}
 
     # ------------------------------------------------------------------
+    # GENERATE TEXT (free-text, non-JSON response — used by InfoProcessor)
+    # ------------------------------------------------------------------
+
+    def generate_text(
+        self,
+        prompt: str,
+        temperature: float = 0.3,
+        max_tokens: int = 600
+    ) -> str:
+        """
+        Genera risposta testuale libera (non JSON) da LLM.
+
+        Args:
+            prompt: Prompt completo
+            temperature: 0.0-1.0 (creatività)
+            max_tokens: Lunghezza max risposta
+
+        Returns:
+            Stringa risposta o messaggio di errore
+        """
+        try:
+            if self._groq_client:
+                response = self._groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                return response.choices[0].message.content.strip()
+            elif self._gemini_model:
+                response = self._gemini_model.generate_content(prompt)
+                return response.text.strip()
+            else:
+                logger.error("❌ Nessun LLM disponibile per generate_text")
+                return ""
+        except Exception as e:
+            logger.error(f"❌ LLM generate_text error: {type(e).__name__} - {e}")
+            return ""
+
+    # ------------------------------------------------------------------
     # TEST API CONNECTIONS (used by sidebar debug)
     # ------------------------------------------------------------------
 
