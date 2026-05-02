@@ -9,6 +9,8 @@ from typing import Any, List, Optional, Tuple
 import json
 import re
 from urllib.parse import quote_plus
+import mimetypes
+import datetime
 
 
 # Allow running this file directly: python .\whatsapp-bot\bot.py
@@ -19,14 +21,16 @@ if str(PROJECT_ROOT) not in sys.path:
 
 # Load workspace .env when running directly (python .\whatsapp-bot\bot.py)
 load_dotenv(PROJECT_ROOT / ".env", override=True)
+TEMP_DIR = PROJECT_ROOT / "temp"
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
-from siraya.controllers.triage_controller_v3 import TriageControllerV3
 from siraya.webhooks.conversation_runtime import ConversationRuntime
 
 import requests
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
+from data_processer import process_data_from_message
 
 class MissingEnvironmentVariable(Exception):
     def __init__(self, *args):
@@ -68,36 +72,54 @@ runtime = ConversationRuntime(dedup_ttl_seconds=20 * 60)
 PAYLOAD_LOG_PATH = PROJECT_ROOT / "Payload_risposte.json"
 PAYLOAD_LOG_LOCK = threading.Lock()
 
-def extract_message_event(body: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    """Extract (message_id, phone_number, text) from Meta payload for text messages only."""
+STATUS_OK = {"status": "ok"}
+
+def extract_message_event(body: dict) -> Tuple[Optional[str], Optional[str], Optional[str], Any]:
+    """
+    Estrae i dati dal payload di Meta.
+    Ritorna esattamente 4 campi: (message_id, phone_number, data_type, data)
+    - data_type: può essere 'text', 'image' o 'location'.
+    - data: stringa per il testo, dict per image/location.
+    """
     if not body.get("object"):
-        return None, None, None
+        return None, None, None, None
 
     try:
         change_value = body["entry"][0]["changes"][0]["value"]
         messages = change_value.get("messages") or []
         if not messages:
-            return None, None, None
+            return None, None, None, None
 
         message = messages[0]
         message_id = message.get("id")
         phone_number = message.get("from")
         message_type = message.get("type")
-        if message_type != "text":
-            return None, None, None
-        text_body = message.get("text", {}).get("body", "").strip()
-        if message_id and phone_number and text_body:
-            return message_id, phone_number, text_body
+
+        # Se mancano i dati di base, interrompiamo subito
+        if not message_id or not phone_number:
+            return None, None, None, None
+
+        if message_type == "text":
+            text_body = message.get("text", {}).get("body", "").strip()
+            if text_body:
+                return message_id, phone_number, "text", text_body
+
+        elif message_type == "image":
+            image_data = message.get("image")
+            if image_data:
+                return message_id, phone_number, "image", image_data
+
+        elif message_type == "location":
+            location_data = message.get("location")
+            if location_data:
+                return message_id, phone_number, "location", location_data
+
     except (IndexError, KeyError, TypeError):
-        return None, None, None
+        return None, None, None, None
 
-    return None, None, None
+    # Se il tipo non è supportato o i dati sono vuoti
+    return None, None, None, None
 
-
-def extract_text_message(body: dict) -> Tuple[Optional[str], Optional[str]]:
-    """Backward-compatible wrapper: returns only (phone_number, text)."""
-    _, phone_number, text = extract_message_event(body)
-    return phone_number, text
 
 def _markdown_to_whatsapp(text: str) -> str:
     """
@@ -159,6 +181,7 @@ def _append_google_maps_link(text: str) -> str:
     return f"{text.rstrip()}\n\n🗺️ Avvia navigazione: {maps_url}"
 
 
+
 def send_reply(to_number: str, text: str) -> None:
     """Invia risposta usando WhatsApp Cloud API."""
     if not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
@@ -201,7 +224,7 @@ def send_reply(to_number: str, text: str) -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    return STATUS_OK
 
 
 # 1) Verifica webhook da parte di Meta (GET)
@@ -219,7 +242,6 @@ def verify_webhook(
 
     raise HTTPException(status_code=403, detail="Forbidden")
 
-import datetime
 
 
 @app.post("/webhook")
@@ -228,8 +250,8 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
         body = await request.json()
     except Exception:
         logger.warning("invalid_json_payload")
-        return {"status": "ok"}
-    """ 
+        return STATUS_OK
+    
     # Best-effort payload logging (non deve bloccare il webhook)
     try:
         now = datetime.datetime.now().isoformat()
@@ -258,11 +280,13 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
             )
     except Exception as exc:
         logger.warning("payload_file_log_failed error=%s", exc)
-    """
-    message_id, phone_number, text = extract_message_event(body)
-    if not message_id or not phone_number or not text:
-        logger.info("ignore_event reason=non_text_or_incomplete")
-        return {"status": "ok"}
+    
+    message_id, phone_number, data_type, data = extract_message_event(body)
+
+    # Ignora l'evento se la funzione ha ritornato None (tipo non supportato o errore)
+    if not data_type:
+        logger.info("ignore_event reason=unsupported_type_or_incomplete")
+        return STATUS_OK
 
     is_duplicate = runtime.seen_or_mark_message(message_id)
     logger.info(
@@ -273,11 +297,12 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
     )
 
     if is_duplicate:
-        return {"status": "ok"}
+        return STATUS_OK
 
+    text_for_bot = process_data_from_message(data_type, data)
     logger.info("enqueue_processing message_id=%s phone_number=%s", message_id, phone_number)
-    background_tasks.add_task(runtime.process_message, phone_number, text, message_id, send_reply)
-    return {"status": "ok"}
+    background_tasks.add_task(runtime.process_message, phone_number, text_for_bot, message_id, send_reply)
+    return STATUS_OK
 
 @app.get("/ping", response_class=PlainTextResponse)
 async def keepalive():

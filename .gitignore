@@ -25,3 +25,4 @@ wheels/
 .installed.cfg
 *.egg
 Payload_risposte.json
+offline_logs.jsonl
