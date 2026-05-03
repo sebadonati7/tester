@@ -299,7 +299,14 @@ async def handle_messages(request: Request, background_tasks: BackgroundTasks) -
     if is_duplicate:
         return STATUS_OK
 
-    text_for_bot = process_data_from_message(data_type, data)
+    # Elabora il messaggio e ottiene il dict con success e text
+    processed_result = process_data_from_message(data_type, data)
+    text_for_bot = processed_result.get("text", "")
+    if data_type == "image":
+        send_reply(phone_number,text_for_bot)
+    if data_type == 'location':
+        send_reply(phone_number,'Posizione identificata: '+text_for_bot)
+    
     logger.info("enqueue_processing message_id=%s phone_number=%s", message_id, phone_number)
     background_tasks.add_task(runtime.process_message, phone_number, text_for_bot, message_id, send_reply)
     return STATUS_OK

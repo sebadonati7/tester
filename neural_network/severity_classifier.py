@@ -65,6 +65,19 @@ class SeverityClassifier:
     def evaluate_severity(self, image_path: str) -> dict:
         """
         Funzione pubblica esposta all'Orchestratore (es. FastAPI).
+        Dati restituiti in caso di successo
+        {
+                "status": "success",
+                "prediction": class_name,
+                "confidence": round(float(confidence.item()), 4),
+                "details": {
+                    "Lieve_prob": round(float(probabilities[0].item()), 4),
+                    "Grave_prob": round(float(probabilities[1].item()), 4)
+                }
+            }
+        
+        In caso di fallimento:
+        {"status": "error", "message": str(e)}
         """
         try:
             input_tensor = self._preprocess_opencv(image_path)

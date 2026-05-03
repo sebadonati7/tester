@@ -19,8 +19,8 @@ TEMP_DIR.mkdir(parents=True, exist_ok=True)
 CONFIDENCE_THRESHOLD = 0.90 # in percentuale
 MAX_DISTANCE_THRESHOLD = 300 # in km
 
-TECH_ERROR = "Ripeti"
-CONF_ERROR = "Ripeti"
+TECH_ERROR = "Errore tecnico. Descrivi il tuo problema testualmente"
+CONF_ERROR = "Immagine non chiara. Descrivi il tuo problema testualmente"
 
 # Initialize logger
 logger = logging.getLogger("whatsapp-bot")
@@ -50,14 +50,15 @@ e selezionata la città/struttura più vicina (ancora in via di sviluppo)
 """
 
 
-def process_data_from_message(data_type: str, data) -> dict[str, str]:
+def process_data_from_message(data_type: str, data) -> dict:
     """
-    Trasforma i dati strutturati in testo strutturato per il controller, funge da dispatcher per il trattamento che questi devono esguire
+    Trasforma i dati strutturati in dict strutturato per il controller, funge da dispatcher per il trattamento che questi devono eseguire
     - data_type: può essere 'text', 'image' o 'location'.
     - data: stringa per il testo, dict per image/location.
+    - Ritorna un dict con chiavi 'success' (bool) e 'text' (str).
     """
     if data_type == 'text':
-        text = data
+        result = {"success": True, "text": data}
     elif data_type == 'image':
         """
         Il campo 'data' è strutturato così
@@ -68,7 +69,7 @@ def process_data_from_message(data_type: str, data) -> dict[str, str]:
             "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=1743413047032496&source=webhook&ext=1777640108&hash=ARk31EpLz4yq2HNXRaxhtTjqp90b5oUA_-oLtxaqDxUKbg"
         }
         """
-        text = evaluate_image(data)
+        result = evaluate_image(data)
     elif data_type == 'location':
         """
         Il campo 'data' è strutturato così
@@ -77,17 +78,17 @@ def process_data_from_message(data_type: str, data) -> dict[str, str]:
             "longitude": 12.1088064
         }
         """
-        text = evaluate_location(data['latitude'], data['longitude'])
-    logger.info("Testo prodotto: " + text)
-    return text
+        result = evaluate_location(data['latitude'], data['longitude'])
+    logger.info("Elaborazione completata: success=%s, text=%s", result.get("success"), result.get("text"))
+    return result
 
 
 
 
-def evaluate_image(image_data: dict) -> str:
+def evaluate_image(image_data: dict) -> dict:
     """
-    Scarica l'immagine WhatsApp, esegue la classificazione e ritorna testo solo
-    se la confidenza è >= 90%.
+    Scarica l'immagine WhatsApp, esegue la classificazione e ritorna un dict con
+    'success' (bool) e 'text' (str). Il testo viene ritornato solo se la confidenza è >= 90%.
     """
     mime_type = image_data.get("mime_type")
     media_id = image_data.get("id")
@@ -95,33 +96,33 @@ def evaluate_image(image_data: dict) -> str:
 
     if not mime_type or not media_id or not media_url:
         logger.warning("Dati immagine incompleti: %s", image_data)
-        return 
+        return {"success": False, "text": TECH_ERROR}
 
     image_path: Optional[Path] = None
     try:
         image_path = _download_whatsapp_image(media_url=media_url, mime_type=mime_type, media_id=media_id)
         if not image_path:
-            return TECH_ERROR
+            return {"success": False, "text": TECH_ERROR}
 
         model = get_model()
         result = model.evaluate_severity(str(image_path))
 
         if result.get("status") != "success":
             logger.error("Errore classificazione immagine: %s", result)
-            return TECH_ERROR
+            return {"success": False, "text": TECH_ERROR}
 
         confidence = float(result.get("confidence", 0.0))
         if confidence < CONFIDENCE_THRESHOLD:
-            return CONF_ERROR
+            return {"success": False, "text": CONF_ERROR}
 
         prediction = str(result.get("prediction", "")).lower()
         if "grave" in prediction:
-            return "È una ferita alla pelle grave"
-        return "È una ferita alla pelle lieve"
+            return {"success": True, "text": "Identificata una ferita alla pelle grave"}
+        return {"success": True, "text": "Identificata una ferita alla pelle lieve"}
 
     except Exception as exc:
         logger.exception("Errore in evaluate_image: %s", exc)
-        return TECH_ERROR
+        return {"success": False, "text": TECH_ERROR}
     finally:
         if image_path and image_path.exists():
             try:
@@ -129,10 +130,10 @@ def evaluate_image(image_data: dict) -> str:
             except Exception:
                 logger.warning("Impossibile eliminare il file temporaneo: %s", image_path)
 
-def evaluate_location(latitude: float, longitude: float) -> str:
+def evaluate_location(latitude: float, longitude: float) -> dict:
     """
     Calcola la distanza in linea d'aria verso tutti i comuni della regione Emilia-Romagna
-    e ritorna il nome del comune più vicino.
+    e ritorna un dict con 'success' (bool) e 'text' (str) contenente il nome del comune più vicino.
     Se il comune più vicino è più di 300km di distanza, ritorna "Lontano".
     """
     try:
@@ -144,7 +145,7 @@ def evaluate_location(latitude: float, longitude: float) -> str:
         
         if not comuni:
             logger.warning("Nessun comune trovato nella mappa")
-            return "Lontano"
+            return {"success": False, "text": "Lontano"}
         
         min_distance = float('inf')
         closest_comune = None
@@ -165,18 +166,18 @@ def evaluate_location(latitude: float, longitude: float) -> str:
                 closest_comune = comune_name
         
         if closest_comune is None:
-            return "Lontano"
+            return {"success": False, "text": "Lontano"}
         
         logger.info("Comune più vicino: %s (distanza: %.2f km)", closest_comune, min_distance)
         
         if min_distance > MAX_DISTANCE_THRESHOLD:
-            return "Lontano"
+            return {"success": False, "text": "Lontano"}
         
-        return closest_comune
+        return {"success": True, "text": closest_comune}
         
     except Exception as exc:
         logger.exception("Errore in evaluate_location: %s", exc)
-        return "Lontano"
+        return {"success": False, "text": "Lontano"}
 
 
 def _haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
