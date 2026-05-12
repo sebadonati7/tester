@@ -270,6 +270,99 @@ def seed_districts(client, districts_data: Dict) -> int:
 # MAIN
 # ============================================================================
 
+def seed_info_documents(client, facilities: List[Dict]) -> int:
+    """
+    Seed documents table for INFO queries (semantic search).
+    
+    Creates one document per facility with embedding-ready content.
+    
+    Args:
+        client: Supabase client
+        facilities: List of facility records
+        
+    Returns:
+        Number of records inserted
+    """
+    if not facilities:
+        print("⚠️  No facilities to seed for documents")
+        return 0
+    
+    print(f"\n📦 Seeding {len(facilities)} documents for INFO queries...")
+    
+    records = []
+    for f in facilities:
+        nome = f.get("nome", "N/A")
+        comune = f.get("comune", "")
+        tipologia = f.get("tipologia", "")
+        servizi = ", ".join(f.get("servizi_disponibili", []))
+        
+        # Format orari
+        orari_dict = f.get("orari", {})
+        orari_text = ""
+        if orari_dict:
+            for giorno, fascia in orari_dict.items():
+                if giorno != "note":
+                    orari_text += f"- {giorno.capitalize()}: {fascia}\n"
+            if orari_dict.get("note"):
+                orari_text += f"Note: {orari_dict['note']}"
+        
+        # Build content
+        contatti = f.get("contatti", {})
+        telefono = contatti.get("telefono", "N/A") if isinstance(contatti, dict) else "N/A"
+        indirizzo = contatti.get("indirizzo", "N/A") if isinstance(contatti, dict) else "N/A"
+        web = contatti.get("web", "N/A") if isinstance(contatti, dict) else "N/A"
+        
+        content = f"""STRUTTURA: {nome}
+TIPO: {tipologia}
+COMUNE: {comune}
+PROVINCIA: {f.get("provincia", "")}
+
+SERVIZI: {servizi}
+
+ORARI:
+{orari_text}
+
+CONTATTI:
+Telefono: {telefono}
+Indirizzo: {indirizzo}
+Web: {web}"""
+        
+        record = {
+            "title": f"{nome} - {comune}",
+            "content": content,
+            "doc_type": "facility_complete",
+            "location": comune,
+            "embedding": None,  # Will be NULL for now (can add embedding later)
+            "metadata": json.dumps({
+                "facility_id": f.get("id"),
+                "tipologia": tipologia
+            }, ensure_ascii=False),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        records.append(record)
+    
+    # Batch insert
+    batch_size = 500
+    total_inserted = 0
+    
+    for i in range(0, len(records), batch_size):
+        batch = records[i:i + batch_size]
+        try:
+            response = client.table("documents").insert(
+                batch,
+                count="estimated"
+            ).execute()
+            
+            count = len(response.data) if response.data else len(batch)
+            total_inserted += count
+            print(f"   ✓ Batch {i // batch_size + 1}: {count} records")
+            
+        except Exception as e:
+            print(f"   ❌ Batch {i // batch_size + 1} failed: {e}")
+    
+    print(f"   Total inserted: {total_inserted} documents")
+    return total_inserted
+
 def main():
     """Main seeding workflow."""
     print("=" * 60)
